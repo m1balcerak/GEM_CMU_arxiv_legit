@@ -1,0 +1,24 @@
+\section{Geodesic analysis details}
+\label{app:geodesic-details}
+
+\paragraph{Pairing and alignments.}
+We draw 1000 molecules from the dataset and group them by node count. For each group we sample
+pairs uniformly and align them using node matching to define a coupling between endpoints.
+
+\paragraph{Path optimization.}
+We represent a continuous path in the embedding space and optimize the energy-weighted length
+objective in \Cref{sec:experiments}, including the path-energy term. The linear baseline uses the
+same endpoint pairing and interpolates between the coupled graphs.
+
+\paragraph{Spline parameterization.}
+We implement geodesic paths using a Bezier spline over learnable control-point logits for nodes and
+edges. The spline lives in the probability simplex (node/edge categorical distributions), and
+discrete graphs are sampled only for visualization and metric evaluation. The optimization minimizes
+the relative length ratio $L_{\mathrm{spline}}/L_{\mathrm{linear}} - 1$, where the segment lengths are
+weighted by $\exp(-\beta V_\theta(x_\tau))$ along the path.
+
+\paragraph{Discrete evaluation.}
+We discretize each continuous path at evenly spaced points in normalized arc length. At each point
+we sample categorical graphs from the path distribution to compute validity and energy statistics.
+We report the length ratio $L_{\mathrm{geo}}/L_{\mathrm{lin}}$ and the correlation between energy
+and validity along the path.

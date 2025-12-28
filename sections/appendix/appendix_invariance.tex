@@ -1,0 +1,53 @@
+\section{Permutation-invariant energy parameterization}\label{app:perm-invariance}
+
+We implement the potential with a node/edge/global graph transformer backbone
+(the GraphTransformer used in our codebase). Each layer is permutation equivariant:
+for any relabeling $\sigma$, hidden node and edge features transform as
+$(X,E)\mapsto (\sigma\!\cdot\!X,\sigma\!\cdot\!E)$. The global feature $h$ collects
+extra graph-level features and is updated through permutation-invariant summaries,
+so $h$ is invariant.
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+  font=\scriptsize,
+  node distance=1.0cm,
+  module/.style={
+    rectangle,
+    rounded corners=5pt,
+    minimum width=3.1cm,
+    minimum height=0.95cm,
+    align=center,
+    draw=black!55,
+    fill=black!4,
+    thick
+  },
+  arrow/.style={-Latex, line width=1.1pt, draw=black!60}
+]
+  \node[module] (graph) {Graph input $x$\\(node + edge features)};
+  \node[module, right=of graph] (gt) {Graph Transformer\\(equivariant)};
+  \node[module, right=of gt] (pool) {Invariant readout\\$\sum_i X_i,\;\sum_{i\ne j} E_{ij}$ + MLP};
+  \node[module, right=of pool] (energy) {$V_\theta(x)\in\mathbb{R}$};
+
+  \draw[arrow] (graph) -- (gt);
+  \draw[arrow] (gt) -- (pool);
+  \draw[arrow] (pool) -- (energy);
+\end{tikzpicture}}
+\caption{Permutation-equivariant backbone with invariant pooling to produce a scalar energy.}
+\label{fig:energy-arch}
+\end{figure}
+
+The scalar energy is obtained by an invariant readout that first pools the
+equivariant features and then applies an MLP:
+\begin{equation}
+\begin{aligned}
+\bar{X} &= \sum_{i\in\mathcal{V}} X^{(L)}_i,\qquad
+\bar{E} = \sum_{i\ne j} E^{(L)}_{ij},\\
+V_\theta(x,h) &= \mathrm{MLP}\big([\bar{X},\bar{E},h^{(L)}]\big).
+\end{aligned}
+\end{equation}
+The sums are invariant to permutations, so the concatenated vector
+$(\bar{X},\bar{E},h^{(L)})$ is invariant. Therefore any MLP applied to it is
+also invariant. This matches the sum-pooled energy head in the implementation
+(with a masked off-diagonal sum).

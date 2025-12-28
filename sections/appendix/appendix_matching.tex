@@ -1,0 +1,20 @@
+\section{Permutation-invariant minibatch matching}
+\label{app:matching}
+
+Exact computation of the fused cost $c_{\mathrm{MongeFGW}}$ requires a combinatorial search over
+permutations. We therefore use fast, permutation-invariant approximations tailored to the source
+distribution and the downstream use (pairing vs.\ local edits).
+
+\paragraph{Histogram matching for a uniform source.}
+When the source $p_0$ is a uniform distribution over node and edge classes, we use a cheap signature
+for each graph. Let $h_X$ be the normalized node-type histogram, $h_E$ the normalized edge-type
+histogram (over $i<j$), and $h_{XE}$ the histogram over unordered node-type pairs with edge types. We
+form a weighted signature $h(x)=[\alpha h_X,\;\beta h_E,\;\gamma h_{XE}]$ and solve a linear assignment
+between graphs of equal size using $\|h(x)-h(y)\|_1$. This produces permutation-invariant couplings and
+is sufficient when $p_0$ is far from $p_{\mathrm{data}}$, so we do not require fine-grained alignment.
+
+\paragraph{Node matching for molecule-like sources.}
+If the source distribution already produces valid molecules, we recommend a node-matching alignment
+based on node labels (optionally with a light edge-structure tie-breaker), followed by computing the
+aligned local cost. This reflects chemical atom mapping practice: once atoms are aligned, bond
+correspondences are largely determined~\citep{bell2019dockrmsd}.

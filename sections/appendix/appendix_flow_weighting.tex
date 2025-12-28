@@ -1,0 +1,32 @@
+\section{Time weighting for the flow loss}
+\label{app:flow-weighting}
+
+The flow-matching term can be reweighted in time by introducing a scalar
+$\alpha(t)$:
+\begin{equation}
+\mathcal{L}_{\text{flow},\alpha}(\theta)
+=
+\mathbb{E}_{(x_0,x_1)\sim\tilde{\gamma},\,t\sim\Unif([0,1])}\left[
+\alpha(t)\,\|-\nabla_{\hat{x}} V_\theta(\hat{x}_t)-v\|_2^2
+\right].
+\end{equation}
+A simple choice is a piecewise linear schedule
+\begin{equation}
+\alpha_{\tau^\ast}(t)=
+\begin{cases}
+1,&0\le t\le\tau^\ast,\\[6pt]
+\dfrac{1-t}{1-\tau^\ast},&\tau^\ast<t\le1,
+\end{cases}
+\end{equation}
+so that $\alpha_{\tau^\ast}(1)=0$. This downweights flow supervision for samples
+approaching the data manifold and can reduce interference with $\mathcal{L}_{\text{ER}}$.
+We do not apply this weighting in our experiments ($\alpha(t)\equiv 1$), because
+full flow supervision was empirically more stable for $\mathcal{L}_{\text{ER}}$.
+
+Time-decaying weights are common in continuous settings: Energy Matching and
+Equilibrium Matching relax the flow term to avoid over-constraining the
+equilibrium regime. In particular, Equilibrium Matching uses $\alpha(t)\to 0$
+as $t\to 1$ because a vanishing energy gradient at equilibrium is one of the
+score-matching conditions for energy-based training~\citep{wang2025equilibrium}.
+Such schedules may be beneficial in other domains where late-time supervision
+conflicts with equilibrium refinement.

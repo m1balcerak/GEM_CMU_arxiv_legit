@@ -1,0 +1,372 @@
+\section{Graph Energy Matching (GEM)}
+\label{sec:gem}
+
+We extend energy matching to graphs by defining (i) a permutation-aware matching cost used to build
+minibatch couplings for $\mathcal{L}_{\mathrm{OT}}$, and (ii) a discrete Gibbs target together with a
+gradient-informed MCMC sampler.
+
+\paragraph{Graph representation.}
+We represent a graph with node index set $\mathcal{V}=\{1,\dots,n\}$.
+A configuration consists of categorical node attributes and categorical edge attributes on all pairs.
+Each node $i\in\mathcal{V}$ has a categorical domain $\mathcal{X}_i$ (e.g.\ atom type).
+Each unordered pair $i<j$ is an edge site with domain $\mathcal{X}_{ij}$ that includes a distinguished
+\texttt{NO-BOND} state. The discrete state space is
+$\Omega \coloneqq \Big(\prod_{i\in\mathcal{V}}\mathcal{X}_i\Big)\times
+\Big(\prod_{1\le i<j\le n}\mathcal{X}_{ij}\Big)$.
+
+\paragraph{Continuous embeddings.}
+Each categorical site is embedded into Euclidean space via maps
+$\phi_i:\mathcal{X}_i\to\mathbb{R}^{d_{\mathrm{node}}}$ and
+$\phi_{ij}:\mathcal{X}_{ij}\to\mathbb{R}^{d_{\mathrm{edge}}}$.
+Concatenating yields an ambient embedding
+$\hat{x}=(\phi_i(x_i))_{i\in\mathcal{V}} \;\oplus\; (\phi_{ij}(x_{ij}))_{i<j}\in\mathbb{R}^{D}$,
+where $\oplus$ is concatenation: we stack all node embeddings followed by all edge embeddings into a
+single vector in $\mathbb{R}^{D}$, with $D = n\,d_{\mathrm{node}} + \tbinom{n}{2}\,d_{\mathrm{edge}}$.
+Here $n$ denotes the maximum number of nodes (from the training dataset); smaller graphs are padded
+and masked following standard conventions for graph diffusion models~\citep{vignac2022digress,qinmadeira2024defog}.
+The Markov chain evolves on discrete $x\in\Omega$, while $\nabla_{\hat{x}}V_\theta(\hat{x})$ is computed
+with respect to the embedding.
+
+\paragraph{Permutation symmetry and alignments.}
+For any permutation $\sigma\in S_n$, let $\sigma$ act on node indices and induce a relabeling of the
+graph: $(\sigma\!\cdot\!x)_i=x_{\sigma(i)}$ and $(\sigma\!\cdot\!x)_{ij}=x_{\sigma(i)\sigma(j)}$.
+We enforce permutation invariance by construction: $V_\theta$ is produced by a permutation-equivariant
+graph transformer with an invariant readout to a scalar (Appendix~\ref{app:perm-invariance}), so
+$V_\theta(\sigma\!\cdot\!x)=V_\theta(x)$ and the Gibbs distribution
+$\pi_\theta(x)\propto \exp(-V_\theta(x))$ is also invariant.
+
+
+\paragraph{Local quadratic cost.}
+We use the quadratic discrepancy
+\begin{equation}\label{eq:loc-cost}
+c_{\mathrm{loc}}(x,y)
+\;\coloneqq\;
+w_X\sum_{i\in\mathcal{V}}\|\hat{x}_i-\hat{y}_i\|^2
++
+w_E\sum_{i<j}\|\hat{x}_{ij}-\hat{y}_{ij}\|^2,
+\end{equation}
+where $w_X,w_E>0$ are scaling parameters for node and edge contributions. This defines the local
+geometry used throughout and is accurate when edits are small.
+
+\paragraph{Fused GW cost.}
+To compare graphs while preserving node-permutation symmetry, we lift the local cost to a fused
+discrepancy:
+\begin{equation}\label{eq:monge-fgw}
+c_{\mathrm{MongeFGW}}(x,y)
+=
+\min_{\sigma\in S_n}
+\left\{
+c_{\mathrm{loc}}(x,\sigma\!\cdot\!y)
+\right\}.
+\end{equation}
+Exact computation is NP-hard (it reduces to a graph matching / quadratic assignment problem), so we use
+approximations tailored to context and assumptions; see Appendix~\ref{app:matching}.
+
+\paragraph{JKO and first-order conditions.}
+We propose a JKO-style objective tailored to graph-induced geometry that preserves Gibbs equilibrium
+for $V_\theta$ while remaining valid on discrete spaces. We avoid time-indexed dynamics---cumbersome for
+discrete jumps and prone to do-nothing moves---by using a spatial two-regime $\varepsilon(x)$ and a
+coupling-based transport term over valid graphs, which motivates our multi-site geometry-aware sampler.
+We analyze
+\begin{equation}
+\pi_{k+1}=\arg\min_{\pi}\,\mathcal{J}(\pi).
+\end{equation}
+In the JKO step the kinetic term is minimized over couplings between $\pi_k$ and $\pi$, yielding
+$W_2^2$ in the continuous setting. We write the functional as
+\begin{align}
+\mathcal{J}(\pi)
+&=
+\frac{1}{2\eta}\,\inf_{\gamma\in\Pi(\pi_k,\pi)}\mathcal{A}(\gamma)\nonumber\\
+&\quad+\sum_{x\in\Omega} V_\theta(x)\,\pi(x)\nonumber\\
+&\quad+\sum_{x\in\Omega} \varepsilon(x)\,\pi(x)\log\pi(x).
+\end{align}
+A pointwise stationarity condition along coupled samples $(x,y)$ from an optimal coupling,
+with $c=c_{\mathrm{MongeFGW}}$, can be written
+(up to an additive constant) as
+\begin{equation}
+\frac{1}{2\eta}\,c(x,y)
+\;+\;V_\theta(x)
+\;+\;\varepsilon(x)\,\log\pi_{k+1}(x)
+\;=\;\text{const}.
+\end{equation}
+At the target distribution the transport term vanishes, so with $\varepsilon(x)=1$ this gives the Gibbs form
+\begin{equation}
+\pi_{\mathrm{eq}}(x)\propto \exp\!\left(-V_\theta(x)\right).
+\end{equation}
+As in the continuous Energy Matching formulation~\citep{balcerak2025energy}, one can target the full
+objective when a sampler respects the local geometry induced by $c_{\mathrm{loc}}$ (i.e., proposals
+are biased toward low-cost edits); we introduce such a sampler below.
+We focus on the off-equilibrium regime with $\varepsilon(x)=0$ and analyze the functional by relaxing
+the kinetic term: we fix a coupling $\tilde{\gamma}$ between the source $p_0$ and the data
+$p_{\mathrm{data}}$ (e.g.\ minibatch OT), which induces a path between them and replaces the infimum
+with $\mathcal{A}(\tilde{\gamma})$, yielding
+\begin{equation}
+\widetilde{\mathcal{J}}(\pi_{k+1};\tilde{\gamma})
+=
+\frac{1}{2\eta}\,\mathcal{A}(\tilde{\gamma})
+\;+\sum_{x\in\Omega} V_\theta(x)\,\pi_{k+1}(x).
+\end{equation}
+By \eqref{eq:kinetic-action}--\eqref{eq:kinetic-action-bound}, $\mathcal{A}(\tilde{\gamma})$ upper-bounds
+the OT discrepancy, and this relaxed term is tractable to compute. This motivates a transport-aligned
+drift based on the displacement between coupled samples; we use this to supervise
+$-\nabla_{\hat{x}}V_\theta$ along the coupling paths. We evaluate gradients with respect to the
+continuous embedding $\hat{x}$ introduced above, which makes this signal well-defined away from
+equilibrium and yields a training signal along the predefined coupling paths.
+Because $\varepsilon(x)$ is spatial (constant in each regime), the discrete scheme does not require an
+explicit time index, making it natural for jump processes and MCMC chains.
+
+\paragraph{Minibatch couplings and transport-aligned supervision.}
+Given minibatches from a source $p_0$ and the data $p_{\mathrm{data}}$, we compute a permutation-invariant
+minibatch matching using an approximation to $c_{\mathrm{MongeFGW}}$, obtaining a coupling
+$\tilde{\gamma}$ and a pairing map $T$ that assigns each data graph $x_{\mathrm{data}}$ to a source
+graph $T(x_{\mathrm{data}})$. In molecule-like settings we use node-matching alignments (with light
+edge tie-breakers), while for a uniform source we use fast histogram signatures; see
+Appendix~\ref{app:matching}. Since we transport from $\pi_0$ toward $\pi_{\mathrm{data}}$, these
+pairings provide off-manifold supervision: the displacement
+$v=\hat{x}_{\mathrm{data}}-\widehat{T(x_{\mathrm{data}})}$ defines a transport-aligned drift, which
+we use to supervise $-\nabla_{\hat{x}}V_\theta$ as one term of the training objective
+(Section~\ref{sec:training}).
+
+\paragraph{Discrete equilibrium and energy refinement.}
+On the finite state space $\Omega$, this Gibbs distribution is the exact stationary target in the mixing
+regime. We refine $V_\theta$ near data using the energy refinement objective $\mathcal{L}_{\mathrm{ER}}$
+from the preliminaries.
+
+\paragraph{Two-regime temperature in the discrete sampler.}
+We use the same two-regime schedule as above: $\varepsilon(x)=0$ in the transport regime and
+$\varepsilon(x)=1$ in the mixing regime, so the discrete chain targets the unit-temperature Gibbs
+density. 
+
+\paragraph{Local cost for proposals.}
+The matching cost $c_{\mathrm{MongeFGW}}$ includes a minimization over permutations.
+In the sampler we propose \emph{local edits} around the current labeling, so we do not re-solve for
+$\sigma$ at each step. We use the quadratic surrogate $c_{\mathrm{loc}}$ from \eqref{eq:loc-cost}, which
+serves as a local approximation when edits are small. We use two proposal mechanisms, separated by
+regime: a stochastic geometry-aware kernel in the mixing regime and a deterministic greedy descent in
+the transport regime.
+
+\paragraph{Mixing-regime stochastic proposal.}
+We allow multi-site updates that may change any subset of nodes and edges in a single step.
+This proposal is inspired by the transport-aligned drift: taking a directional derivative of the
+relaxed objective yields the left-hand side
+$(\hat{y}-\hat{x})^\top\!\big(\frac{1}{2\eta}\nabla_{\hat{x}} c_{\mathrm{loc}}(\hat{x},\hat{y})
+-\nabla_{\hat{x}}V_\theta(\hat{x})\big)$, whose terms appear in the kernel below. The
+exponential/softmax form supplies an exploration (entropic)
+component, and the resulting kernel can be viewed as a linearized locally balanced proposal; related
+discrete-gradient samplers appear in~\citep{grathwohl2021oops,zhang2022langevin,zanella2020informed}.
+Here we work in the continuous embedding, so displacements and gradients are taken with respect to
+\(\hat{x}\) and \(\hat{y}\).
+Define the linearized improvement by:
+\begin{equation}\label{eq:loc-linearized-improvement}
+\Delta_\theta(x\to y)
+\;\coloneqq\;
+(\hat{y}-\hat{x})^\top \big(-\nabla_{\hat{x}} V_\theta(\hat{x})\big)
+\end{equation}
+We then use a gradient-informed transition kernel guided by the first-order optimality conditions of the
+regularized objective. This is related to locally balanced proposals through the linearization in
+\eqref{eq:loc-linearized-improvement} and avoids full energy differences in high dimension:
+\begin{equation}\label{eq:loc-kernel}
+\begin{aligned}
+q_\theta(x\to y)
+&\propto
+\exp\!\Big(
+(\hat{y}-\hat{x})^\top \big(-\beta\nabla_{\hat{x}} V_\theta(\hat{x})\big)\\
+&\quad+\lambda_c\,(\hat{y}-\hat{x})^\top \nabla_{\hat{x}} c_{\mathrm{loc}}(\hat{x},\hat{y})
+\Big)
+\end{aligned}
+\end{equation}
+The explicit form for the quadratic cost in \eqref{eq:loc-cost} is:
+\begin{equation}\label{eq:loc-kernel-explicit}
+\begin{aligned}
+q_\theta(x\to y)
+&\propto
+\exp\!\Bigg(
+(\hat{y}-\hat{x})^\top \big(-\beta\nabla_{\hat{x}} V_\theta(\hat{x})\big)\\
+&\quad-\Big[
+\lambda_X\sum_{i\in\mathcal{V}}\|\hat{y}_i-\hat{x}_i\|^2\\
+&\quad\quad\quad\quad
++\lambda_E\sum_{i<j}\|\hat{y}_{ij}-\hat{x}_{ij}\|^2
+\Big]
+\Bigg)
+\end{aligned}
+\end{equation}
+In practice we calibrate $\beta$, $\lambda_X$, and $\lambda_E$ by maximizing relative likelihood of
+generated samples under the learned energy.
+
+\paragraph{Transport-regime greedy proposal.}
+In the transport regime we use a deterministic greedy proposal: for each site $s$ we choose the locally best edit
+$c_s^\star$ and its energy change $\Delta_s$, then apply the $N$ most negative edits in parallel. The
+chain stops when no negative $\Delta_s$ remain or when $V_\theta(x)$ drops below a reference energy
+level $\mathbb{E}_{p_{\mathrm{data}}}[V_\theta(x)]$, which we estimate and cache during training.
+This update is accepted with probability $1$.
+
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[>=Latex, font=\small]
+
+% ---------------- Panel box ----------------
+\def\W{11.2}
+\def\H{4.9}
+\node[font=\small\bfseries] at (\W/2,\H-0.20)
+{Discrete, geometry-aware energy-based proposal (local edits)};
+
+% ---------------- Center + shells ----------------
+\coordinate (xhat) at (3.8,1.55);
+
+\pgfmathsetmacro{\rOne}{0.85}
+\pgfmathsetmacro{\rTwo}{1.35}
+\pgfmathsetmacro{\rThr}{1.85}
+
+\draw[gray!75, dashed, line width=0.7pt] (xhat) circle[radius=\rOne];
+\draw[gray!60, dashed, line width=0.7pt] (xhat) circle[radius=\rTwo];
+\draw[gray!50, dashed, line width=0.7pt] (xhat) circle[radius=\rThr];
+\node[gray!60, font=\scriptsize, align=center] at ($(xhat)+(-2.15,1.20)$)
+{cost isolines\\$c_{\mathrm{loc}}(x,y)=\mathrm{const}$};
+
+\node[gray!80, font=\scriptsize\bfseries] at ($(xhat)+(115:\rOne)+(0.06,-0.24)$) {1 flip};
+\node[gray!75, font=\scriptsize\bfseries] at ($(xhat)+(115:\rTwo)+(0.06,-0.26)$) {2 flips};
+\node[gray!70, font=\scriptsize\bfseries] at ($(xhat)+(115:\rThr)+(0.06,-0.28)$) {3 flips};
+
+\filldraw[black, fill=orange!85] (xhat) circle (2.2pt);
+\node[font=\scriptsize, anchor=north east] at ($(xhat)+(-0.06,-0.12)$) {$\hat{x}$};
+\node[gray!75, font=\scriptsize\bfseries, anchor=west] at ($(xhat)+(0.12,-0.02)$) {stay};
+
+% ---------------- Gradient direction ----------------
+\pgfmathsetmacro{\gdeg}{30} % degrees
+\coordinate (gend) at ($(xhat)+(\gdeg:3.05)$);
+\draw[->, ultra thick, green!60!black] (xhat) -- (gend)
+  node[below right, xshift=0pt, yshift=-6pt, font=\small\bfseries]
+  {$-\nabla_{\hat{x}} V_\theta(\hat{x})$};
+
+% ---------------- Dot area encodes probability ----------------
+% schematic score on a candidate shell: exp( A r cos(theta-g) - B r^2 )
+\pgfmathsetmacro{\A}{2.0}  % gradient tilt strength (visual)
+\pgfmathsetmacro{\B}{1.0}  % locality decay (visual)
+
+% max over shells at angle = gdeg
+\pgfmathsetmacro{\sOne}{exp(\A*\rOne - \B*\rOne*\rOne)}
+\pgfmathsetmacro{\sTwo}{exp(\A*\rTwo - \B*\rTwo*\rTwo)}
+\pgfmathsetmacro{\sThr}{exp(\A*\rThr - \B*\rThr*\rThr)}
+\pgfmathsetmacro{\smax}{max(\sOne,max(\sTwo,\sThr))}
+
+% radius mapping: area ~ p  -> radius ~ sqrt(p)
+\pgfmathsetmacro{\radMin}{0.35}   % pt
+\pgfmathsetmacro{\radScale}{2.25} % pt
+
+\newcommand{\DrawRing}[3]{%
+  % #1 radius, #2 list of angles, #3 fill color
+  \foreach \ang in {#2} {%
+    \pgfmathsetmacro{\score}{exp(\A*#1*cos(\ang-\gdeg) - \B*#1*#1)}%
+    \pgfmathsetmacro{\p}{\score/\smax}%
+    \pgfmathsetmacro{\rad}{\radMin + \radScale*sqrt(\p)}%
+    \filldraw[black, fill=#3] ($(xhat)+(\ang:#1)$) circle[radius=\rad pt];
+  }%
+}
+
+% candidates on quantized cost shells (schematic)
+\DrawRing{\rOne}{0,30,60,90,120,150,180,210,240,270,300,330}{blue!75}
+\DrawRing{\rTwo}{15,45,75,105,135,165,195,225,255,285,315,345}{blue!55}
+\DrawRing{\rThr}{0,45,90,135,180,225,270,315}{blue!35}
+
+% ---------------- Minimal legend + equation ----------------
+\node[draw, rounded corners, fill=white, inner sep=3pt,
+      font=\scriptsize, anchor=north]
+  at (\W/2,\H-0.55)
+{$q_\theta(x\to y)\propto \exp\!\Big((\hat{y}-\hat{x})^\top \big(-\beta\nabla_{\hat{x}} V_\theta(\hat{x})\big)+\lambda_c (\hat{y}-\hat{x})^\top \nabla_{\hat{x}} c_{\mathrm{loc}}(\hat{x},\hat{y})\Big)$};
+
+\node[font=\small, anchor=west] at (6.65,3.25)
+{dot area $\propto\, q_\theta(x\to y)$};
+
+\end{tikzpicture}%
+}
+\caption{Proposal scoring for local graph edits. Dot area encodes $q_\theta(x\to y)$ on approximately regular cost shells; gradient alignment increases weight while the locality penalty suppresses larger edits. If the proposal stays at the origin, we resample to encourage exploration and reduce stagnation. Unequal weights yield different node/edge step sizes.}
+\label{fig:proposal-middle-softmax-alpha-half}
+\end{figure}
+
+
+
+\paragraph{Mixing-regime acceptance.}
+In the mixing regime we accept the stochastic proposal with Metropolis--Hastings probability:
+\begin{equation}\label{eq:mh-accept}
+\begin{aligned}
+\alpha(x,y)
+&=\min\!\left(1,\frac{\pi_\theta(y)\,q_\theta(y\to x)}{\pi_\theta(x)\,q_\theta(x\to y)}\right),\\
+\end{aligned}
+\end{equation}
+with $\pi_\theta(x)\propto \exp\!\left(-V_\theta(x)\right)$. This choice
+enforces detailed balance:
+\begin{equation}\label{eq:mh-detailed-balance}
+\pi_\theta(x)\,q_\theta(x\to y)\,\alpha(x,y)
+=
+\pi_\theta(y)\,q_\theta(y\to x)\,\alpha(y,x),
+\end{equation}
+so $\pi_\theta$ is stationary for the mixing dynamics~\citep{metropolis1953equation,hastings1970monte}.
+The locality term ties the sampler directly to the same quadratic form induced by the graph cost, while
+dropping the permutation search is justified by the locality of edits under a fixed labeling.
+
+\paragraph{Sampling proposals (implementation).}\label{sec:sampling-proposals}
+We use gradient-informed proposals on the discrete graph space
+\(x=(x_i, x_{ij})_{i\in\mathcal{V},\,i<j}\), with target density
+\(\pi_\theta(x)\propto \exp\!\left(-V_\theta(x)\right)\).
+We allow an effective inverse temperature \(\beta_{\mathrm{mh}}\) in the MH ratio below
+(\(\beta_{\mathrm{mh}}=1\) for the base model).
+Let \(g^X=\nabla_X V_\theta(x)\) and \(g^E=\nabla_E V_\theta(x)\) denote gradients
+with respect to the one-hot node and edge embeddings, and define the symmetrized
+edge gradient \(g^{E,\mathrm{sym}}_{ij}=\tfrac{1}{2}(g^E_{ij}+g^E_{ji})\).
+
+\paragraph{Factorized proposal (multi-site).}
+We sample all nodes and undirected edges independently from categorical logits
+\begin{equation}
+\ell_i^X(c)= -\beta_{\mathrm{prop}}\big(g^X_{i,c}-g^X_{i,x_i}\big)-\lambda_X\,\mathbf{1}[c\ne x_i],
+\end{equation}
+\begin{equation}
+\ell_{ij}^E(c)= -\beta_{\mathrm{prop}}\big(g^{E,\mathrm{sym}}_{ij,c}-g^{E,\mathrm{sym}}_{ij,x_{ij}}\big)
+-\lambda_E\,\mathbf{1}[c\ne x_{ij}],
+\end{equation}
+so the full proposal factorizes as
+\begin{equation}
+\begin{aligned}
+q_{\beta_{\mathrm{prop}}}(x\to y)
+&=
+\prod_{i\in\mathcal{V}}\mathrm{Cat}\!\left(y_i;\mathrm{softmax}(\ell_i^X)\right)\\
+&\quad\times\prod_{i<j}\mathrm{Cat}\!\left(y_{ij};\mathrm{softmax}(\ell_{ij}^E)\right).
+\end{aligned}
+\end{equation}
+The current class has logit \(0\) (the \textit{stay} option), while \(\lambda_X,\lambda_E\) penalize changes.
+
+\paragraph{\gls{mh} refinement (single beta).}
+For the standard DLangevin proposal we set \(\beta_{\mathrm{prop}}=\beta_{\mathrm{mh}}=\beta\) and accept
+\begin{equation}
+\begin{aligned}
+\alpha(x,y)
+&=\min\!\{1,\exp(\Delta(x,y))\},\\
+\Delta(x,y)
+&=-\beta_{\mathrm{mh}}\big(V_\theta(y)-V_\theta(x)\big)
++\log\frac{q_{\beta_{\mathrm{prop}}}(y\to x)}{q_{\beta_{\mathrm{prop}}}(x\to y)}.
+\end{aligned}
+\end{equation}
+
+\paragraph{Two-betas simulated annealing.}
+We decouple the proposal temperature and target temperature by using
+\(\beta_{\mathrm{prop}}\) in the logits above, while \(\beta_{\mathrm{mh}}\) controls the MH ratio.
+Optionally, \(\beta_{\mathrm{mh}}\) is annealed across MCMC steps:
+\begin{equation}
+\beta_{\mathrm{mh}}(s)=
+\begin{cases}
+\beta_{\mathrm{mh}}^{\mathrm{init}}+\Delta\beta\,\dfrac{s}{S_{\mathrm{anneal}}-1}, & 0\le s<S_{\mathrm{anneal}},\\[6pt]
+\beta_{\mathrm{mh}}^{\mathrm{final}}, & s\ge S_{\mathrm{anneal}}.
+\end{cases}
+\end{equation}
+where \(\Delta\beta=\beta_{\mathrm{mh}}^{\mathrm{final}}-\beta_{\mathrm{mh}}^{\mathrm{init}}\).
+
+\paragraph{Do-nothing resampling and proposal diffusion.}
+If the independently sampled proposal equals the current state (all sites \textit{stay}),
+we resample after softening the logits to increase randomness:
+\(\beta_{\mathrm{prop}}\leftarrow\rho\,\beta_{\mathrm{prop}}\),
+\(\lambda_X\leftarrow\rho\,\lambda_X\),
+\(\lambda_E\leftarrow\rho\,\lambda_E\) with \(0<\rho<1\).
+We repeat this a bounded number of times; if no change occurs, we keep the current
+state and accumulate the \textit{stay} probability in \(\log q\). The reverse
+transition uses the same resampling rule, preserving the MH ratio.

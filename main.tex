@@ -1,0 +1,106 @@
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+
+% hyperref makes hyperlinks in the resulting PDF.
+\usepackage{hyperref}
+
+% Attempt to make hyperref and algorithmic work together better:
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+% Use the following line for the initial blind version submitted for review:
+\usepackage{icml2026}
+
+% For preprint, use
+% \usepackage[preprint]{icml2026}
+
+% If accepted, instead use the following line for the camera-ready submission:
+% \usepackage[accepted]{icml2026}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{bbm}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{mdframed}
+\usepackage[nameinlink]{cleveref}
+\usepackage{tikz}
+\usepackage[acronym]{glossaries}
+
+\input{macros}
+
+% The \icmltitle you define below is probably too long as a header.
+% Therefore, a short form for the running title is supplied here:
+\icmltitlerunning{Graph Energy Matching}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{Graph Energy Matching: Transport-Aligned Energy Models\\for Discrete Structures}
+  \vskip 0.05in
+  {\small\textcolor{red}{\textbullet\ Page limit is 8; we currently exceed it and will move material to the appendix.}}
+  \begin{icmlauthorlist}
+    \icmlauthor{Anonymous}{anon}
+  \end{icmlauthorlist}
+
+\icmlaffiliation{anon}{Anonymous Institution}
+\icmlcorrespondingauthor{Anonymous Author}{anon.email@domain.com}
+
+  \icmlkeywords{Energy-based models, graph generation, optimal transport}
+
+  \vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}  % no special notice (required even if empty)
+
+\begin{abstract}
+We propose Graph Energy Matching (\gls{gem}), an energy-based controllable generative framework for discrete spaces,
+with a particular focus on graphs. \gls{gem} learns a scalar \emph{potential energy} $V_\theta$ that
+(i) transports a simple reference distribution using symmetry-aware graph matchings and
+(ii) refines the energy near data with a contrastive sampling stage. The learned energy is
+graph-isomorphism invariant (invariant to node relabelings). The approach is theoretically grounded within the
+Jordan--Kinderlehrer--Otto gradient-flow view for discrete spaces. A single scalar field captures data
+likelihood structure while enabling geometry-aware discrete sampling. For sampling, \gls{gem} uses multi-site discrete
+proposals: energy differences are linearized using $\nabla V_\theta$ and large edits are
+suppressed by a locality penalty derived from the same graph cost used for matching, yielding
+efficient exploration. We evaluate our approach on molecular graph generation in both unconditional
+and challenging conditional settings targeting drug-like properties.\textcolor{red}{[Results are Work In Progress (WiP): unconditional FCD is SOTA; conditional results look SOTA, but we will report final metrics after a systematic evaluation.]}
+\end{abstract}
+
+
+
+
+
+
+%MAIN TEXT
+\input{sections/introduction}
+\input{sections/preliminaries}
+\input{sections/gem}
+\input{sections/training}
+\input{sections/experiments}
+\input{sections/discussion}
+
+%BIBLIOGRAPHY
+\bibliographystyle{icml2026}
+\bibliography{main}
+
+%APPENDIX
+\appendix
+\input{sections/appendix/appendix_matching}
+\input{sections/appendix/appendix_flow_weighting}
+\input{sections/appendix/appendix_geodesic_details}
+\input{sections/appendix/appendix_manifold_refinement}
+\input{sections/appendix/appendix_invariance}
+\input{sections/appendix/appendix_baselines}
+\input{sections/appendix/appendix_sampling}
+\input{sections/appendix/appendix_hyperparams}
+\input{sections/appendix/appendix_experimental_setup}
+\end{document}

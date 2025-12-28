@@ -1,0 +1,45 @@
+\section{Training objectives}
+\label{sec:training}
+
+\paragraph{Minibatch coupling.}
+Given minibatches $x_0 \sim p_0$ and $x_{\text{data}} \sim p_{\text{data}}$, we match samples using a
+permutation-invariant approximation to the fused GW-type graph cost $c(x_0,x_{\text{data}})$
+(Section~\ref{sec:gem} and Appendix~\ref{app:matching}), obtaining a pairing map $T$ induced by the
+minibatch coupling. Each data graph $x_{\text{data}}$ is paired with a source graph $T(x_{\text{data}})$;
+denote their embeddings by $\widehat{T(x_{\text{data}})}$ and $\hat{x}_{\text{data}}$. Define the
+displacement in the embedding space as $v=\hat{x}_{\text{data}}-\widehat{T(x_{\text{data}})}$.
+We sample a \emph{discrete} interpolant $x_t$ by independently choosing each node/edge from the
+endpoint graphs. For every site $s$ (node or edge),
+\begin{equation}
+x_{t,s}\sim \mathrm{Cat}\!\left(t\,\mathbf{e}(x_{\text{data},s}) + (1-t)\,\mathbf{e}(T(x_{\text{data}})_s)\right),
+\quad t\sim\Unif([0,1]),
+\end{equation}
+where $\mathbf{e}(\cdot)$ denotes the one-hot vector in the categorical domain of site $s$. Let
+$\hat{x}_t$ be the embedding of $x_t$ via $\phi_i,\phi_{ij}$ (Section~\ref{sec:gem}); we use it only
+to evaluate $\nabla_{\hat{x}} V_\theta(\hat{x}_t)$.
+
+\paragraph{Objectives.}
+We use a flow-matching loss and an energy refinement term:
+\begin{align}
+\mathcal{L}_{\text{flow}}(\theta)
+&=
+\mathbb{E}_{(T(x_{\text{data}}),x_{\text{data}})\sim\tilde{\gamma},\,t\sim\Unif([0,1])}\left[
+\|-\nabla_{\hat{x}} V_\theta(\hat{x}_t)-v\|_2^2
+\right],\\
+\mathcal{L}_{\text{ER}}(\theta)
+&=
+\mathbb{E}_{x\sim p_{\text{data}}}[V_\theta(x)]
+-\mathbb{E}_{\tilde{x}\sim \text{sg}\,p_\theta}[V_\theta(\tilde{x})].
+\end{align}
+Relaxations of the transport objective near $t=1$ are discussed in Appendix~\ref{app:flow-weighting}.
+We minimize
+\begin{equation}
+\min_\theta\;
+\mathcal{L}_{\text{flow}}(\theta)
++\lambda_{\text{ER}}\,
+\mathcal{L}_{\text{ER}}(\theta).
+\end{equation}
+We use a warm-up of $N_{\mathrm{warmup}}$ iterations with only $\mathcal{L}_{\text{flow}}$ before
+turning on $\mathcal{L}_{\text{ER}}$, following the continuous formulation~\citep{balcerak2025energy};
+the same intuition carries over to the discrete case by yielding better negatives closer to the data
+manifold.

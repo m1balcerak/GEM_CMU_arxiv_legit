@@ -1,0 +1,30 @@
+\section{Discussion}
+GEM keeps inference-time control compositional by adding new constraints and objectives as energy terms,
+and we demonstrate this in the conditional generation experiments (Section~\ref{sec:experiments}). The sampler is
+connected to locally balanced schemes through a linearized energy change, but uses gradients rather than
+full high-dimensional differences. The explicit energy and relative likelihoods enable new diagnostics,
+including geodesic analysis between molecules and HP calibration based on likelihood ratios.
+
+\section{Ablations}
+We will do ablations here. \textcolor{red}{[WiP]}
+
+\section{Future directions}
+GEM naturally extends to 3D molecule generation by using a strong graph prior and composing it with
+geometric constraints at inference time, which can improve fidelity and conditional control while
+keeping the prior plug-and-play. The energy formulation exposes relative likelihoods that can guide
+scalable inference-time refinement and extra constraints without retraining, and the discriminators
+are no longer tied to a specific forward process. Advances in equivariant architectures translate
+cleanly to energy-based setups through invariant mappings, making the energy itself naturally
+invariant. The sampler already overcomes a key bottleneck for energy-based models by delivering
+high-quality samples, suggesting room for further scaling and constraint stacking to drive
+scientific discovery.
+Generalization can be studied through the learned relative likelihoods by holding out subsets of the
+dataset and analyzing how energy rankings extrapolate to unseen regions or attribute bands, offering
+new diagnostics beyond sample quality alone.
+
+\section{Conclusion}
+We introduced GEM, a Graph Energy Matching framework that learns a single explicit potential for
+graph generation while directly modeling relative likelihoods. Because control is implemented by
+adding energies, GEM accommodates new constraints at inference time without being tied to a fixed
+forward process, enabling flexible and compositional conditioning. The resulting sampler achieves
+high-quality samples while keeping the model interpretable through its energy landscape.

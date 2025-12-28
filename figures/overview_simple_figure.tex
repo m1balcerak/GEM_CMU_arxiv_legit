@@ -1,0 +1,60 @@
+\begin{figure*}[t]
+\centering
+
+% Okabe–Ito palette
+\definecolor{otColor}{RGB}{230,159,0}   % orange: OT
+\definecolor{mhColor}{RGB}{0,114,178}   % blue:   MH
+\tikzset{state/.style={circle,draw,minimum size=11mm,inner sep=0pt}}
+
+\begin{tikzpicture}[>=Stealth, every node/.style={font=\small}, node distance=1.7cm]
+
+% Transport phase nodes (orange shade)
+\node[state,fill=orange!20]                    (pi0b) {$\pi_{0}$};
+\node[state,fill=orange!20,right=of pi0b]      (pi1b) {$\pi_{1}$};
+\node[right=of pi1b]                           (dots1b) {$\dots$};
+\node[state,fill=orange!20,right=of dots1b]    (pikb) {$\pi_{k}$};
+
+% Phase-transition divider
+\draw[densely dashed,line width=1.2pt] ($(pikb.east)+(0.10,0.95)$) -- ($(pikb.east)+(0.10,-0.95)$);
+
+% Mixing phase nodes (blue shade)
+\node[right=1.2cm of pikb]                       (dots2b) {$\dots$};
+\node[state,fill=blue!15,right=1.0cm of dots2b]  (pidatab) {$\pi_{\text{data}}$};
+\node[right=2mm of pidatab]                      (eqb) {$=$};
+\node[state,fill=blue!15,right=2mm of eqb]       (pistb) {$\pi_{\theta}$};
+
+% Transport arrows
+\draw[->,very thick,draw=otColor,shorten <=7pt,shorten >=7pt] (pi0b) -- (pi1b);
+\draw[->,very thick,draw=otColor,shorten <=7pt,shorten >=7pt] (pi1b) -- (dots1b);
+\draw[->,very thick,draw=otColor,shorten <=7pt,shorten >=7pt] (dots1b) -- (pikb);
+
+% MH arrows
+\draw[->,very thick,draw=mhColor,shorten <=7pt,shorten >=7pt] (pikb) -- (dots2b);
+\draw[->,very thick,draw=mhColor,shorten <=7pt,shorten >=7pt] (dots2b) -- (pidatab);
+
+% Annotation for gradient-informed transport
+\node[below=10pt of dots1b,align=center,font=\scriptsize]
+      {greedy discrete proposals on samples\\(direction $-\nabla_x V_{\theta}(x)$ $\leftrightarrow$ transport map direction)};
+
+
+% Annotation for discrete proposals + MH
+\node[below=10pt of dots2b,align=center,font=\scriptsize,xshift=36pt]
+      {local, geometry-aware, $\nabla_x V_\theta(x)$-informed jumps\\+ MH acceptance};
+
+% Phase annotations
+\node[align=center,above=1mm of pi1b]
+      {\textbf{Optimal Transport Phase}\\[-1pt]\scriptsize samples far from data manifold: $V_{\theta}(x) \gg V_{\text{data}}^{\text{mean}}$};
+
+\node[align=center,above=1mm of pidatab]
+      {\textbf{Mixing Phase}\\[-1pt]\scriptsize samples near data manifold: $V_{\theta}(x) \sim V_{\text{data}}^{\text{mean}}$};
+
+% Self-loop at stationary state
+\draw[->,thick,draw=mhColor]
+  ($(pistb.east)+(2pt,3pt)$) arc[start angle=160,end angle=-160,radius=8pt];
+
+\end{tikzpicture}
+
+\caption{Illustration of GEM sampling, a two-phase MCMC method. Sampling alternates between a transport phase, where gradient-informed, greedy proposals rapidly move samples toward regions of high probability, and a mixing phase employing MH acceptance to ensure correct stationary distribution and efficient mixing between modes. \textbf{Color key:} transport (\textcolor{otColor}{orange}), MH (\textcolor{mhColor}{blue}).}
+
+\label{fig:sampling-regimes}
+\end{figure*}

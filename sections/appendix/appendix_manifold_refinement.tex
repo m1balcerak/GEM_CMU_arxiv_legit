@@ -1,0 +1,43 @@
+\section{Energy refinement objective derivation}\label{app:energy-refinement}
+
+Let the model density be
+\begin{equation}
+p_\theta(x)=\frac{e^{-E_\theta(x)}}{Z_\theta},
+\qquad
+Z_\theta=\int e^{-E_\theta(x)}\,\mathrm{d}x.
+\end{equation}
+Maximum likelihood estimation solves
+\begin{equation}
+\theta^\star=\arg\max_\theta\;\mathbb{E}_{x\sim p_{\text{data}}}\big[\log p_\theta(x)\big]
+\;\;\Longleftrightarrow\;\;
+\theta^\star=\arg\min_\theta\;\mathcal{J}(\theta),
+\end{equation}
+with
+\begin{equation}
+\mathcal{J}(\theta):=-\mathbb{E}_{p_{\text{data}}}\big[\log p_\theta(x)\big]
+=\mathbb{E}_{p_{\text{data}}}\big[E_\theta(x)\big]+\log Z_\theta.
+\end{equation}
+Taking gradients gives
+\begin{equation}
+\nabla_\theta \mathcal{J}(\theta)
+=\mathbb{E}_{p_{\text{data}}}\big[\nabla_\theta E_\theta(x)\big]
++\nabla_\theta \log Z_\theta,
+\end{equation}
+and
+\begin{equation}
+\begin{aligned}
+\nabla_\theta \log Z_\theta
+&=\frac{1}{Z_\theta}\nabla_\theta Z_\theta
+=\frac{1}{Z_\theta}\int e^{-E_\theta(x)}\big(-\nabla_\theta E_\theta(x)\big)\,\mathrm{d}x\\
+&=-\mathbb{E}_{p_\theta}\big[\nabla_\theta E_\theta(x)\big].
+\end{aligned}
+\end{equation}
+Therefore,
+\begin{equation}
+\boxed{
+\nabla_\theta \mathcal{J}(\theta)
+=\mathbb{E}_{p_{\text{data}}}\big[\nabla_\theta E_\theta(x)\big]
+-\mathbb{E}_{p_\theta}\big[\nabla_\theta E_\theta(x)\big]
+}.
+\end{equation}
+In our setting, \(E_\theta(x)=V_\theta(x)\), and we approximate the model expectation with samples from the current chain while stopping gradients through the sampler, yielding the energy refinement objective in the main text.
