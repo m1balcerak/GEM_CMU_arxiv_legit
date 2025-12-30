@@ -17,6 +17,11 @@ Table~\ref{tab:uncond} reports unconditional metrics on MOSES and QM9. Sampling 
 by energy trajectories in Figure~\ref{fig:moses-energy-trajectory}, and
 Figure~\ref{fig:moses-data-init-metrics} tracks validity/uniqueness/novelty for data-initialized
 chains.
+Validity, novelty, and uniqueness can be corrected post-hoc via rejection sampling, a simple
+procedure; diffusion-style baselines in Table~\ref{tab:uncond} already reach reasonable V.U.(N)
+levels. What rejection cannot fix is FCD: we are best on QM9 and, more importantly, on MOSES with
+more than 50\% improvement, at the same computational time as DeFoG (reproduced from the authors'
+setup).
 \begin{table*}[t]
 \centering
 \small
