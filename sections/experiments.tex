@@ -13,30 +13,52 @@ Experimental setup details are summarized in Appendix~\ref{app:exp-setup}.
 
 \subsection*{Unconditional generation}
 \paragraph{MOSES: Baselines vs.\ GEM.}
-Table~\ref{tab:moses-uncond} reports unconditional MOSES metrics. Sampling dynamics are summarized
+Table~\ref{tab:uncond} reports unconditional metrics on MOSES and QM9. Sampling dynamics are summarized
 by energy trajectories in Figure~\ref{fig:moses-energy-trajectory}, and
 Figure~\ref{fig:moses-data-init-metrics} tracks validity/uniqueness/novelty for data-initialized
 chains.
-\begin{table}[H]
+\begin{table*}[t]
 \centering
 \small
-\begin{tabular}{lccc}
+\begin{minipage}{0.48\textwidth}
+\centering
+\textbf{MOSES} ($\sim$1.5M molecules)\\[2pt]
+\begin{tabular}{lcc}
 \toprule
-Model & FCD $\downarrow$ & V.U.N. $\uparrow$ & NCC $\downarrow$ \\
+Model & FCD $\downarrow$ & V.U.N. $\uparrow$ \\
 \midrule
-Training set (MOSES) & 0.254 & 0.0 & X \\
+Training set (MOSES) & 0.254 & 0.0 \\
 \midrule
-GraphEBM~\citep{liu2021graphebm} & 6.15 & 3.63 & X \\
-DeFoG$^*$~\citep{qinmadeira2024defog} & 1.95 & 85.38 & X \\
-VFM~\citep{eijkelboom2024vfm} & 2.15 & X & X \\
+GraphEBM~\citep{liu2021graphebm} & 6.15 & 3.63 \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & 1.95 & 82.21 \\
+VFM~\citep{eijkelboom2024vfm} & 2.15 & X \\
 \midrule
-\textbf{GEM (Ours)} & \textbf{0.83} & \textbf{87.80} & \textbf{X} \\
+\textbf{GEM (Ours)} & \textbf{0.83} & \textbf{87.80} \\
 \bottomrule
 \end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}{0.48\textwidth}
+\centering
+\textbf{QM9} ($\sim$0.15M molecules)\\[2pt]
+\begin{tabular}{lcc}
+\toprule
+Model & FCD $\downarrow$ & V.U. $\uparrow$ \\
+\midrule
+Training set (QM9) & 0.04 & X \\
+\midrule
+GraphEBM~\citep{liu2021graphebm} & 7.16 & 8.07 \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & 0.81 & 96.81 \\
+VFM~\citep{eijkelboom2024vfm} & 0.44 & \textbf{99.81} \\
+\midrule
+\textbf{GEM (Ours)} & \textbf{0.31} & 98.51 \\
+\bottomrule
+\end{tabular}
+\end{minipage}
 \vspace{0.15cm}
-\caption{\footnotesize MOSES unconditional generation. FCD is Fr\'echet ChemNet Distance (lower is better); $V.U.N.$ is the valid-unique-novel fraction (higher is better); NCC is the mean number of connected components (lower is better). $^*$ reproduced. 10k generations. \textcolor{red}{[WiP]}}
-\label{tab:moses-uncond}
-\end{table}
+\caption{\footnotesize Unconditional generation on MOSES and QM9. FCD is Fr\'echet ChemNet Distance (lower is better); $V.U.N.$ (MOSES) and $V.U.$ (QM9) are valid-unique-novel and valid-unique fractions (higher is better). $^*$ reproduced. 10k generations. Same wallclock for generation. \textcolor{red}{[WiP]}}
+\label{tab:uncond}
+\end{table*}
 
 \begin{figure}[t]
 \centering
@@ -213,20 +235,21 @@ Figure~\ref{fig:mol-trajectories}.
 \caption{\footnotesize Data-initialized metrics over MCMC steps: validity rises with sampling, novelty rebounds, and uniqueness stays at 100\%. Dashed line indicates 0.90. \textcolor{red}{[WiP]}}
 \label{fig:moses-data-init-metrics}
 \end{figure}
-Figure~\ref{fig:moses-wallclock-vun} summarizes V.U.N.\ fraction versus wallclock on MOSES.
+Figure~\ref{fig:moses-vun-steps} summarizes V.U.N.\ versus inference steps on MOSES; the wallclock
+view is in Appendix~\ref{app:moses-wallclock}.
 
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}[scale=0.95]
-  \draw[->, thick] (0,0) -- (6.2,0) node[midway, below=8pt] {wallclock};
+  \draw[->, thick] (0,0) -- (6.2,0) node[midway, below=8pt] {inference steps};
   \draw[->, thick] (0,0) -- (0,3.2);
   \node[rotate=90] at (-0.95,1.6) {V.U.N.};
 
   % Title
-  \node[font=\small\bfseries] at (3.1,3.55) {MOSES generation vs wallclock};
+  \node[font=\small\bfseries] at (3.1,3.55) {MOSES V.U.N. vs inference steps};
 
   % Axes ticks
-  \foreach \x/\lab in {0/0,1.5/1,3.0/2,4.5/3,6.0/4} {
+  \foreach \x/\lab in {0/0,1.43/300,2.86/600,4.29/900,5.72/1200,6.20/1300} {
     \draw (\x,0) -- (\x,-0.06);
     \node[below, font=\scriptsize] at (\x,-0.06) {\lab};
   }
@@ -234,47 +257,44 @@ Figure~\ref{fig:moses-wallclock-vun} summarizes V.U.N.\ fraction versus wallcloc
     \draw (0,\y) -- (-0.08,\y);
     \node[left, font=\scriptsize] at (-0.1,\y) {\lab};
   }
+  % Best V.U.N. ticks
+  \draw[blue!70!black] (0,2.800) -- (-0.08,2.800);
+  \node[left, font=\scriptsize, text=blue!70!black, yshift=1pt] at (-0.1,2.800) {0.875};
+  \draw[orange!90!black] (0,2.651) -- (-0.08,2.651);
+  \node[left, font=\scriptsize, text=orange!90!black, yshift=-1pt] at (-0.1,2.651) {0.828};
 
-  % Placeholder text
-  \node[gray!60, font=\small\bfseries] at (3.1,1.92) {Work in Progress};
+  % Best V.U.N. references
+  \draw[blue!70!black, dashed, line width=0.7pt] (0,2.800) -- (6.2,2.800);
+  \draw[orange!90!black, dashed, line width=0.7pt] (0,2.651) -- (6.2,2.651);
+
+  % GEM (blue)
+  \draw[blue!70!black, thick] plot coordinates {
+    (0.000,0.000) (0.048,0.505) (0.477,2.164) (1.431,2.680) (1.908,2.679)
+    (2.385,2.710) (2.862,2.734) (3.338,2.783) (4.292,2.759) (5.246,2.773)
+    (6.200,2.800)
+  };
+
+  % DeFoG (orange)
+  \draw[orange!90!black, thick] plot coordinates {
+    (0.048,0.102) (0.477,2.574) (1.431,2.631) (2.385,2.651)
+    (3.338,2.649) (4.292,2.630) (5.246,2.629)
+  };
 
   % Legend
-  \begin{scope}[shift={(4.0,0.55)}]
-    \draw[fill=white, draw=gray!35] (0,0) rectangle (2.0,1.1);
-    \draw[green!70!black, thick] (0.15,0.85) -- (0.6,0.85);
-    \node[anchor=west, font=\scriptsize] at (0.7,0.85) {GEM (ours)};
-    \draw[orange!80!black, thick] (0.15,0.55) -- (0.6,0.55);
-    \node[anchor=west, font=\scriptsize] at (0.7,0.55) {DeFoG};
-    \draw[blue!70!black, thick] (0.15,0.25) -- (0.6,0.25);
-    \node[anchor=west, font=\scriptsize] at (0.7,0.25) {VFM};
+  \begin{scope}[shift={(3.75,0.6)}]
+    \draw[fill=white, draw=gray!35] (0,0) rectangle (2.6,0.9);
+    \draw[blue!70!black, thick] (0.15,0.62) -- (0.6,0.62);
+    \node[anchor=west, font=\scriptsize] at (0.7,0.62) {GEM V.U.N.};
+    \draw[orange!90!black, thick] (0.15,0.32) -- (0.6,0.32);
+    \node[anchor=west, font=\scriptsize] at (0.7,0.32) {DeFoG V.U.N.};
   \end{scope}
 \end{tikzpicture}
-\caption{\footnotesize Validity, uniqueness, and novelty (V.U.N.) fraction versus wallclock on MOSES. \textcolor{red}{[WiP]}}
-\label{fig:moses-wallclock-vun}
+\caption{\footnotesize Fraction of valid, unique, and novel (V.U.N.) versus inference steps on MOSES, on a single H100 with 1k samples and batch size 128. DeFoG uses denoising steps and GEM uses MCMC steps. Dashed lines indicate best V.U.N.\ results for GEM and DeFoG. \textcolor{red}{[WiP]}}
+\label{fig:moses-vun-steps}
 \end{figure}
 
 \paragraph{QM9.}
-Table~\ref{tab:qm9-uncond} reports unconditional QM9 metrics.
-\begin{table}[H]
-\centering
-\small
-\begin{tabular}{lccc}
-\toprule
-Model & FCD $\downarrow$ & V.U. $\uparrow$ & NCC $\downarrow$ \\
-\midrule
-Training set (QM9) & 0.04 & X & X \\
-\midrule
-GraphEBM~\citep{liu2021graphebm} & 7.16 & 8.07 & X \\
-DeFoG$^*$~\citep{qinmadeira2024defog} & 0.81 & X & X \\
-VFM~\citep{eijkelboom2024vfm} & 0.44 & \textbf{99.81} & 1.11 \\
-\midrule
-\textbf{GEM (Ours)} & \textbf{0.31} & 99.01 & \textbf{1.04} \\
-\bottomrule
-\end{tabular}
-\vspace{0.15cm}
-\caption{\footnotesize QM9 unconditional generation. FCD is Fr\'echet ChemNet Distance (lower is better); $V.U.$ is the valid-unique fraction (higher is better); NCC is the mean number of connected components (lower is better). $^*$ reproduced. 10k generations. \textcolor{red}{[WiP]}}
-\label{tab:qm9-uncond}
-\end{table}
+QM9 unconditional metrics are reported in Table~\ref{tab:uncond}.
 
 \subsection*{Conditional generation}
 We evaluate conditional generation under molecular property constraints (e.g., logP, QED).
