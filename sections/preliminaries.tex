@@ -121,5 +121,8 @@ noise-dependent conditional signal along the path (e.g., a regressor/classifier 
 $p_t(y\mid x_t)$). In discrete settings this often requires training a dedicated predictor on noised
 latents across noise levels (or separate conditional/unconditional models for CFG), adding extra
 training and coupling the control mechanism to the chosen noising process~\citep{schiff2024discreteguidance,eijkelboom2025controlledvfm}.
+Moreover, property prediction on heavily corrupted graphs is ill-posed because bonds and valences are
+often invalid, so regressor accuracy naturally degrades away from clean samples; we quantify this
+effect in Appendix~\ref{app:regressor-noise}.
 A concise conceptual summary of the baselines used in our experiments is provided in
 Appendix~\ref{app:baselines}.

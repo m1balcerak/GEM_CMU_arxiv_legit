@@ -33,7 +33,10 @@
 \usepackage{mdframed}
 \usepackage[nameinlink]{cleveref}
 \usepackage{tikz}
+\usepackage{pgfplots}
 \usepackage[acronym]{glossaries}
+
+\pgfplotsset{compat=1.18}
 
 \input{macros}
 
@@ -103,6 +106,7 @@ and challenging conditional settings targeting drug-like properties.\textcolor{r
 \input{sections/appendix/appendix_baselines}
 \input{sections/appendix/appendix_sampling}
 \input{sections/appendix/appendix_wallclock}
+\input{sections/appendix/appendix_property_regressor_noise}
 \input{sections/appendix/appendix_hyperparams}
 \input{sections/appendix/appendix_experimental_setup}
 \end{document}
