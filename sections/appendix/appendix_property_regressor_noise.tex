@@ -4,7 +4,7 @@
 Property regressors are trained on clean molecules, so evaluating them on noisy graphs is
 ill-posed when bonds and valences are corrupted. We measure the degradation by computing test
 MAE as a function of noise level $t$ along the diffusion path. We use 10k test molecules and
-report three representative properties (SAS, logS, QED). As expected, errors are large for
+report four representative properties (SAS, logS, logP, QED). As expected, errors are large for
 noisy inputs and only become reasonable at $t=1$ (fully denoised, clean samples).
 Figure~\ref{fig:regressor-noise} summarizes the trend.
 
@@ -17,7 +17,7 @@ Figure~\ref{fig:regressor-noise} summarizes the trend.
   xlabel={$t$ (noise level)},
   ylabel={Test MAE},
   xmin=0, xmax=1,
-  ymin=0, ymax=0.5,
+  ymin=0, ymax=0.8,
   grid=both,
   grid style={line width=0.3pt, draw=gray!30},
   tick label style={font=\scriptsize},
@@ -44,6 +44,16 @@ Figure~\ref{fig:regressor-noise} summarizes the trend.
   (1.0, 0.0594828186)
 };
 \addlegendentry{logS}
+
+\addplot+[thick, purple!70!black] coordinates {
+  (0.0, 0.7199128723)
+  (0.2, 0.7027059631)
+  (0.4, 0.6730399292)
+  (0.6, 0.6084385590)
+  (0.8, 0.4690968353)
+  (1.0, 0.0782309380)
+};
+\addlegendentry{logP}
 
 \addplot+[thick, green!60!black] coordinates {
   (0.0, 0.0852654148)
