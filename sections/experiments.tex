@@ -45,6 +45,7 @@ DeFoG$^*$~\citep{qinmadeira2024defog} & 1.95 & 82.21 \\
 \midrule
 Training set (MOSES) & 0.09 & 0.0 \\
 GraphEBM$^*$~\citep{liu2021graphebm} & 6.11 & 32.16 \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & X & X \\
 \textbf{GEM (Ours)} & 0.76 & 89.81 \\
 \bottomrule
 \end{tabular}
@@ -68,6 +69,7 @@ DeFoG$^*$~\citep{qinmadeira2024defog} & 0.81 & 96.81 & 0.36 \\
 \midrule
 Training set (QM9) & 0.04 & 100 & 0 \\
 GraphEBM$^*$~\citep{liu2021graphebm} & 5.15 & 21.53 & 0.48 \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & X & X & X \\
 \textbf{GEM (Ours)} & 0.31 & 98.51 & 0.51 \\
 \bottomrule
 \end{tabular}
@@ -247,6 +249,11 @@ We train a property regressor \(f_\phi\) for differentiable guidance and define 
 energy \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
 then run the same proposal kernel $q_\theta(x\!\to\!y)$ using \(-\nabla_x V_\theta^{\mathrm{cond}}(x)\),
 with the Metropolis--Hastings acceptance ratio modified accordingly.
+For diffusion baselines, ``editing'' cannot start from clean data as in EBM chains, so we inject
+noise by mixing each node/edge with probability $\tau$ from a noise sample and with probability
+$1-\tau$ from the data. The hyperparameter $\tau\in[0,1]$ controls the noise level and is tuned for
+the best V.U.N.\ of each baseline (Appendix~\ref{app:hyperparams}). We then run the time/noise-conditioned
+denoising process starting from the corresponding noise level (i.e., the step indexed by $\tau$).
 Table~\ref{tab:moses-conditional} reports single-property conditioning results, and
 Table~\ref{tab:moses-conditional-joint} summarizes joint constraints. GEM maintains strong validity,
 uniqueness, and novelty while improving constraint satisfaction relative to baselines.
@@ -282,6 +289,7 @@ DeFoG$^*$~\citep{qinmadeira2024defog} & 27.55 & 62.85 & X & X & X & X \\
 \midrule
 Training set (MOSES) & 0 & 0 & 0 & 0 & 0 & 0 \\
 GraphEBM~\citep{liu2021graphebm} & X & X & X & X & X & X \\
+DeFoG~\citep{qinmadeira2024defog} & X & X & X & X & X & X \\
 \textbf{GEM (Ours)} & \textbf{77.01} & \textbf{86.01} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} \\
 \bottomrule
 \end{tabular}
@@ -316,6 +324,7 @@ DeFoG$^*$~\citep{qinmadeira2024defog} & X & X & X & X \\
 \midrule
 Training set (MOSES) & 0 & 0 & 0 & 0 \\
 GraphEBM~\citep{liu2021graphebm} & X & X & X & X \\
+DeFoG~\citep{qinmadeira2024defog} & X & X & X & X \\
 \textbf{GEM (Ours)} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} \\
 \bottomrule
 \end{tabular}
