@@ -11,6 +11,11 @@ all three. Sampling in discrete graph generation can start from \textbf{uniform 
 from the empirical histogram, node/edge types uniform), \textbf{marginal noise} (node count from the
 empirical histogram, node/edge types from empirical marginals), or \textbf{training data} (samples
 drawn from the training set), and can be run with diffusion/CTMC dynamics or MCMC.
+For diffusion baselines, ``editing'' cannot start from clean data as in EBM chains, so we inject
+noise by mixing each node/edge with probability $\tau$ from a noise sample and with probability
+$1-\tau$ from the data. The hyperparameter $\tau\in[0,1]$ controls the noise level and is tuned for
+the best V.U.N.\ of each baseline (Appendix~\ref{app:hyperparams}). We then run the time/noise-conditioned
+denoising process starting from the corresponding noise level (i.e., the step indexed by $\tau$).
 MOSES is a large-scale molecular dataset (about 1.5M molecules), while QM9 is a smaller benchmark
 focused on low-mass molecules. We use MOSES to stress-test sample quality at scale and QM9 as a
 compact setting for comparison.
@@ -249,11 +254,6 @@ We train a property regressor \(f_\phi\) for differentiable guidance and define 
 energy \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
 then run the same proposal kernel $q_\theta(x\!\to\!y)$ using \(-\nabla_x V_\theta^{\mathrm{cond}}(x)\),
 with the Metropolis--Hastings acceptance ratio modified accordingly.
-For diffusion baselines, ``editing'' cannot start from clean data as in EBM chains, so we inject
-noise by mixing each node/edge with probability $\tau$ from a noise sample and with probability
-$1-\tau$ from the data. The hyperparameter $\tau\in[0,1]$ controls the noise level and is tuned for
-the best V.U.N.\ of each baseline (Appendix~\ref{app:hyperparams}). We then run the time/noise-conditioned
-denoising process starting from the corresponding noise level (i.e., the step indexed by $\tau$).
 Table~\ref{tab:moses-conditional} reports single-property conditioning results, and
 Table~\ref{tab:moses-conditional-joint} summarizes joint constraints. GEM maintains strong validity,
 uniqueness, and novelty while improving constraint satisfaction relative to baselines.
