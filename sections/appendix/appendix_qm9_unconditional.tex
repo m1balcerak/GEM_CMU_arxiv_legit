@@ -2,8 +2,7 @@
 \label{app:qm9-uncond}
 
 Table~\ref{tab:uncond-qm9} reports unconditional metrics on QM9. V.U. is saturated around 100\%, and
-lower FCD is often paid for with decreased novelty or larger networks that can memorize the training
-set.
+lower FCD is often paid for with decreased novelty or larger networks that can memorize the dataset.
 
 \begin{table}[t]
 \centering
@@ -11,28 +10,28 @@ set.
 \textbf{QM9} ($\sim$0.15M molecules)\\[2pt]
 \begin{tabular}{lccc}
 \toprule
-Model & V.U. $\uparrow$ & Novelty $\uparrow$ & FCD $\downarrow$ \\
+Method & V.U. $\uparrow$ & Novelty $\uparrow$ & FCD $\downarrow$ \\
 \midrule
-\multicolumn{4}{l}{\textit{Denoising (uniform or marginal noise initialization)}} \\
+Training samples (QM9) & 100 & 0 & 0.04 \\
+\midrule
+\multicolumn{4}{l}{\textit{Source Distribution Initialization}} \\
 \midrule
 GraphEBM~\citep{liu2021graphebm} & 8.07 & 0.62 & 7.16 \\
 VFM~\citep{eijkelboom2024vfm} & \textbf{99.81} & 0.49 & \textbf{0.44} \\
 DeFoG$^*$~\citep{qinmadeira2024defog} & 96.81 & 0.36 & 0.81 \\
 \textbf{GEM (Ours)} & 97.11 & \textbf{0.63} & 0.92 \\
 \midrule
-\multicolumn{4}{l}{\textit{Editing (data distribution initialization)}} \\
+\multicolumn{4}{l}{\textit{Target Distribution Initialization}} \\
 \midrule
-Training set (QM9) & 100 & 0 & 0.04 \\
 GraphEBM$^*$~\citep{liu2021graphebm} & 21.53 & 0.48 & 5.15 \\
-DeFoG$^*$~\citep{qinmadeira2024defog} & X & X & X \\
 \textbf{GEM (Ours)} & \textbf{98.51} & \textbf{0.51} & \textbf{0.31} \\
 \bottomrule
 \end{tabular}
-\caption{\footnotesize Unconditional generation on QM9, grouped by initialization. FCD is
-Fr\'echet ChemNet Distance (lower is better); $V.U.$ is the valid-unique fraction and novelty is the
-unique-valid fraction not in the training split (higher is better). $^*$ reproduced with the same
-backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs use a small energy head. Architecture details are
-in Appendix~\ref{app:perm-invariance}. 10k generations. Budget of 1000 inference steps.
-\textcolor{red}{[WiP]}}
+\caption{\footnotesize Unconditional generation on QM9, grouped by initialization. \gls*{fcd}
+measures the distance between generated and QM9 molecules in ChemNet feature space (lower is better);
+$V.U.$ is the valid-unique fraction and novelty is the unique-valid fraction not in the QM9 split
+(higher is better). $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs
+use a small energy head. Architecture details are in Appendix~\ref{app:perm-invariance}. 10k
+generations. Budget of 750 inference steps. \textcolor{red}{[WiP]}}
 \label{tab:uncond-qm9}
 \end{table}

@@ -71,7 +71,7 @@
 
 \begin{minipage}{\textwidth}
 \centering
-\makebox[\textwidth][l]{\normalsize\textbf{Samples Perspective:}}\\[4pt]
+\makebox[\textwidth][l]{\raisebox{0.15cm}{\normalsize\textbf{Samples Perspective:}}}\\[2.5pt]
 \begingroup
 \setlength{\tabcolsep}{1.27pt}
 \renewcommand{\arraystretch}{0.82}
@@ -89,7 +89,7 @@
 \includegraphics[width=\samplewidth]{figures/overview_samples/r13_c02.png} &
 \includegraphics[width=\samplewidth]{figures/overview_samples/r13_c03.png} &
 \includegraphics[width=\samplewidth]{figures/overview_samples/r13_c04.png} &
-\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c05.png} \\
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c07.png} \\
 \end{tabular}}%
 \hspace*{\samplerightshift}\begin{tabular}[t]{cccccccc}
 \sampleplaceholder & \sampleplaceholder & \sampleplaceholder & \sampleplaceholder & \sampleplaceholder &
@@ -97,17 +97,18 @@
 \includegraphics[width=\samplewidth]{figures/overview_samples/r06_c08.png} &
 \includegraphics[width=\samplewidth]{figures/overview_samples/r06_c10.png} \\[-0.5em]
 \sampleplaceholder & \sampleplaceholder & \sampleplaceholder & \sampleplaceholder & \sampleplaceholder &
-\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c07.png} &
 \includegraphics[width=\samplewidth]{figures/overview_samples/r13_c08.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c09.png} &
 \includegraphics[width=\samplewidth]{figures/overview_samples/r13_c10.png} \\
 \end{tabular}
 \endgroup
 \end{minipage}
 \tikz[remember picture, overlay]\node (samples-bottom) {};
 \begin{tikzpicture}[remember picture, overlay]
-\draw[densely dashed,line width=1.2pt] (divider-top) -- (divider-top |- samples-bottom);
+\draw[densely dashed,line width=1.2pt] (divider-top) -- ($(divider-top)!0.95!(divider-top |- samples-bottom)$);
 \end{tikzpicture}
 
+\vspace{-0.15cm}
 \caption{\textbf{GEM Sampling Overview.} Two perspectives on GEM sampling: a probability-distribution
 view (top) of the two-phase MCMC process, and a samples view (bottom) showing molecular trajectories
 from MOSES. Sampling alternates between a transport phase, where gradient-informed,

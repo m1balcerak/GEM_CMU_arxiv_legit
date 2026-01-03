@@ -35,8 +35,8 @@ $V_\theta(\sigma\!\cdot\!x)=V_\theta(x)$ and the Gibbs distribution
 $\pi_\theta(x)\propto \exp(-V_\theta(x))$ is also invariant.
 
 
-\paragraph{Local quadratic cost.}
-We use the quadratic discrepancy
+\paragraph{Local embedding discrepancy and fused GW cost.}
+We measure local discrepancies in the embedding by
 \begin{equation}\label{eq:loc-cost}
 c_{\mathrm{loc}}(x,y)
 \;\coloneqq\;
@@ -44,24 +44,22 @@ w_X\sum_{i\in\mathcal{V}}\|\hat{x}_i-\hat{y}_i\|^2
 +
 w_E\sum_{i<j}\|\hat{x}_{ij}-\hat{y}_{ij}\|^2,
 \end{equation}
-where $w_X,w_E>0$ are scaling parameters for node and edge contributions. This defines the local
-geometry used throughout and is accurate when edits are small.
-
-\paragraph{Fused GW cost.}
-To compare graphs while preserving node-permutation symmetry, we lift the local cost to a fused
-discrepancy:
-\begin{equation}\label{eq:monge-fgw}
-c_{\mathrm{MongeFGW}}(x,y)
+with $w_X,w_E>0$ scaling node and edge contributions. To compare graphs in a permutation-invariant way,
+we lift this local geometry to a fused discrepancy by optimizing over node relabelings:
+\begin{equation}\label{eq:fgw-cost}
+c_{\mathrm{FGW}}(x,y)
 =
 \min_{\sigma\in S_n}
 \left\{
 c_{\mathrm{loc}}(x,\sigma\!\cdot\!y)
 \right\}.
 \end{equation}
-Exact computation is NP-hard (it reduces to a graph matching / quadratic assignment problem), so we use
-approximations tailored to context and assumptions; see Appendix~\ref{app:matching}.
+This quantity is used for minibatch pairings and transport supervision. Exact evaluation is NP-hard
+(graph matching / quadratic assignment), so we employ fast approximations suited to the source and
+task (Appendix~\ref{app:matching}). In the sampler we avoid re-solving for $\sigma$ at every step and
+instead use $c_{\mathrm{loc}}$ as a local surrogate for small edits.
 
-\paragraph{JKO and first-order conditions.}
+\paragraph{JKO on graph spaces and first-order conditions.}
 We propose a JKO-style objective tailored to graph-induced geometry that preserves Gibbs equilibrium
 for $V_\theta$ while remaining valid on discrete spaces. We avoid time-indexed dynamics---cumbersome for
 discrete jumps and prone to do-nothing moves---by using a spatial two-regime $\varepsilon(x)$ and a
@@ -80,7 +78,7 @@ $W_2^2$ in the continuous setting. We write the functional as
 &\quad+\sum_{x\in\Omega} \varepsilon(x)\,\pi(x)\log\pi(x).
 \end{align}
 A pointwise stationarity condition along coupled samples $(x,y)$ from an optimal coupling,
-with $c=c_{\mathrm{MongeFGW}}$, can be written
+with $c=c_{\mathrm{FGW}}$, can be written
 (up to an additive constant) as
 \begin{equation}
 \frac{1}{2\eta}\,c(x,y)
@@ -116,7 +114,7 @@ explicit time index, making it natural for jump processes and MCMC chains.
 
 \paragraph{Minibatch couplings and transport-aligned supervision.}
 Given minibatches from a source $p_0$ and the data $p_{\mathrm{data}}$, we compute a permutation-invariant
-minibatch matching using an approximation to $c_{\mathrm{MongeFGW}}$, obtaining a coupling
+minibatch matching using an approximation to $c_{\mathrm{FGW}}$, obtaining a coupling
 $\tilde{\gamma}$ and a pairing map $T$ that assigns each data graph $x_{\mathrm{data}}$ to a source
 graph $T(x_{\mathrm{data}})$. In molecule-like settings we use node-matching alignments (with light
 edge tie-breakers), while for a uniform source we use fast histogram signatures; see
@@ -137,9 +135,9 @@ $\varepsilon(x)=1$ in the mixing regime, so the discrete chain targets the unit-
 density. 
 
 \paragraph{Local cost for proposals.}
-The matching cost $c_{\mathrm{MongeFGW}}$ includes a minimization over permutations.
+The matching cost $c_{\mathrm{FGW}}$ includes a minimization over permutations.
 In the sampler we propose \emph{local edits} around the current labeling, so we do not re-solve for
-$\sigma$ at each step. We use the quadratic surrogate $c_{\mathrm{loc}}$ from \eqref{eq:loc-cost}, which
+$\sigma$ at each step. We use the local surrogate $c_{\mathrm{loc}}$ from \eqref{eq:loc-cost}, which
 serves as a local approximation when edits are small. We use two proposal mechanisms, separated by
 regime: a stochastic geometry-aware kernel in the mixing regime and a deterministic greedy descent in
 the transport regime.
@@ -174,7 +172,7 @@ q_\theta(x\to y)
 \Big)
 \end{aligned}
 \end{equation}
-The explicit form for the quadratic cost in \eqref{eq:loc-cost} is:
+The explicit form for the local discrepancy in \eqref{eq:loc-cost} is:
 \begin{equation}\label{eq:loc-kernel-explicit}
 \begin{aligned}
 q_\theta(x\to y)

@@ -5,18 +5,14 @@ We report unconditional generation on MOSES in the main text and on QM9 in
 Appendix~\ref{app:qm9-uncond}, conditional generation under property targets (logP, logS, QED), and
 geodesic comparisons in the learned space. By convention on QM9 we report novelty separately from
 $V.U.$: the dataset is small and novelty is often far from 1.0, so we include a dedicated novelty
-column to show it is comparable and to avoid biasing FCD there.
+column to show it is comparable and to avoid biasing \gls*{fcd} there.
 We report validity (RDKit-sanitized non-empty SMILES), uniqueness (distinct SMILES among valid),
 novelty (unique valid molecules not in the training split), and $V.U.N.$ for the fraction satisfying
-all three. Sampling in discrete graph generation can start from \textbf{uniform noise} (node count
-from the empirical histogram, node/edge types uniform), \textbf{marginal noise} (node count from the
-empirical histogram, node/edge types from empirical marginals), or \textbf{training data} (samples
-drawn from the training set), and can be run with diffusion/CTMC dynamics or MCMC.
-For diffusion baselines, ``editing'' cannot start from clean data as in EBM chains, so we inject
-noise by mixing each node/edge with probability $\tau$ from a noise sample and with probability
-$1-\tau$ from the data. The hyperparameter $\tau\in[0,1]$ controls the noise level and is tuned for
-the best V.U.N.\ of each baseline (Appendix~\ref{app:hyperparams}). We then run the time/noise-conditioned
-denoising process starting from the corresponding noise level (i.e., the step indexed by $\tau$).
+all three. We also report \gls*{fcd}, a ChemNet feature-space distance between generated and MOSES
+molecules (lower is better). Sampling in discrete graph generation can start from \textbf{uniform noise}
+(node count from the empirical histogram, node/edge types uniform), \textbf{marginal noise} (node count
+from the empirical histogram, node/edge types from empirical marginals), or \textbf{training data}
+(samples drawn from the training set), and can be run with diffusion/CTMC dynamics or MCMC.
 MOSES is a large-scale molecular dataset (about 1.5M molecules), while QM9 is a smaller benchmark
 focused on low-mass molecules. We use MOSES to stress-test sample quality at scale and QM9 as a
 compact setting for comparison.
@@ -29,42 +25,43 @@ Appendix~\ref{app:qm9-uncond} (Table~\ref{tab:uncond-qm9}).
 Figure~\ref{fig:moses-data-init-metrics} reports annealed-proposal metrics on MOSES, and
 Figure~\ref{fig:moses-vun-steps} summarizes V.U.N.\ versus inference steps on MOSES.
 Validity, novelty, and uniqueness can be improved post-hoc via rejection sampling, so diffusion
-baselines in Table~\ref{tab:uncond-moses} already reach strong V.U.N. FCD is less amenable to such
-correction; we see a clear gap on MOSES.
+baselines in Table~\ref{tab:uncond-moses} already reach strong V.U.N. \gls*{fcd} is less amenable to
+such correction; we see a clear gap on MOSES.
 \begin{table}[t]
 \centering
 \small
 \textbf{MOSES} ($\sim$1.5M molecules)\\[2pt]
 \begin{tabular}{lcc}
 \toprule
-Model & V.U.N. $\uparrow$ & FCD $\downarrow$ \\
+Method & V.U.N. $\uparrow$ & \gls*{fcd} $\downarrow$ \\
 \midrule
-\multicolumn{3}{l}{\textit{Denoising (uniform or marginal noise initialization)}} \\
+Training samples (MOSES) & 0.0 & 0.09 \\
+\midrule
+\multicolumn{3}{l}{\textit{Source Distribution Initialization}} \\
 \midrule
 GraphEBM$^*$~\citep{liu2021graphebm} & 8.12 & 24.21 \\
 VFM$^*$~\citep{eijkelboom2024vfm} & 81.68 & 2.15 \\
 DeFoG$^*$~\citep{qinmadeira2024defog} & 82.21 & 1.95 \\
 \textbf{GEM (Ours)} & \textbf{87.26} & (running...) \\
 \midrule
-\multicolumn{3}{l}{\textit{Editing (data distribution initialization)}} \\
+\multicolumn{3}{l}{\textit{Target Distribution Initialization}} \\
 \midrule
-Training set (MOSES) & 0.0 & 0.09 \\
 GraphEBM$^*$~\citep{liu2021graphebm} & 32.16 & 17.11 \\
-DeFoG$^*$~\citep{qinmadeira2024defog} & X & X \\
-\textbf{GEM (Ours)} & 89.81 & \textbf{0.76} \\
+\textbf{GEM (Ours)} & \textbf{89.81} & \textbf{0.76} \\
 \bottomrule
 \end{tabular}
 \caption{\footnotesize \textbf{Unconditional Generation.} MOSES results grouped by initialization.
-FCD is Fr\'echet ChemNet Distance (lower is better); $V.U.N.$ is the valid-unique-novel fraction
-(higher is better). $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs
-use a small energy head. Architecture details are in Appendix~\ref{app:perm-invariance}. 25k
-generations. Budget of 1000 inference steps. \textcolor{red}{[WiP]}}
+$V.U.N.$ is the valid-unique-novel fraction (higher is better); \gls*{fcd} measures the distance
+between generated and MOSES molecules in ChemNet feature space (lower is better). $^*$ reproduced
+with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs use a small energy head. Architecture
+details are in Appendix~\ref{app:perm-invariance}. 25k generations. Budget of 750 inference steps.
+\textcolor{red}{[WiP]}}
 \label{tab:uncond-moses}
 \end{table}
 
 A schematic of MCMC evolution for GEM on QM9 and MOSES is shown in Appendix~\ref{app:sampling}
 (Figure~\ref{fig:appendix-mcmc-traj}).
-Qualitative geodesic and linear trajectories on MOSES are shown in
+Qualitative GEM energy-weighted (top) and cost-only (bottom) geodesics on MOSES are shown in
 Figure~\ref{fig:mol-trajectories}.
 
 \begin{figure*}[t]
@@ -72,39 +69,37 @@ Figure~\ref{fig:mol-trajectories}.
 \begin{tikzpicture}[scale=1.15]
   % Layout constants
   \def\boxsize{1.4}
-  \def\gap{2.4}
-  \def\rowgap{1.8}
+  \def\gap{2.1}
+  \def\rowgap{2.0}
   \def\arrowlen{0.6}
+  \pgfmathsetmacro{\titlex}{3*\gap + 0.5*\boxsize}
 
-  % Title
-  \node[font=\small\bfseries] at (6.7,2.1) {MOSES Geodesics};
+  % Row labels (above rows)
+  \node[anchor=west, font=\small\bfseries] at (0,\boxsize+0.30) {GEM energy-weighted geodesic:};
+  \node[anchor=west, font=\small\bfseries] at (0,-\rowgap+\boxsize+0.30) {Cost-only geodesic:};
 
-  % Row labels
-  \node[anchor=east, align=center, font=\small\bfseries] at (-0.9,0.5*\boxsize) {$V_\theta(x)$-induced\\(GEM)};
-  \node[anchor=east, font=\small\bfseries] at (-0.9,-\rowgap+0.5*\boxsize) {Linear};
-
-  % Row 1 (QM9)
-  \foreach \i/\lab in {0/A,1/B,2/C,3/D,4/E} {
+  % Row 1 (cost + V)
+  \foreach \i/\lab in {0/A,1/B,2/C,3/D,4/E,5/F,6/G} {
     \draw[thick] (\i*\gap,0) rectangle ++(\boxsize,\boxsize);
     \node[font=\small\bfseries] at (\i*\gap+0.5*\boxsize,0.5*\boxsize) {\lab};
   }
-  \foreach \i in {0,1,2,3} {
+  \foreach \i in {0,1,2,3,4,5} {
     \draw[->, thick]
       ({\i*\gap + 0.5*(\gap+\boxsize) - 0.5*\arrowlen}, {0.5*\boxsize})
       -- ({\i*\gap + 0.5*(\gap+\boxsize) + 0.5*\arrowlen}, {0.5*\boxsize});
   }
-  % Row 2 (Linear)
-  \foreach \i/\lab in {0/A,1/B,2/C,3/D,4/E} {
+  % Row 2 (cost-only)
+  \foreach \i/\lab in {0/A,1/B,2/C,3/D,4/E,5/F,6/G} {
     \draw[thick] (\i*\gap,-\rowgap) rectangle ++(\boxsize,\boxsize);
     \node[font=\small\bfseries] at (\i*\gap+0.5*\boxsize,-\rowgap+0.5*\boxsize) {\lab};
   }
-  \foreach \i in {0,1,2,3} {
+  \foreach \i in {0,1,2,3,4,5} {
     \draw[->, thick]
       ({\i*\gap + 0.5*(\gap+\boxsize) - 0.5*\arrowlen}, {-\rowgap+0.5*\boxsize})
       -- ({\i*\gap + 0.5*(\gap+\boxsize) + 0.5*\arrowlen}, {-\rowgap+0.5*\boxsize});
   }
 \end{tikzpicture}
-\caption{\footnotesize \textbf{Geodesic vs Linear Paths.} Molecule trajectories along continuous paths for MOSES. Top row: spline/geodesic path induced by $V_\theta(x)$ using the local metric $c_{\mathrm{loc}}$; bottom row: linear interpolation baseline. Boxes indicate samples along the continuous path. \textcolor{red}{[WiP]}}
+\caption{\footnotesize \textbf{GEM Energy-Weighted vs Cost-Only Geodesics.} Molecule trajectories along continuous geodesic paths for MOSES. Top row: GEM energy-weighted geodesic; bottom row: cost-only geodesic. Boxes indicate samples along the continuous path. \textcolor{red}{[WiP]}}
 \label{fig:mol-trajectories}
 \end{figure*}
 
@@ -249,36 +244,37 @@ cached.
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{lcc cc cc}
 \toprule
-Model
+Method
 & \multicolumn{2}{c}{Condition: logP $>$ 1.5}
 & \multicolumn{2}{c}{Condition: logS $>$ 1.5}
 & \multicolumn{2}{c}{Condition: QED $>$ 0.6} \\
 \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
-& C.V.U.N. $\uparrow$ & V.U.N. $\uparrow$
-& C.V.U.N. $\uparrow$ & V.U.N. $\uparrow$
-& C.V.U.N. $\uparrow$ & V.U.N. $\uparrow$ \\
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$ \\
 \midrule
-\multicolumn{7}{l}{\textit{Denoising (uniform or marginal noise initialization)}} \\
+Training samples (MOSES) & 0 & 0 & 0 & 0 & 0 & 0 \\
+\midrule
+\multicolumn{7}{l}{\textit{Source Distribution Initialization}} \\
 \midrule
 GraphEBM~\citep{liu2021graphebm} & X & X & X & X & X & X \\
 G-VFM~\citep{eijkelboom2025controlledvfm} & 21.16 & 60.64 & X & X & X & X \\
 DeFoG$^*$~\citep{qinmadeira2024defog} & 27.55 & 62.85 & X & X & X & X \\
-\textbf{GEM (Ours)} & 65.53 & 82.15 & X & X & X & X \\
+\textbf{GEM (Ours)} & \textbf{65.53} & \textbf{82.15} & X & X & X & X \\
 \midrule
-\multicolumn{7}{l}{\textit{Editing (data distribution initialization)}} \\
+\multicolumn{7}{l}{\textit{Target Distribution Initialization}} \\
 \midrule
-Training set (MOSES) & 0 & 0 & 0 & 0 & 0 & 0 \\
 GraphEBM~\citep{liu2021graphebm} & X & X & X & X & X & X \\
-DeFoG~\citep{qinmadeira2024defog} & X & X & X & X & X & X \\
 \textbf{GEM (Ours)} & \textbf{77.01} & \textbf{86.01} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} \\
 \bottomrule
 \end{tabular}
 \endgroup
 \vspace{0.15cm}
-\caption{\footnotesize \textbf{Single-Property Conditioning.} MOSES conditional generation under
-property constraints. $C.V.U.N.$ is the fraction meeting the condition and $V.U.N.$ is the
-valid-unique-novel marginal fraction. All entries are percentages. $V$, $U$, and $N$ denote
-validity, uniqueness, and novelty, respectively. $^*$ reproduced. \textcolor{red}{[WiP]}}
+\caption{\footnotesize \textbf{Property Conditioning.} MOSES conditional generation under
+property constraints. $C.V.U.N.$ is the fraction meeting the condition and valid, unique, novel
+simultaneously; $C.V.U.$ is the fraction meeting the condition and valid, unique. All entries are
+percentages. $C$, $V$, $U$, and $N$ denote condition satisfaction, validity, uniqueness, and novelty,
+respectively. $^*$ reproduced. \textcolor{red}{[WiP]}}
 \label{tab:moses-conditional}
 \end{table*}
 
@@ -288,35 +284,37 @@ validity, uniqueness, and novelty, respectively. $^*$ reproduced. \textcolor{red
 \textbf{MOSES} ($\sim$1.5M molecules)\\[2pt]
 \begingroup
 \setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{lcccc}
+\begin{tabular}{lcccccc}
 \toprule
-Model
-& \multicolumn{2}{c}{\begin{tabular}{c}Joint condition: \\logP $>$ 1.5 \& logS $>$ 1.5\end{tabular}}
-& \multicolumn{2}{c}{\begin{tabular}{c}Joint condition: \\logS $>$ 1.5 \& QED $>$ 0.6\end{tabular}} \\
-\cmidrule(lr){2-3} \cmidrule(lr){4-5}
-& C.V.U.N. $\uparrow$ & V.U.N. $\uparrow$
-& C.V.U.N. $\uparrow$ & V.U.N. $\uparrow$ \\
+Method
+& \multicolumn{2}{c}{\begin{tabular}{c}logP $>$ 1.5 \& logS $>$ 1.5\end{tabular}}
+& \multicolumn{2}{c}{\begin{tabular}{c}logS $>$ 1.5 \& QED $>$ 0.6\end{tabular}}
+& \multicolumn{2}{c}{\begin{tabular}{c}logP $>$ 1.5 \& QED $>$ 0.6\end{tabular}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$ \\
 \midrule
-\multicolumn{5}{l}{\textit{Denoising (uniform or marginal noise initialization)}} \\
+Training samples (MOSES) & 0 & 0 & 0 & 0 & 0 & 0 \\
 \midrule
-GraphEBM~\citep{liu2021graphebm} & X & X & X & X \\
-G-VFM~\citep{eijkelboom2025controlledvfm} & X & X & X & X \\
-DeFoG$^*$~\citep{qinmadeira2024defog} & X & X & X & X \\
-\textbf{GEM (Ours)} & X & X & X & X \\
+\multicolumn{7}{l}{\textit{Source Distribution Initialization}} \\
 \midrule
-\multicolumn{5}{l}{\textit{Editing (data distribution initialization)}} \\
+GraphEBM~\citep{liu2021graphebm} & X & X & X & X & X & X \\
+G-VFM~\citep{eijkelboom2025controlledvfm} & X & X & X & X & X & X \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & X & X & X & X & X & X \\
+\textbf{GEM (Ours)} & X & X & X & X & X & X \\
 \midrule
-Training set (MOSES) & 0 & 0 & 0 & 0 \\
-GraphEBM~\citep{liu2021graphebm} & X & X & X & X \\
-DeFoG~\citep{qinmadeira2024defog} & X & X & X & X \\
-\textbf{GEM (Ours)} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} \\
+\multicolumn{7}{l}{\textit{Target Distribution Initialization}} \\
+\midrule
+GraphEBM~\citep{liu2021graphebm} & X & X & X & X & X & X \\
+\textbf{GEM (Ours)} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} \\
 \bottomrule
 \end{tabular}
 \endgroup
 \vspace{0.15cm}
-\caption{\footnotesize \textbf{Joint Constraints.} MOSES conditional generation with joint
+\caption{\footnotesize \textbf{Multi-Property Conditioning.} MOSES conditional generation with joint
 constraints on (logP, logS) and (logS, QED). All entries are percentages for $C.V.U.N.$ and
-$V.U.N.$. $^*$ reproduced. \textcolor{red}{[WiP]}}
+$C.V.U.$. $^*$ reproduced. \textcolor{red}{[WiP]}}
 \label{tab:moses-conditional-joint}
 \end{table*}
 
@@ -327,7 +325,7 @@ We sample 1000 molecules, form same-size pairs, and for each pair construct (i) 
 geodesic and (ii) a linear interpolation along the coupling. From the continuous path we obtain
 discrete graphs via categorical sampling, then compute the average validity along each path.
 We plot average validity versus the endpoint distance induced by the matching cost
-$c_{\mathrm{MongeFGW}}$ (node-matching, Appendix~\ref{app:matching}), comparing geodesic vs.\ linear;
+$c_{\mathrm{FGW}}$ (node-matching, Appendix~\ref{app:matching}), comparing geodesic vs.\ linear;
 see Figure~\ref{fig:geodesic-validity}. Qualitative paths are shown in
 Figure~\ref{fig:mol-trajectories}.
 We report the length ratio $L_{\mathrm{geo}}/L_{\mathrm{lin}}$ and the correlation between energy and
@@ -372,14 +370,13 @@ Additional details are in Appendix~\ref{app:geodesic-details}.
   \node[left, font=\scriptsize] at (-0.1,3.2) {100};
 
   \draw[gray!60, dashed] (0,0) -- (5.2,0);
-  \draw[gray!60, dashed] (0,3.2) -- (5.2,3.2);
 
   \draw[thick, blue] plot[smooth] coordinates {(0.0,2.8) (1.2,2.5) (2.2,2.0) (3.2,1.6) (4.2,1.3)};
-  \draw[thick, gray, dashed] plot[smooth] coordinates {(0.0,1.1) (1.2,0.9) (2.2,0.7) (3.2,0.6) (4.2,0.5)};
+  \draw[thick, gray] plot[smooth] coordinates {(0.0,1.1) (1.2,0.9) (2.2,0.7) (3.2,0.6) (4.2,0.5)};
 
-  \node[blue, anchor=west] at (3.1,2.5) {geodesic};
-  \node[gray, anchor=west] at (3.1,2.0) {linear};
+  \node[blue, anchor=west] at (1.9,2.8) {GEM energy-weighted geodesic};
+  \node[gray, anchor=west] at (1.9,2.3) {cost-only geodesic};
 \end{tikzpicture}
-\caption{\footnotesize \textbf{Geodesic Validity.} Expected average validity vs.\ endpoint distance (cost-induced) for geodesic vs.\ linear interpolation. \textcolor{red}{[WiP]}}
+\caption{\footnotesize \textbf{Validity Along Geodesics.} Expected average validity vs.\ endpoint distance (cost-induced) for GEM energy-weighted versus cost-only geodesics. \textcolor{red}{[WiP]}}
 \label{fig:geodesic-validity}
 \end{figure}
