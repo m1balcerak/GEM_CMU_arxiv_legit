@@ -44,7 +44,7 @@ Model & FCD $\downarrow$ & V.U.N. $\uparrow$ \\
 GraphEBM$^*$~\citep{liu2021graphebm} & 6.15 & 8.12 \\
 VFM$^*$~\citep{eijkelboom2024vfm} & 2.15 & 81.68 \\
 DeFoG$^*$~\citep{qinmadeira2024defog} & 1.95 & 82.21 \\
-\textbf{GEM (Ours)} & X & X \\
+\textbf{GEM (Ours)} & X & 87.26 \\
 \midrule
 \multicolumn{3}{l}{\textit{Editing (data distribution initialization)}} \\
 \midrule
@@ -80,7 +80,7 @@ DeFoG$^*$~\citep{qinmadeira2024defog} & X & X & X \\
 \end{tabular}
 \end{minipage}
 \vspace{0.15cm}
-\caption{\footnotesize Unconditional generation on MOSES and QM9, grouped by initialization. FCD is Fr\'echet ChemNet Distance (lower is better); $V.U.N.$ (MOSES) and $V.U.$ (QM9) are valid-unique-novel and valid-unique fractions (higher is better). $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs use a small energy head. Architecture details are in Appendix~\ref{app:perm-invariance}. 10k generations for QM9 and 25k for MOSES. \textcolor{red}{[WiP]}}
+\caption{\footnotesize Unconditional generation on MOSES and QM9, grouped by initialization. FCD is Fr\'echet ChemNet Distance (lower is better); $V.U.N.$ (MOSES) and $V.U.$ (QM9) are valid-unique-novel and valid-unique fractions (higher is better). $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs use a small energy head. Architecture details are in Appendix~\ref{app:perm-invariance}. 10k generations for QM9 and 25k for MOSES. Budget of 1000 inference steps. \textcolor{red}{[WiP]}}
 \label{tab:uncond}
 \end{table*}
 
