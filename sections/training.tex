@@ -12,7 +12,7 @@ We sample a \emph{discrete} interpolant $x_t$ by independently choosing each nod
 endpoint graphs. For every site $s$ (node or edge),
 \begin{equation}
 x_{t,s}\sim \mathrm{Cat}\!\left(t\,\mathbf{e}(x_{\text{data},s}) + (1-t)\,\mathbf{e}(T(x_{\text{data}})_s)\right),
-\quad t\sim\Unif([0,1]),
+\, t\sim\Unif([0,1]),
 \end{equation}
 where $\mathbf{e}(\cdot)$ denotes the one-hot vector in the categorical domain of site $s$. Let
 $\hat{x}_t$ be the embedding of $x_t$ via $\phi_i,\phi_{ij}$ (Section~\ref{sec:gem}); we use it only
