@@ -6,46 +6,58 @@
 \definecolor{mhColor}{RGB}{0,114,178}   % blue:   MH
 \tikzset{state/.style={circle,draw,minimum size=11mm,inner sep=0pt}}
 
-\begin{tikzpicture}[>=Stealth, every node/.style={font=\small}, node distance=1.7cm]
+\begin{minipage}{\textwidth}
+\centering
+\makebox[\textwidth][l]{\normalsize\textbf{Probability Distributions Perspective:}}\\[2pt]
+\begin{tikzpicture}[>=Stealth, every node/.style={font=\small}, node distance=1.7cm, remember picture]
+\def\transportshift{-0.3cm}
+\def\dividercomp{0.3cm}
 
+\begin{scope}[xshift=\transportshift]
 % Transport phase nodes (orange shade)
 \node[state,fill=orange!20]                    (pi0b) {$\pi_{0}$};
 \node[state,fill=orange!20,right=of pi0b]      (pi1b) {$\pi_{1}$};
 \node[right=of pi1b]                           (dots1b) {$\dots$};
 \node[state,fill=orange!20,right=of dots1b]    (pikb) {$\pi_{k}$};
+\coordinate (transport-center) at ($(pi0b)!0.5!(pikb)$);
 
-% Phase-transition divider
-\draw[densely dashed,line width=1.2pt] ($(pikb.east)+(0.10,0.95)$) -- ($(pikb.east)+(0.10,-0.95)$);
+% Transport arrows
+\draw[->,very thick,draw=otColor,shorten <=7.35pt,shorten >=7.35pt] (pi0b) -- (pi1b);
+\draw[->,very thick,draw=otColor,shorten <=7.35pt,shorten >=7.35pt] (pi1b) -- (dots1b);
+\draw[->,very thick,draw=otColor,shorten <=7.35pt,shorten >=7.35pt] (dots1b) -- (pikb);
+
+% Annotation for gradient-informed transport
+\node[below=16pt of transport-center,align=center,font=\scriptsize]
+      {greedy discrete proposals on samples\\(direction $-\nabla_x V_{\theta}(x)$ $\leftrightarrow$ transport map direction)};
+\end{scope}
+
+% Phase-transition divider (extended below with an overlay line)
+\node[coordinate] (dividerx) at ($(pikb.east)+(0.10,0) + (\dividercomp,0)$) {};
+\coordinate (divider-top) at ($(dividerx)+(0,0.95)$);
+\coordinate (divider-bottom) at ($(dividerx)+(0,-0.95)$);
 
 % Mixing phase nodes (blue shade)
-\node[right=1.2cm of pikb]                       (dots2b) {$\dots$};
+\node[right=1.6cm of dividerx]                    (dots2b) {$\dots$};
 \node[state,fill=blue!15,right=1.0cm of dots2b]  (pidatab) {$\pi_{\text{data}}$};
 \node[right=2mm of pidatab]                      (eqb) {$=$};
 \node[state,fill=blue!15,right=2mm of eqb]       (pistb) {$\pi_{\theta}$};
 
-% Transport arrows
-\draw[->,very thick,draw=otColor,shorten <=7pt,shorten >=7pt] (pi0b) -- (pi1b);
-\draw[->,very thick,draw=otColor,shorten <=7pt,shorten >=7pt] (pi1b) -- (dots1b);
-\draw[->,very thick,draw=otColor,shorten <=7pt,shorten >=7pt] (dots1b) -- (pikb);
-
 % MH arrows
-\draw[->,very thick,draw=mhColor,shorten <=7pt,shorten >=7pt] (pikb) -- (dots2b);
+\coordinate (mh-start) at ($(dividerx)+(0.05cm,0)$);
+\draw[->,very thick,draw=mhColor,shorten <=7pt,shorten >=7pt] (mh-start) -- (dots2b);
 \draw[->,very thick,draw=mhColor,shorten <=7pt,shorten >=7pt] (dots2b) -- (pidatab);
-
-% Annotation for gradient-informed transport
-\node[below=10pt of dots1b,align=center,font=\scriptsize]
-      {greedy discrete proposals on samples\\(direction $-\nabla_x V_{\theta}(x)$ $\leftrightarrow$ transport map direction)};
 
 
 % Annotation for discrete proposals + MH
-\node[below=10pt of dots2b,align=center,font=\scriptsize,xshift=36pt]
-      {local, geometry-aware, $\nabla_x V_\theta(x)$-informed jumps\\+ MH acceptance};
+\coordinate (mixing-center) at ($(dots2b)!0.5!(pistb)$);
+\node[below=16pt of mixing-center,align=center,font=\scriptsize]
+      {multi-site, local, geometry-aware, $\nabla_x V_\theta(x)$-informed jumps\\+ MH acceptance};
 
 % Phase annotations
-\node[align=center,above=1mm of pi1b]
+\coordinate (phase-label-y) at ($(pi0b.north)+(0,-0.5mm)$);
+\node[align=center,anchor=south] at (phase-label-y -| transport-center)
       {\textbf{Transport Phase}\\[-1pt]\scriptsize samples far from data manifold: $V_{\theta}(x) \gg V_{\text{data}}^{\text{mean}}$};
-
-\node[align=center,above=1mm of pidatab]
+\node[align=center,anchor=south] at (phase-label-y -| pidatab)
       {\textbf{Mixing Phase}\\[-1pt]\scriptsize samples near data manifold: $V_{\theta}(x) \sim V_{\text{data}}^{\text{mean}}$};
 
 % Self-loop at stationary state
@@ -53,8 +65,56 @@
   ($(pistb.east)+(2pt,3pt)$) arc[start angle=160,end angle=-160,radius=8pt];
 
 \end{tikzpicture}
+\end{minipage}
 
-\caption{\textbf{GEM Sampling Overview.} Illustration of GEM sampling, a two-phase MCMC method. Sampling alternates between a transport phase, where gradient-informed, greedy proposals rapidly move samples toward regions of high probability, and a mixing phase employing MH acceptance to ensure correct stationary distribution and efficient mixing between modes. \textbf{Color key:} transport (\textcolor{otColor}{orange}), MH (\textcolor{mhColor}{blue}).}
+\vspace{0.1cm}
+
+\begin{minipage}{\textwidth}
+\centering
+\makebox[\textwidth][l]{\normalsize\textbf{Samples Perspective:}}\\[4pt]
+\begingroup
+\setlength{\tabcolsep}{1.27pt}
+\renewcommand{\arraystretch}{0.82}
+\newcommand{\samplewidth}{0.104\textwidth}
+\newcommand{\sampleshift}{1.5em}
+\newcommand{\samplerightshift}{1.5em}
+\newcommand{\sampleplaceholder}{\makebox[\samplewidth][c]{}}
+\makebox[0pt][l]{\hspace*{-\sampleshift}\begin{tabular}[t]{ccccc}
+\includegraphics[width=\samplewidth]{figures/overview_samples/r06_c01.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r06_c02.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r06_c03.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r06_c04.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r06_c05.png} \\[-0.5em]
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c01.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c02.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c03.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c04.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c05.png} \\
+\end{tabular}}%
+\hspace*{\samplerightshift}\begin{tabular}[t]{cccccccc}
+\sampleplaceholder & \sampleplaceholder & \sampleplaceholder & \sampleplaceholder & \sampleplaceholder &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r06_c07.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r06_c08.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r06_c10.png} \\[-0.5em]
+\sampleplaceholder & \sampleplaceholder & \sampleplaceholder & \sampleplaceholder & \sampleplaceholder &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c07.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c08.png} &
+\includegraphics[width=\samplewidth]{figures/overview_samples/r13_c10.png} \\
+\end{tabular}
+\endgroup
+\end{minipage}
+\tikz[remember picture, overlay]\node (samples-bottom) {};
+\begin{tikzpicture}[remember picture, overlay]
+\draw[densely dashed,line width=1.2pt] (divider-top) -- (divider-top |- samples-bottom);
+\end{tikzpicture}
+
+\caption{\textbf{GEM Sampling Overview.} Two perspectives on GEM sampling: a probability-distribution
+view (top) of the two-phase MCMC process, and a samples view (bottom) showing molecular trajectories
+from MOSES. Sampling alternates between a transport phase, where gradient-informed,
+greedy proposals rapidly move samples toward regions of high probability, and a mixing phase
+employing MH acceptance to ensure correct stationary distribution and efficient mixing between
+modes. \textbf{Color key:} transport (\textcolor{otColor}{orange}), MH
+(\textcolor{mhColor}{blue}).}
 
 \label{fig:sampling-regimes}
 \end{figure*}
