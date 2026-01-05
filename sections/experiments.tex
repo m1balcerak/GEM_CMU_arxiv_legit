@@ -39,14 +39,14 @@ Training samples (MOSES) & 0.0 & 0.09 \\
 \midrule
 \multicolumn{3}{l}{\textit{Source Distribution Initialization}} \\
 \midrule
-GraphEBM$^*$~\citep{liu2021graphebm} & 8.12 & 24.21 \\
-VFM$^*$~\citep{eijkelboom2024vfm} & 81.68 & 2.15 \\
+GraphEBM$^*$~\citep{liu2021graphebm} & 8.12 & 9.83 \\
+VFM$^*$~\citep{eijkelboom2024vfm} & 81.39 & 2.71 \\
 DeFoG$^*$~\citep{qinmadeira2024defog} & 82.21 & 1.95 \\
-\textbf{GEM (Ours)} & \textbf{87.26} & (running...) \\
+\textbf{GEM (Ours)} & \textbf{85.31} & \textbf{1.79} \\
 \midrule
 \multicolumn{3}{l}{\textit{Target Distribution Initialization}} \\
 \midrule
-GraphEBM$^*$~\citep{liu2021graphebm} & 32.16 & 17.11 \\
+GraphEBM$^*$~\citep{liu2021graphebm} & 32.16 & 7.31 \\
 \textbf{GEM (Ours)} & \textbf{89.81} & \textbf{0.76} \\
 \bottomrule
 \end{tabular}
@@ -54,8 +54,7 @@ GraphEBM$^*$~\citep{liu2021graphebm} & 32.16 & 17.11 \\
 $V.U.N.$ is the valid-unique-novel fraction (higher is better); \gls*{fcd} measures the distance
 between generated and MOSES molecules in ChemNet feature space (lower is better). $^*$ reproduced
 with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs use a small energy head. Architecture
-details are in Appendix~\ref{app:perm-invariance}. 25k generations. Budget of 750 inference steps.
-\textcolor{red}{[WiP]}}
+details are in Appendix~\ref{app:perm-invariance}. 25k generations. Budget of 625 inference steps.}
 \label{tab:uncond-moses}
 \end{table}
 
