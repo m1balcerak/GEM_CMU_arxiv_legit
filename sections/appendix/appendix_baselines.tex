@@ -23,3 +23,43 @@ generation via CTMC paths.
 G-VFM~\citep{eijkelboom2025controlledvfm} extends VFM with equivariant conditioning mechanisms to
 support controllable generation, typically by incorporating property guidance into the flow-matching
 framework.
+
+\begin{table*}[t]
+\centering
+\small
+\textbf{MOSES} ($\sim$1.5M molecules)\\[2pt]
+\begingroup
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccccc}
+\toprule
+Method
+& \multicolumn{2}{c}{\begin{tabular}{c}logP $>$ 1.5 \& logS $>$ 1.5\end{tabular}}
+& \multicolumn{2}{c}{\begin{tabular}{c}logS $>$ 1.5 \& QED $>$ 0.6\end{tabular}}
+& \multicolumn{2}{c}{\begin{tabular}{c}logP $>$ 1.5 \& QED $>$ 0.6\end{tabular}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$ \\
+\midrule
+Training samples (MOSES) & 0 & 0 & 0 & 0 & 0 & 0 \\
+\midrule
+\multicolumn{7}{l}{\textit{Source Distribution Initialization}} \\
+\midrule
+GraphEBM~\citep{liu2021graphebm} & X & X & X & X & X & X \\
+G-VFM~\citep{eijkelboom2025controlledvfm} & X & X & X & X & X & X \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & X & X & X & X & X & X \\
+\textbf{GEM (Ours)} & X & X & X & X & X & X \\
+\midrule
+\multicolumn{7}{l}{\textit{Target Distribution Initialization}} \\
+\midrule
+GraphEBM~\citep{liu2021graphebm} & X & X & X & X & X & X \\
+\textbf{GEM (Ours)} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} & \textbf{X} \\
+\bottomrule
+\end{tabular}
+\endgroup
+\vspace{0.15cm}
+\caption{\footnotesize \textbf{Multi-Property Conditioning.} MOSES conditional generation with joint
+constraints on (logP, logS) and (logS, QED). All entries are percentages for $C.V.U.N.$ and
+$C.V.U.$. $^*$ reproduced. \textcolor{red}{[WiP]}}
+\label{tab:moses-conditional-joint}
+\end{table*}
