@@ -5,7 +5,7 @@
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{booktabs}
-
+\usepackage{svg}
 % hyperref makes hyperlinks in the resulting PDF.
 \usepackage{hyperref}
 
@@ -48,7 +48,9 @@
 \begin{document}
 
 \twocolumn[
-\icmltitle{Graph Energy Matching:\\ Controllable Graph Generation with Transport‑Aligned Discrete Proposals}
+\icmltitle{Graph Energy Matching:\\
+Transport-Aligned Energy-Based Modeling for Controllable Graph Generation}
+%Controllable(?) Graph Generation with Transport‑Aligned Discrete Proposals}
   \vskip 0.05in
   {\small\textcolor{red}{\textbullet\ Page limit is 8; we currently exceed it and will move material to the appendix.\\
   \textbullet\ ICML abstract 23rd of January, paper 28th of January}}
@@ -67,17 +69,8 @@
 \printAffiliationsAndNotice{}  % no special notice (required even if empty)
 
 \begin{abstract}
-We propose Graph Energy Matching (\gls{gem}), an energy-based controllable generative framework for discrete spaces,
-with a particular focus on graphs. \gls{gem} learns a scalar \emph{potential energy} $V_\theta$ that
-(i) transports a simple reference distribution using symmetry-aware graph matchings and
-(ii) refines the energy near data with a contrastive sampling stage. The learned energy is
-graph-isomorphism invariant (invariant to node relabelings). The approach is theoretically grounded within the
-Jordan--Kinderlehrer--Otto gradient-flow view for discrete spaces. A single scalar field captures data
-likelihood structure while enabling geometry-aware discrete sampling. For sampling, \gls{gem} uses multi-site discrete
-proposals: energy differences are linearized using $\nabla V_\theta$ and large edits are
-suppressed by a locality penalty derived from the same graph cost used for matching, yielding
-efficient exploration. We evaluate our approach on molecular graph generation in both unconditional
-and challenging conditional settings targeting drug-like properties.\textcolor{red}{[Some results are Work In Progress (WiP) - we focus on controlability, however.]}
+
+Energy-based models (EBMs) provide a natural mechanism for controllable generation in discrete domains by composing objectives and constraints into an energy function. However, such methods tend to struggle with poorly constrained energies that lie outside the support of the data  distribution, with a wide fidelity gap between them and the diffusion-based generative models. We introduce Graph Energy Matching (GEM), a controllable generative framework for graphs that makes EBMs competitive for generative modeling in discrete spaces. Specifically, GEM learns a single, permutation-invariant potential for (i) transport-aligned guidance from a simple source distribution to the data distribution, (ii) likelihood refinement in the data manifold. GEM is motivated by a discrete Jordan–Kinderlehrer–Otto perspective and uses permutation-invariant minibatch couplings. Further, GEM employs a two-regime discrete MCMC procedure for sampling. (i) A transport phase that applies gradient-informed multi-site edits to reach high-probability regions rapidly (ii) followed by a Metropolis–Hastings mixing phase with geometry-aware proposals. We show that not only does GEM achieve strong unconditional generation quality on molecular graph benchmarks, but it also enables controlled generation at inference time by augmenting the learned energy with additional constraints.
 \end{abstract}
 
 

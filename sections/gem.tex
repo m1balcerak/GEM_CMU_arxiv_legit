@@ -1,38 +1,99 @@
-\section{Graph Energy Matching (GEM)}
+\section{Graph Energy Matching}
 \label{sec:gem}
-We extend energy matching to graphs by defining (i) a permutation-aware matching cost used to build
-minibatch couplings for $\mathcal{L}_{\mathrm{OT}}$, and (ii) a discrete Gibbs target together with a
-gradient-informed MCMC sampler.
+Graph generation requires handling of discrete variables and permutation invariance. Hence, in this work, we primarily focus on the two following aspects to make energy matching suitable for graphs: a discrete sampling strategy and a permutation-invariant cost for minibatch-OT. For this, we first define the graph notation and introduce JKO in the graph space.
+
+% By introducing a permutation-invariant cost function for minibatch OT as well as sampling strategies for discrete states, we extend Energy Matching to graph structures.
+
+%We extend energy matching to graphs by defining (i) a permutation-aware matching cost %used to build
+%minibatch couplings for $\mathcal{L}_{\mathrm{OT}}$, and (ii) a discrete Gibbs target %together with a
+%gradient-informed MCMC sampler.
 
 \paragraph{Graph representation.}
-We represent a graph with node index set $\mathcal{V}=\{1,\dots,n\}$.
-A configuration consists of categorical node attributes and categorical edge attributes on all pairs.
-Each node $i\in\mathcal{V}$ has a categorical domain $\mathcal{X}_i$ (e.g.\ atom type).
-Each unordered pair $i<j$ is an edge site with domain $\mathcal{X}_{ij}$ that includes a distinguished
-\texttt{NO-BOND} state. The discrete state space is
+A graph of size $n$ is represented by a set of nodes $\mathcal{V}=\{1,\dots,n\}$ and an adjacency matrix $\mathcal{E}$ that represents the node connectivity. Each node $i\in\mathcal{V}$ is a one-hot vector representing node type $ x_i \in \mathcal{X}_i$ (e.g.\ atom type) and each pair $i<j$ corresponds to an edge type $e_{ij} \in \mathcal{E}_{ij}$ (e.g. a bond type). Thus, the discrete state space representing our molecule is defined as
+% We consider graphs with node index set $\mathcal{V}=\{1,\dots,n\}$. A configuration 
+% $x$ assigns categorical attributes to all nodes and to all unordered node pairs. Specifically, each node $i\in\mathcal{V}$ takes a value $ x_i \in \mathcal{X}_i$ (e.g.\ atom type) and each pair $i<j$ corresponds to an edge site $x_{ij} \in \mathcal{X}_{ij}$ (e.g. a bond typ). 
+%that includes a distinguished \texttt{NO-BOND} state. 
+% The discrete state space is
 $\Omega \coloneqq \Big(\prod_{i\in\mathcal{V}}\mathcal{X}_i\Big)\times
 \Big(\prod_{1\le i<j\le n}\mathcal{X}_{ij}\Big)$.
 
-\paragraph{Continuous embeddings.}
-Each categorical site is embedded into Euclidean space via maps
+We embed each categorical site into Euclidean space via maps
 $\phi_i:\mathcal{X}_i\to\mathbb{R}^{d_{\mathrm{node}}}$ and
 $\phi_{ij}:\mathcal{X}_{ij}\to\mathbb{R}^{d_{\mathrm{edge}}}$.
-Concatenating yields an ambient embedding
+Concatenating all embeddings yields an ambient representation
 $\hat{x}=(\phi_i(x_i))_{i\in\mathcal{V}} \;\oplus\; (\phi_{ij}(x_{ij}))_{i<j}\in\mathbb{R}^{D}$,
-where $\oplus$ is concatenation: we stack all node embeddings followed by all edge embeddings into a
-single vector in $\mathbb{R}^{D}$, with $D = n\,d_{\mathrm{node}} + \tbinom{n}{2}\,d_{\mathrm{edge}}$.
-Here $n$ denotes the maximum number of nodes (from the training dataset); smaller graphs are padded
-and masked following standard conventions for graph diffusion models~\citep{vignac2022digress,qinmadeira2024defog}.
-The Markov chain evolves on discrete $x\in\Omega$, while $\nabla_{\hat{x}}V_\theta(\hat{x})$ is computed
-with respect to the embedding.
+where $\oplus$ denotes concatenation and $D = n\,d_{\mathrm{node}} + \tbinom{n}{2}\,d_{\mathrm{edge}}$.
+Here, $n$ is the maximum number of nodes in the training dataset; smaller graphs are padded and masked following standard conventions for graph diffusion models~\citep{vignac2022digress,qinmadeira2024defog}.
 
-\paragraph{Permutation symmetry and alignments.}
-For any permutation $\sigma\in S_n$, let $\sigma$ act on node indices and induce a relabeling of the
-graph: $(\sigma\!\cdot\!x)_i=x_{\sigma(i)}$ and $(\sigma\!\cdot\!x)_{ij}=x_{\sigma(i)\sigma(j)}$.
-We enforce permutation invariance by construction: $V_\theta$ is produced by a permutation-equivariant
+
+%The Markov chain evolves on discrete $x\in\Omega$, while $\nabla_{\hat{x}}V_\theta(\hat{x})$ is computed with respect to the embedding.
+
+
+
+
+
+\subsection{JKO on the Graph Space}
+We introduce a JKO-style objective adapted to discrete graph configurations. Our goal is twofold: i) We preserve the Gibbs equilibrium associated with the learned energy $V_\theta$ and ii) remain well-defined on a finite state space where sampling proceeds via discrete edits rather than continuous trajectories. Hence, we avoid time-indexed dynamics, which are cumbersome for discrete jumps and often dominated by 'do-nothing moves' (self-loops or near-identity edits arising from invalid/high-cost proposals under graph constraints), by using a spatial two-regime 
+temperature $\epsilon(x)$ and a coupling-based transport term defined over valid graphs. This choice directly motivates the multi-site, geometry-aware sampler:
+
+
+Given a distribution $\pi_k$, we consider the JKO update
+\begin{equation}
+\pi_{k+1}=\arg\min_{\pi}\,\mathcal{J}(\pi).
+\end{equation}
+with the objective
+\begin{align}
+\mathcal{J}(\pi)
+&=
+\frac{1}{2\eta}\,\inf_{\gamma\in\Pi(\pi_k,\pi)}\mathcal{A}(\gamma)\nonumber +\sum_{x\in\Omega} V_\theta(x)\,\pi(x)\nonumber\\
+&\quad+\sum_{x\in\Omega} \varepsilon(x)\,\pi(x)\log\pi(x).
+\end{align}
+Please note that this formulation differs from the traditional JKO step. While the traditional JKO involves minimization of the kinetic term over couplings between $\pi_k$ and $\pi$, yielding $W_2^2$ in the continuous setting, we are operating in discrete state space. Hence, we work with an action $\mathcal{A}(\gamma)$ induced by a graph cost $c_{\mathrm{FGW}}$. A pointwise stationarity condition along paired graphs $(x,y)$ from an optimal coupling is, up to an additive constant,
+\begin{equation}
+\frac{1}{2\eta}\,c(x,y)
+\;+\;V_\theta(x)
+\;+\;\varepsilon(x)\,\log\pi_{k+1}(x)
+\;=\;\text{const}.
+\end{equation}
+At the data distribution, the transport term vanishes, so with $\varepsilon(x)=1$, this results in the Gibbs form
+\begin{equation}
+\pi_{\mathrm{eq}}(x)\propto \exp\!\left(-V_\theta(x)\right).
+\end{equation}
+
+As in the continuous Energy Matching formulation~\citep{balcerak2025energy}, one can target the full objective when a sampler respects the local geometry induced by $c_{\mathrm{loc}}$ (i.e., proposals
+are biased toward low-cost edits.) 
+We focus on the off-equilibrium regime with $\varepsilon(x)=0$ and analyze the functional by relaxing
+the kinetic term. We fix a coupling $\tilde{\gamma}$ between the source $p_0$ and the data
+$p_{\mathrm{data}}$ (e.g.\ minibatch OT), which induces a path between them and replaces the infimum
+with $\mathcal{A}(\tilde{\gamma})$, yielding
+\begin{equation}
+\widetilde{\mathcal{J}}(\pi_{k+1};\tilde{\gamma})
+=
+\frac{1}{2\eta}\,\mathcal{A}(\tilde{\gamma})
+\;+\sum_{x\in\Omega} V_\theta(x)\,\pi_{k+1}(x).
+\end{equation}
+By \eqref{eq:kinetic-action}--\eqref{eq:kinetic-action-bound}, $\mathcal{A}(\tilde{\gamma})$ upper-bounds
+the OT discrepancy, and this relaxed term is tractable to compute. This motivates a \emph{transport-aligned
+drift} based on the displacement between coupled samples; we use this to supervise
+$-\nabla_{\hat{x}}V_\theta$ along the coupling paths. We evaluate gradients with respect to the
+continuous embedding $\hat{x}$ introduced above, which makes the potential landscape well-defined away from
+equilibrium and yields a training signal along the predefined coupling paths.
+$\varepsilon(x)$ is spatial (constant in each regime) thus the discrete scheme does not require an
+explicit time index, making it natural for jump processes and MCMC chains.
+
+
+
+
+
+\subsection{Permutation-Invariant Minibatch OT}
+
+For the targeted potential $V_\theta(x)$, permutation invariance can be enforced by construction as $V_\theta$ is produced by a permutation-equivariant
 graph transformer with an invariant readout to a scalar (Appendix~\ref{app:perm-invariance}), so
 $V_\theta(\sigma\!\cdot\!x)=V_\theta(x)$ and the Gibbs distribution
-$\pi_\theta(x)\propto \exp(-V_\theta(x))$ is also invariant.
+$\pi_\theta(x)\propto \exp(-V_\theta(x))$ are invariant. 
+Here, $\sigma\in S_n$ is a permutation that is acting on node indices and induce a relabeling of the
+graph: $(\sigma\!\cdot\!x)_i=x_{\sigma(i)}$ and $(\sigma\!\cdot\!x)_{ij}=x_{\sigma(i)\sigma(j)}$. \\
+For GEM, we additionally enforce permutation invariance during the transport phase:
 
 
 \paragraph{Local embedding discrepancy and fused GW cost.}
@@ -54,69 +115,17 @@ c_{\mathrm{FGW}}(x,y)
 c_{\mathrm{loc}}(x,\sigma\!\cdot\!y)
 \right\}.
 \end{equation}
-This quantity is used for minibatch pairings and transport supervision. Exact evaluation is NP-hard
-(graph matching / quadratic assignment), so we employ fast approximations suited to the source and
-task (Appendix~\ref{app:matching}). In the sampler we avoid re-solving for $\sigma$ at every step and
+This quantity is used for minibatch pairings and transport supervision. Since exact evaluation is NP-hard
+for graph matching or quadratic assignment, we employ fast approximations suited to the source and
+task (Appendix~\ref{app:matching}). In the sampler, we avoid re-solving for $\sigma$ at every step and
 instead use $c_{\mathrm{loc}}$ as a local surrogate for small edits.
 
-\paragraph{JKO on graph spaces and first-order conditions.}
-We propose a JKO-style objective tailored to graph-induced geometry that preserves Gibbs equilibrium
-for $V_\theta$ while remaining valid on discrete spaces. We avoid time-indexed dynamics---cumbersome for
-discrete jumps and prone to do-nothing moves---by using a spatial two-regime $\varepsilon(x)$ and a
-coupling-based transport term over valid graphs, which motivates our multi-site geometry-aware sampler.
-We analyze
-\begin{equation}
-\pi_{k+1}=\arg\min_{\pi}\,\mathcal{J}(\pi).
-\end{equation}
-In the JKO step the kinetic term is minimized over couplings between $\pi_k$ and $\pi$, yielding
-$W_2^2$ in the continuous setting. We write the functional as
-\begin{align}
-\mathcal{J}(\pi)
-&=
-\frac{1}{2\eta}\,\inf_{\gamma\in\Pi(\pi_k,\pi)}\mathcal{A}(\gamma)\nonumber\\
-&\quad+\sum_{x\in\Omega} V_\theta(x)\,\pi(x)\nonumber\\
-&\quad+\sum_{x\in\Omega} \varepsilon(x)\,\pi(x)\log\pi(x).
-\end{align}
-A pointwise stationarity condition along coupled samples $(x,y)$ from an optimal coupling,
-with $c=c_{\mathrm{FGW}}$, can be written
-(up to an additive constant) as
-\begin{equation}
-\frac{1}{2\eta}\,c(x,y)
-\;+\;V_\theta(x)
-\;+\;\varepsilon(x)\,\log\pi_{k+1}(x)
-\;=\;\text{const}.
-\end{equation}
-At the target distribution the transport term vanishes, so with $\varepsilon(x)=1$ this gives the Gibbs form
-\begin{equation}
-\pi_{\mathrm{eq}}(x)\propto \exp\!\left(-V_\theta(x)\right).
-\end{equation}
-As in the continuous Energy Matching formulation~\citep{balcerak2025energy}, one can target the full
-objective when a sampler respects the local geometry induced by $c_{\mathrm{loc}}$ (i.e., proposals
-are biased toward low-cost edits); we introduce such a sampler below.
-We focus on the off-equilibrium regime with $\varepsilon(x)=0$ and analyze the functional by relaxing
-the kinetic term: we fix a coupling $\tilde{\gamma}$ between the source $p_0$ and the data
-$p_{\mathrm{data}}$ (e.g.\ minibatch OT), which induces a path between them and replaces the infimum
-with $\mathcal{A}(\tilde{\gamma})$, yielding
-\begin{equation}
-\widetilde{\mathcal{J}}(\pi_{k+1};\tilde{\gamma})
-=
-\frac{1}{2\eta}\,\mathcal{A}(\tilde{\gamma})
-\;+\sum_{x\in\Omega} V_\theta(x)\,\pi_{k+1}(x).
-\end{equation}
-By \eqref{eq:kinetic-action}--\eqref{eq:kinetic-action-bound}, $\mathcal{A}(\tilde{\gamma})$ upper-bounds
-the OT discrepancy, and this relaxed term is tractable to compute. This motivates a transport-aligned
-drift based on the displacement between coupled samples; we use this to supervise
-$-\nabla_{\hat{x}}V_\theta$ along the coupling paths. We evaluate gradients with respect to the
-continuous embedding $\hat{x}$ introduced above, which makes this signal well-defined away from
-equilibrium and yields a training signal along the predefined coupling paths.
-Because $\varepsilon(x)$ is spatial (constant in each regime), the discrete scheme does not require an
-explicit time index, making it natural for jump processes and MCMC chains.
 
 \paragraph{Minibatch couplings and transport-aligned supervision.}
 Given minibatches from a source $p_0$ and the data $p_{\mathrm{data}}$, we compute a permutation-invariant
 minibatch matching using an approximation to $c_{\mathrm{FGW}}$, obtaining a coupling
 $\tilde{\gamma}$ and a pairing map $T$ that assigns each data graph $x_{\mathrm{data}}$ to a source
-graph $T(x_{\mathrm{data}})$. In molecule-like settings we use node-matching alignments (with light
+graph $T(x_{\mathrm{data}})$. In molecule-like settings, we use node-matching alignments (with light
 edge tie-breakers), while for a uniform source we use fast histogram signatures; see
 Appendix~\ref{app:matching}. Since we transport from $\pi_0$ toward $\pi_{\mathrm{data}}$, these
 pairings provide off-manifold supervision: the displacement
@@ -124,32 +133,35 @@ $v=\hat{x}_{\mathrm{data}}-\widehat{T(x_{\mathrm{data}})}$ defines a transport-a
 we use to supervise $-\nabla_{\hat{x}}V_\theta$ as one term of the training objective
 (Section~\ref{sec:training}).
 
-\paragraph{Discrete equilibrium and energy refinement.}
-On the finite state space $\Omega$, this Gibbs distribution is the exact stationary target in the mixing
-regime. We refine $V_\theta$ near data using the energy refinement objective $\mathcal{L}_{\mathrm{ER}}$
-from the preliminaries.
 
-\paragraph{Two-regime temperature in the discrete sampler.}
-We use the same two-regime schedule as above: $\varepsilon(x)=0$ in the transport regime and
-$\varepsilon(x)=1$ in the mixing regime, so the discrete chain targets the unit-temperature Gibbs
-density. 
+
 
 \paragraph{Local cost for proposals.}
 The matching cost $c_{\mathrm{FGW}}$ includes a minimization over permutations.
-In the sampler we propose \emph{local edits} around the current labeling, so we do not re-solve for
+In the sampler, we propose \emph{local edits} around the current labeling, so we do not re-solve for
 $\sigma$ at each step. We use the local surrogate $c_{\mathrm{loc}}$ from \eqref{eq:loc-cost}, which
 serves as a local approximation when edits are small. We use two proposal mechanisms, separated by
 regime: a stochastic geometry-aware kernel in the mixing regime and a deterministic greedy descent in
 the transport regime.
 
+\subsection{Proposal Generation during Transport and Mixing}
+
+\paragraph{Transport-regime greedy proposal.}
+In the transport regime, we use a deterministic greedy proposal: for each site $s$ we choose the locally best edit
+$c_s^\star$ and its energy change $\Delta_s$, then apply the $N$ most negative edits in parallel. The MCMC
+chain stops when no negative $\Delta_s$ remain or when $V_\theta(x)$ drops below a reference energy
+level $\mathbb{E}_{p_{\mathrm{data}}}[V_\theta(x)]$, which we estimate and cache during training.
+This update is accepted with probability $1$.
+
+
 \paragraph{Mixing-regime stochastic proposal.}
-We allow multi-site updates that may change any subset of nodes and edges in a single step.
+We allow \emph{multi-site updates} that may change any subset of nodes and edges in a single step.
 This proposal is inspired by the transport-aligned drift: taking a directional derivative of the
 relaxed objective yields the left-hand side
 $(\hat{y}-\hat{x})^\top\!\big(\frac{1}{2\eta}\nabla_{\hat{x}} c_{\mathrm{loc}}(\hat{x},\hat{y})
 -\nabla_{\hat{x}}V_\theta(\hat{x})\big)$, whose terms appear in the kernel below. The
 exponential/softmax form supplies an exploration (entropic)
-component, and the resulting kernel can be viewed as a linearized locally balanced proposal; related
+component, and the resulting kernel can be viewed as a \emph{linearized locally balanced proposal}; related
 discrete-gradient samplers appear in~\citep{grathwohl2021oops,zhang2022langevin,zanella2020informed}.
 Here we work in the continuous embedding, so displacements and gradients are taken with respect to
 \(\hat{x}\) and \(\hat{y}\).
@@ -189,14 +201,6 @@ q_\theta(x\to y)
 \end{equation}
 In practice we calibrate $\beta$, $\lambda_X$, and $\lambda_E$ by maximizing relative likelihood of
 generated samples under the learned energy.
-
-\paragraph{Transport-regime greedy proposal.}
-In the transport regime we use a deterministic greedy proposal: for each site $s$ we choose the locally best edit
-$c_s^\star$ and its energy change $\Delta_s$, then apply the $N$ most negative edits in parallel. The
-chain stops when no negative $\Delta_s$ remain or when $V_\theta(x)$ drops below a reference energy
-level $\mathbb{E}_{p_{\mathrm{data}}}[V_\theta(x)]$, which we estimate and cache during training.
-This update is accepted with probability $1$.
-
 
 \begin{figure}[t]
 \centering
@@ -434,7 +438,7 @@ energy trajectories under noise vs.\ data initialization and the corresponding p
 
 
 \paragraph{Mixing-regime acceptance.}
-In the mixing regime we accept the stochastic proposal with Metropolis--Hastings probability:
+In the mixing regime, we accept the stochastic proposal with Metropolis--Hastings probability:
 \begin{equation}\label{eq:mh-accept}
 \begin{aligned}
 \alpha(x,y)
@@ -483,7 +487,7 @@ q_{\beta_{\mathrm{prop}}}(x\to y)
 The current class has logit \(0\) (the \textit{stay} option), while \(\lambda_X,\lambda_E\) penalize changes.
 
 \paragraph{\gls{mh} refinement (single beta).}
-For the standard DLangevin proposal we set \(\beta_{\mathrm{prop}}=\beta_{\mathrm{mh}}=\beta\) and accept
+For the standard Langevin proposal we set \(\beta_{\mathrm{prop}}=\beta_{\mathrm{mh}}=\beta\) and accept
 \begin{equation}
 \begin{aligned}
 \alpha(x,y)

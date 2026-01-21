@@ -1,57 +1,57 @@
 \section{Preliminaries}
 
-\paragraph{Energy-based models and sampling challenges.}
-An \gls{ebm} assigns an energy $E_\theta(x)$, inducing $\pi_\theta(x)\propto \exp(-E_\theta(x))$.
-Maximum-likelihood training uses contrastive objectives with negatives from \gls{mcmc}; the energy is
-poorly posed outside the support of the target distribution and chains can mix slowly. The energy view
-is compositional in the sense that independent factors in the posterior correspond to additive energy terms:
-$p(x \mid y)\propto \underbrace{p(y \mid x)}_{\text{conditional likelihood}}\underbrace{p(x)}_{\text{prior}}$,
-where $y$ is an observation/measurement and $x$ is a sample. The conditional term is often provided by
-a discriminator/regressor; a common Gaussian data-fidelity choice is
-$p(y\mid x)\propto \exp(-\lVert y - A(x)\rVert^2/\zeta^2)$, where $A(x)$ is a forward/measurement model
-and $\zeta$ is a scalar controlling adherence to the condition. At inference, posterior sampling is
-obtained by adding the data-fidelity term (and any other constraint energies) to $E_\theta$.
+%Not sure if we need this
+% \paragraph{Energy-based models and sampling challenges.}
+% An \gls{ebm} assigns an energy $E_\theta(x)$, inducing $\pi_\theta(x)\propto \exp(-E_\theta(x))$.
+% Maximum-likelihood training uses contrastive objectives with negatives from \gls{mcmc}; the energy is
+% poorly posed outside the support of the target distribution and chains can mix slowly. The energy view
+% is compositional in the sense that independent factors in the posterior correspond to additive energy terms:
+% $p(x \mid y)\propto \underbrace{p(y \mid x)}_{\text{conditional likelihood}}\underbrace{p(x)}_{\text{prior}}$,
+% where $y$ is an observation/measurement and $x$ is a sample. The conditional term is often provided by
+% a discriminator/regressor; a common Gaussian data-fidelity choice is
+% $p(y\mid x)\propto \exp(-\lVert y - A(x)\rVert^2/\zeta^2)$, where $A(x)$ is a forward/measurement model
+% and $\zeta$ is a scalar controlling adherence to the condition. At inference, posterior sampling is
+% obtained by adding the data-fidelity term (and any other constraint energies) to $E_\theta$.
 
-\paragraph{Optimal transport costs, stochastic interpolants, and kinetic action.}
-Given a cost $c:\mathcal{X}\times\mathcal{X}\to[0,\infty)$ and distributions $\rho_0,\rho_1$, the
-Kantorovich transport cost is
-\begin{equation}
-W_c(\rho_0,\rho_1)
-\;\coloneqq\;
-\inf_{\gamma\in\Gamma(\rho_0,\rho_1)} \mathbb{E}_\gamma[c(X_0,X_1)],
-\end{equation}
-with $\Gamma(\rho_0,\rho_1)$ the set of couplings. For $\mathcal{X}=\mathbb{R}^d$ and
-$c(x_0,x_1)=\|x_0-x_1\|^2$, $W_c=W_2^2$. Exact OT couplings are typically expensive to compute, but for
-any coupling the induced kinetic action can be evaluated as a discrepancy that upper-bounds the true
-transport cost and provides a usable geometry. Fixing a coupling $\gamma$ with $(X_0,X_1)\sim\gamma$,
-define the interpolant $I_t=(1-t)X_0+tX_1$ and velocity field
-$b_t^\gamma(x)\coloneqq\mathbb{E}[X_1-X_0\mid I_t=x]$, which induce the kinetic action
-\begin{equation}\label{eq:kinetic-action}
-\mathcal{A}(\gamma)
-\;\coloneqq\;
-\int_0^1 \int \|b_t^\gamma(x)\|^2\,\rho_t^\gamma(\mathrm{d}x)\,\mathrm{d}t.
-\end{equation}
-For quadratic cost,
-\begin{equation}\label{eq:kinetic-action-bound}
-W_2^2(\rho_0,\rho_1)\le\mathcal{A}(\gamma)\le\mathbb{E}_\gamma[\|X_1-X_0\|^2],
-\end{equation}
-with equality for optimal deterministic (Monge) couplings. A tractable coupling
-(e.g.\ minibatch matching) is therefore used, and $\mathcal{A}(\gamma)$ is treated as a restricted
-geometry that upper-bounds the true Wasserstein distance.
+% \paragraph{Optimal transport costs, stochastic interpolants, and kinetic action.}
+% Given a cost $c:\mathcal{X}\times\mathcal{X}\to[0,\infty)$ and distributions $\rho_0,\rho_1$, the
+% Kantorovich transport cost is
+% \begin{equation}
+% W_c(\rho_0,\rho_1)
+% \;\coloneqq\;
+% \inf_{\gamma\in\Gamma(\rho_0,\rho_1)} \mathbb{E}_\gamma[c(X_0,X_1)],
+% \end{equation}
+% with $\Gamma(\rho_0,\rho_1)$ the set of couplings. For $\mathcal{X}=\mathbb{R}^d$ and
+% $c(x_0,x_1)=\|x_0-x_1\|^2$, $W_c=W_2^2$. Exact OT couplings are typically expensive to compute, but for
+% any coupling the induced kinetic action can be evaluated as a discrepancy that upper-bounds the true
+% transport cost and provides a usable geometry. Fixing a coupling $\gamma$ with $(X_0,X_1)\sim\gamma$,
+% define the interpolant $I_t=(1-t)X_0+tX_1$ and velocity field
+% $b_t^\gamma(x)\coloneqq\mathbb{E}[X_1-X_0\mid I_t=x]$, which induce the kinetic action
+% \begin{equation}\label{eq:kinetic-action}
+% \mathcal{A}(\gamma)
+% \;\coloneqq\;
+% \int_0^1 \int \|b_t^\gamma(x)\|^2\,\rho_t^\gamma(\mathrm{d}x)\,\mathrm{d}t.
+% \end{equation}
+% For quadratic cost,
+% \begin{equation}\label{eq:kinetic-action-bound}
+% W_2^2(\rho_0,\rho_1)\le\mathcal{A}(\gamma)\le\mathbb{E}_\gamma[\|X_1-X_0\|^2],
+% \end{equation}
+% with equality for optimal deterministic (Monge) couplings. A tractable coupling
+% (e.g.\ minibatch matching) is therefore used, and $\mathcal{A}(\gamma)$ is treated as a restricted
+% geometry that upper-bounds the true Wasserstein distance.
+
+
 
 \paragraph{Energy matching and a learned potential.}
-Energy matching learns a scalar \emph{potential} $V_\theta:\mathcal{X}\to\mathbb{R}$ with two roles.
+Energy matching learns a parameterized ($\theta$) scalar \emph{potential} ($V_\theta$) for a data space ($\mathcal{X}$), i.e., $V_\theta:\mathcal{X}\to\mathbb{R}$. The scalar potential$V_\theta$ plays two roles.
 \begin{itemize}
-\item \textbf{Off-manifold guidance:} away from the data distribution, the vector field $-\nabla V_\theta$
-is trained to align with transport-like directions that move samples from a simple source distribution
-toward the data.
-\item \textbf{Near-equilibrium refinement:} near equilibrium, $V_\theta$ acts as an EBM energy and
-defines a Gibbs density with unit temperature.
+\item \textbf{Off-manifold guidance:} away from the data distribution, the vector field $-\nabla_x V_\theta$ is trained to align with transport-like directions that move samples from an easy-to-sample source distribution toward the data.
+\item \textbf{Near-equilibrium refinement:} near equilibrium, $V_\theta$ acts as an EBM energy and defines a Gibbs density with unit temperature.
 \end{itemize}
-This separates learning into a global transport-alignment term and a local density refinement term.
-A two-regime temperature $\varepsilon(\cdot)$ is used: $\varepsilon=0$ off-manifold (transport regime)
-and $\varepsilon=1$ near equilibrium (mixing regime). This regime switch injects exploration, helps prevent mode
-collapse, and stabilizes the Gibbs distribution in the mixing regime.
+This separates learning into a \emph{global} transport-alignment term and a \emph{local} density refinement term.
+A two-regime temperature $\varepsilon(\cdot)$ is used: $\varepsilon(t)=0$ off-manifold (transport regime) and $\varepsilon(t)=1$ near equilibrium (mixing regime). 
+This switch of regime (i)injects exploration, (ii) helps to prevent mode collapse, and (iii) stabilizes the Gibbs distribution in the mixing regime.
+
 In continuous space, a JKO step for the energy-and-entropy functional reads
 \begin{align}
 \rho_{t+\Delta t}
@@ -62,41 +62,44 @@ In continuous space, a JKO step for the energy-and-entropy functional reads
 &\quad+\;\varepsilon(t)\int \rho(x)\log\rho(x)\,\mathrm{d}x.
 \end{align}
 
+% \paragraph{Transport learning (off-manifold).}
+\paragraph{Off-manifold guidance.}
 These first-order optimality conditions in Wasserstein space~\citep{lanzetti2025firstorder,lanzetti2024variational} motivate two objectives~\citep{balcerak2025energy}:
-away from data, transport directions are matched; near equilibrium, the energy is refined to recover the Gibbs distribution.
-Given optimally paired endpoints $(X_0,X_1)\sim\gamma$ and $t\sim\Unif([0,1])$, define $X_t=(1-t)X_0+tX_1$ and
+(i) Away from data, transport directions are matched (ii) near equilibrium, the energy is refined to recover the Gibbs distribution.
+Given optimally paired endpoints $(X_0,X_1)\sim\gamma$ with transport map $\gamma$ between the source distribution space $X_0\in \mathcal{X}_0$ and data distribution space $X_1\in \mathcal{X}_1$ and $t\sim\Unif([0,1])$, we define $X_t=(1-t)X_0+tX_1$ and
 $v=X_1-X_0$. The potential $V_\theta$ is trained by matching the gradient field to $v$:
 \begin{equation}
 \mathcal{L}_{\mathrm{OT}}
 =
 \mathbb{E}_{(X_0,X_1)\sim\gamma,\;t\sim\Unif([0,1])}
-\big[\|-\nabla_x V_\theta(X_t) - v\|^2\big].
+\big[\|\nabla_x V_\theta(X_t) + v\|^2\big].
 \end{equation}
 
-\paragraph{Energy refinement (near-equilibrium).}
+% \paragraph{Energy refinement (near-equilibrium).}
+\paragraph{Near-equilibrium refinement.}
 As $t\to\infty$, the equilibrium distribution is
 \begin{equation}
-p_{t\to\infty}(x)\;\propto\;\exp\!\left(-V_\theta(x)\right).
+\rho_{t\to\infty}(x)\;\propto\;\exp\!\left(-V_\theta(x)\right).
 \end{equation}
-The refinement of $p_{t\to\infty}$ uses
+The refinement of $\rho_{t\to\infty}$ uses
 \begin{equation}
 \mathcal{L}_{\mathrm{ER}}
 =
 \mathbb{E}_{x^{+}\sim p_{\mathrm{data}}}\!\left[V_\theta(x^{+})\right]
 -
-\mathbb{E}_{x^{-}\sim \mathrm{sg}(p_{t\to\infty})}\!\left[V_\theta(x^{-})\right],
+\mathbb{E}_{x^{-}\sim \operatorname{sg}(p_{t\to\infty})}\!\left[V_\theta(x^{-})\right],
 \end{equation}
-where $x^{-}$ are sampled from the current chain (stop-gradient through the sampler). Chains are
-initialized from the source or from data with a tunable mixing probability. A warm-start with
-$\mathcal{L}_{\mathrm{OT}}$ allows source-initialized chains to reach low-energy regions, followed by
-optimization of
+where $x^{-}$ are sampled using Langevin dynamics, i.e., with a stop-gradient ($\operatorname{sg}$) through the sampler.
+The sampling chain to generate these $x^{-}$ is initialized from the source or from data with a tunable mixing probability.
+A warm-up phase with only
+$\mathcal{L}_{\mathrm{OT}}$ allows source-initialized negative samples ($x^{-}$) to reach low-energy regions, followed byoptimization of
 \begin{equation}
 \mathcal{L}(\theta)=\mathcal{L}_{\mathrm{OT}}(\theta)+\lambda_{\mathrm{ER}}\,\mathcal{L}_{\mathrm{ER}}(\theta).
 \end{equation}
 
 \paragraph{Sampling (two regimes).}
-Sampling interpolates between transport-aligned drift and mixing via an effective temperature
-$\varepsilon(t)$. In continuous time this is the time-inhomogeneous SDE
+Sampling starts from a transport-aligned drift and switches to a mixing via an effective temperature
+$\varepsilon(t)$. In continuous time, this is the time-inhomogeneous SDE
 \begin{equation}
 \mathrm{d}X_t
 =
@@ -104,8 +107,7 @@ $\varepsilon(t)$. In continuous time this is the time-inhomogeneous SDE
 +\sqrt{2\,\varepsilon(t)}\,\mathrm{d}W_t,
 \end{equation}
 which reduces to an ODE when $\varepsilon(t)=0$ (off-manifold) and becomes a stochastic dynamics as
-the regime switches and $\varepsilon(t)\to 1$. In practice this dynamics needs to be
-integrated over time.
+the regime switches and $\varepsilon(t)\to 1$. In practice, this dynamics needs to be integrated over time.
 
 \paragraph{Related work: discrete diffusion/flow matching and control.}
 Recent progress in discrete graph generation is dominated by denoising diffusion and CTMC
@@ -124,5 +126,3 @@ training and coupling the control mechanism to the chosen noising process~\citep
 Moreover, property prediction on heavily corrupted graphs is ill-posed because bonds and valences are
 often invalid, so regressor accuracy naturally degrades away from clean samples; we quantify this
 effect in Appendix~\ref{app:regressor-noise}.
-A concise conceptual summary of the baselines used in our experiments is provided in
-Appendix~\ref{app:baselines}.
