@@ -1,6 +1,23 @@
 \section{Noise sensitivity of property regressors}
 \label{app:regressor-noise}
-\textcolor{red}{TODO: Add property regressor training details (architecture, noise schedule, and time conditioning).}
+\paragraph{Property regressor training.}
+Let $(x_1,y)$ denote a molecule (graph) and its scalar property. A clean regressor $f_\phi$ is
+trained on valid molecules by minimizing
+\begin{equation}
+\min_\phi~\mathbb{E}_{(x_1,y)\sim \mathcal{D}}
+\big[\|f_\phi(x_1)-y\|_2^2\big].
+\end{equation}
+For noise-conditioned regressors, we sample a time $t\sim p(t)$ and a noisy graph
+$x_t\sim q_t(x_t\mid x_1)$ using the same discrete noising kernel as the forward process
+(marginal or uniform). The regressor takes $(x_t,t)$ as input (time is fed as an additional scalar
+feature) and is trained with
+\begin{equation}
+\min_\phi~\mathbb{E}_{(x_1,y)\sim \mathcal{D},~t\sim p(t),~x_t\sim q_t(\cdot\mid x_1)}
+\big[\|f_\phi(x_t,t)-y\|_2^2\big].
+\end{equation}
+During GEM sampling we do not explicitly track diffusion time, so we use an energy-based proxy to
+set $t$: we linearly increase $t$ between the noise and data energy bands and clamp to $t=1$ once
+the chain reaches the data distribution, using $t=1$ for the remainder of generation.
 
 Property regressors are trained on clean molecules, so evaluating them on noisy graphs is
 ill-posed when bonds and valences are corrupted. We measure the degradation by computing test

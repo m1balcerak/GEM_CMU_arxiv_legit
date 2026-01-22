@@ -2,25 +2,13 @@
 \label{sec:experiments}
 
 We report unconditional generation on MOSES in the main text and on QM9 in
-Appendix~\ref{app:qm9-uncond}, conditional generation under property targets (logP, logS, QED, TPSA), and
-geodesic comparisons in the learned space. By convention, on QM9 we report novelty separately from
-$V.U.$: the dataset is small and novelty is often far from 1.0, so we include a dedicated novelty
-column to show it is comparable and to avoid biasing \gls*{fcd} there.
-We report validity (RDKit-sanitized non-empty SMILES), uniqueness (distinct SMILES among valid),
-novelty (unique valid molecules not in the training split), and $V.U.N.$ for the fraction satisfying
-all three. We also report \gls*{fcd}, a ChemNet feature-space distance between generated and MOSES
-molecules (lower is better). We consider two initialization regimes. \textbf{Noise Initialization}
-(standard for diffusion models) starts from easy-to-sample noise; the main challenge is to reach
-chemically valid molecules, while novelty is often already high. \textbf{Data Initialization}
-(available to energy-based models) starts from molecules drawn from the training dataset; the main
-challenge is to make non-trivial edits that increase novelty while preserving chemical validity.
-In practice, Noise Initialization uses \textbf{uniform noise} (node count from the empirical
-histogram, node/edge types uniform) or \textbf{marginal noise} (node count from the empirical
-histogram, node/edge types from empirical marginals), while Data Initialization uses \textbf{training
-data} samples; sampling can be run with diffusion/CTMC dynamics or MCMC.
-MOSES is a large-scale molecular dataset (about 1.5M molecules), while QM9 is a smaller benchmark
-focused on low-mass molecules. We use MOSES to stress-test sample quality at scale and QM9 as a
-compact setting for comparison.
+Appendix~\ref{app:qm9-uncond}, property optimization under thresholded targets (logP, logS, QED, TPSA),
+and geodesic comparisons in the learned space. We report validity, uniqueness, novelty, $V.U.N.$,
+and \gls*{fcd} (lower is better), and we consider two initialization regimes: noise initialization
+starts from easy-to-sample noise and must reach chemically valid molecules, while data initialization
+starts from training molecules and must make novel yet valid edits (diffusion/CTMC or MCMC). MOSES is
+a large-scale dataset (about 1.5M molecules), while QM9 is smaller; we use MOSES for scale and QM9 as
+a compact comparison.
 %
 A concise conceptual summary of the baselines used in our experiments is provided in
 Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix~\ref{app:exp-setup}.
@@ -29,14 +17,11 @@ Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix
 \paragraph{MOSES: Baselines vs.\ GEM.}
 Table~\ref{tab:uncond-moses} reports unconditional metrics on MOSES; QM9 results are in
 Appendix~\ref{app:qm9-uncond} (Table~\ref{tab:uncond-qm9}).
-Figure~\ref{fig:moses-energy-and-metrics} reports annealed-proposal metrics on MOSES. Across both
-Noise Initialization and Data Initialization, GEM improves V.U.N.\ and \gls*{fcd}.
-Validity, novelty, and uniqueness can be
-improved post-hoc via rejection sampling, so diffusion baselines already reach strong V.U.N., but
-\gls*{fcd} is less amenable to such correction; we see a clear gap on MOSES. The step curves in
-Figure~\ref{fig:moses-vun-steps} show rapid early gains with diminishing returns as steps increase,
-and Figure~\ref{fig:moses-energy-and-metrics} highlights the distinct trajectories under Noise vs.\
-Data Initialization.
+Across both Noise Initialization and Data Initialization, GEM improves V.U.N.\ and \gls*{fcd}.
+Validity, novelty, and uniqueness can be improved post-hoc via rejection sampling, so diffusion
+baselines already reach strong V.U.N., but \gls*{fcd} is less amenable to such correction; we see a
+clear gap on MOSES. Figure~\ref{fig:moses-vun-steps} reports performance versus inference steps, and
+Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.\ Data Initialization.
 \begin{table}[h]
 \centering
 \small
@@ -86,21 +71,19 @@ A schematic of MCMC evolution for GEM on QM9 and MOSES is shown in Appendix~\ref
 QM9 unconditional metrics are reported in Appendix~\ref{app:qm9-uncond}
 (Table~\ref{tab:uncond-qm9}).
 
-\subsection*{Conditional generation}
-We evaluate conditional generation under molecular property constraints (e.g., logP, QED).
-We train a property regressor \(f_\phi\) (GraphTransformer) for differentiable guidance and define a
-conditioned energy \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
+\subsection*{Property optimization}
+We evaluate property optimization under molecular threshold constraints (above/below a target),
+following~\citep{ninniri2025graph}: we train a GraphTransformer regressor \(f_\phi\) for
+differentiable guidance and define \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
 then run the same proposal kernel $q_\theta(x\!\to\!y)$ using \(-\nabla_x V_\theta^{\mathrm{cond}}(x)\),
-with the Metropolis--Hastings acceptance ratio modified accordingly. For fairness, all methods use
-noise-conditioned regressors; GEM also admits clean regressors, so we report a clean-regressor
-ablation in Appendix~\ref{app:regressor-noise} (Figure~\ref{fig:regressor-noise},
-Table~\ref{tab:regressor-ablations}). Noise-conditioned regressors are more reliable on noisy or
-invalid graphs (and we often must traverse such regions to move between modes), so they provide more
-stable guidance. Baselines follow their standard marginal-noise regressors, while GEM uses
-uniform-noise conditioning (our training noise), with all other settings matched. We choose targets
-(e.g., logS $\ge$ -2.25, logP $\le$ 1.5, QED $\ge$ 0.9, TPSA $\le$ 50) so that unconditional MOSES
-samples satisfy the constraint at roughly a 20\% rate, yielding comparable difficulty across
-properties.
+with the Metropolis--Hastings acceptance ratio modified accordingly; for fairness, all methods use
+noise-conditioned regressors (GEM clean-regressor ablation in Appendix~\ref{app:regressor-noise},
+Figure~\ref{fig:regressor-noise}, Table~\ref{tab:regressor-ablations}) and we feed regressor time via
+an energy-based proxy that increases linearly until the chain reaches the data distribution, then
+clamps to $t=1$ (Appendix~\ref{app:regressor-noise}). Noise-conditioned regressors are more reliable
+on noisy or invalid graphs, and targets (logS $\ge$ -2.25, logP $\le$ 1.5, QED $\ge$ 0.9,
+TPSA $\le$ 50) are chosen so unconditional MOSES samples satisfy the constraint at roughly a 20\%
+rate, yielding comparable difficulty across properties.
 Table~\ref{tab:moses-conditional} reports single-property conditioning results, and
 Appendix~\ref{app:baselines} summarizes joint constraints (Table~\ref{tab:moses-conditional-joint}).
 GEM maintains strong validity, uniqueness, and novelty while improving constraint satisfaction

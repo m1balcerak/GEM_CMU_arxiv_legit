@@ -5,6 +5,13 @@ connected to locally balanced schemes through a linearized energy change, but us
 full high-dimensional differences. The explicit energy and relative likelihoods enable new diagnostics,
 including geodesic analysis between molecules and HP calibration based on likelihood ratios.
 
+\subsection*{Limitations}
+At very small inference budgets, diffusion-based baselines can reach strong performance with fewer steps;
+Figure~\ref{fig:moses-vun-steps} shows that in the few-step regime our current GEM sampler trails the
+diffusion baseline. More broadly, EBMs for generation rely on gradient-based velocity parameterization,
+which typically requires both forward and backward passes per step and implies an inherent $\sim$2--3$\times$
+theoretical slowdown relative to purely forward samplers.
+
 \section{Ablations}
 We will do ablations here. \textcolor{red}{[WiP]}
 
