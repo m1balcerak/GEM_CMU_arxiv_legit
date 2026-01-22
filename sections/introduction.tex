@@ -1,7 +1,7 @@
 \section{Introduction}
 \label{sec:introduction}
 
-The generative modeling of structured objects in discrete spaces, such as graphs, is central in scientific and industrial applications. Think, for instance, of molecular discovery \textcolor{red}{\cite{TODO}, where ..... TODO some more narrative}.
+The generative modeling of structured objects in discrete spaces, such as graphs, is central in scientific and industrial applications. Think, for instance, of molecular discovery for new drugs.
 
 The complexity of the task lies primarily in the intrinsic combinatorial structure of the \emph{data distribution}, which captures the likelihood of certain, domain-specific patterns.
 %
@@ -21,11 +21,11 @@ We believe that the solution to this challenge are \glspl{ebm}. \gls{ebm} provid
 %
 However, \glspl{ebm} have historically underperformed as high-fidelity generators, largely because sampling is difficult: \gls{mcmc} mixing can be slow in high-dimensional discrete spaces, and energies are poorly constrained away from observed data. For instance, existing methods such as GraphEBM~\citep{liu2021graphebm} lag behind state-of-the-art approaches.
 
-Consequently, \glspl{ebm} on discrete spaces have been so far demoted to \emph{scoring} mechanisms for out-of-distribution detection and uncertainty quantification~\citep{wu2023energy,fuchsgruber2024energy}, rather than as state-of-the-art samplers.
+Consequently, \glspl{ebm} on discrete spaces have been so far restricted to \emph{scoring} mechanisms for out-of-distribution detection and uncertainty quantification~\citep{wu2023energy,fuchsgruber2024energy}, rather than as state-of-the-art generative samplers.
 
 Energy Matching~\citep{balcerak2025energy} bridges these perspectives in continuous spaces by learning a \emph{time-independent}
 potential that simultaneously (i) provides guidance for moving samples from a reference
-distribution toward the data and (ii) defines a Boltzmann-like density near data via contrastive
+distribution toward the data and (ii) defines a Boltzmann-like probability density near the data via contrastive
 refinement. This regularizes energies off-support while retaining the compositional control advantages
 of EBMs. Rather than simulating a time-indexed ODE/SDE, we sample directly on the discrete graph space
 using local edit proposals inside an \gls{mcmc} chain. This avoids continuous relaxations and matches
@@ -36,7 +36,7 @@ to make energy-based generation competitive.
 \Gls{jko} provides a variational framework for optimization in spaces of probability measures, where each
 step balances an energy against a distance (or discrepancy) rooted in \gls{ot}, such as the Wasserstein
 metric~\citep{lanzetti2025firstorder,lanzetti2024variational,terpin2024learning}. This perspective motivates OT-inspired transport supervision given a geometry.
- For graphs, \gls{gw}-type costs offer permutation-respecting
+For graphs, \gls{gw}-type costs offer permutation-respecting
 comparisons~\citep{krzakala2024any2graph}. At the same time, computing exact Wasserstein geodesics is
 typically impractical at scale. Importantly, stochastic interpolants with data-dependent couplings provide
 a principled way to work with tractable, possibly suboptimal couplings: a fixed coupling induces an

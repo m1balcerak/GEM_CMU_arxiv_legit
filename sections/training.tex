@@ -2,33 +2,38 @@
 \label{sec:training}
 
 \paragraph{Minibatch coupling.}
-Given minibatches $x_0 \sim p_0$ and $x_{\text{data}} \sim p_{\text{data}}$, we match samples using a
-permutation-invariant approximation to the Fused GW-type graph cost $c(x_0,x_{\text{data}})$
+Given minibatches $x^0 \sim \pi_0$ and $x^\mathrm{data} \sim \pi_\mathrm{data}$, we match samples using a
+permutation-invariant approximation to the Fused GW-type graph cost $c(x^0,x^\mathrm{data})$
 (Section~\ref{sec:gem} and Appendix~\ref{app:matching}), obtaining a pairing map $T$ induced by the
-minibatch coupling. Each data graph $x_{\text{data}}$ is paired with a source graph $T(x_{\text{data}})$;
-denote their embeddings by $\widehat{T(x_{\text{data}})}$ and $\hat{x}_{\text{data}}$. Define the
-displacement in the embedding space as $v=\hat{x}_{\text{data}}-\widehat{T(x_{\text{data}})}$.
-We sample a \emph{discrete} interpolant $x_t$ by independently choosing each node/edge from the
-endpoint graphs. For every site $s$ (node or edge),
-\begin{equation}
-x_{t,s}\sim \mathrm{Cat}\!\left(t\,\mathbf{e}(x_{\text{data},s}) + (1-t)\,\mathbf{e}(T(x_{\text{data}})_s)\right),
-\, t\sim\Unif([0,1]),
-\end{equation}
-where $\mathbf{e}(\cdot)$ denotes the one-hot vector in the categorical domain of site $s$. Let
-$\hat{x}_t$ be the embedding of $x_t$ via $\phi_i,\phi_{ij}$ (Section~\ref{sec:gem}); we use it only
-to evaluate $\nabla_{\hat{x}} V_\theta(\hat{x}_t)$.
+minibatch coupling. Each data graph $x^\mathrm{data}$ is paired with a source graph $y^0=T(x^\mathrm{data})$;
+denote their embeddings by $\hat{y}^0$ and $\hat{x}^\mathrm{data}$. Define the
+displacement in the embedding space as $v=\hat{x}^\mathrm{data}-\hat{y}^0$.
+We sample a \emph{discrete} interpolant $x^t:=(x^t_\mathcal{V},x^t_\mathcal{E})$, where $x_\mathcal{V}^t:= [x_i^t]_{i=1}^n$ and $x_\mathcal{E}^t := [x_{ij}^t]_{i<j}$ by independently sampling each node and edge from the endpoint graphs.
+% \begin{equation}
+% x^t\sim \mathrm{Cat}\left(t\,\mathbf{e}((x^\mathrm{data})s) + (1-t)\,\mathbf{e}((y^0)_s)\right),
+% \, t\sim\Unif([0,1]),
+% \end{equation}
+% \begin{equation}
+% t \sim \Unif([0,1]),\qquad
+\begin{eqnarray}
+x_i^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{V}\big(y_i^0\big) + t\,\phi_\mathcal{V}\big(x_i^{\mathrm{data}}\big)\Big)\\
+x_{ij}^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{E}\big(y_{ij}^0\big) + t\,\phi_\mathcal{E}\big(x_{ij}^{\mathrm{data}}\big)\Big)
+\end{eqnarray}
+% \end{equation}
+Let $\hat{x}^t$ be the real valued embedding of $x^t$ via $\phi_\mathcal{V},\phi_\mathcal{E}$ (Section~\ref{sec:gem}); we use it only
+to evaluate $\nabla_{\hat{x}} V_\theta(\hat{x}^t)$.
 
 \paragraph{Objectives.}
 We use a flow-matching loss and an energy refinement term:
 \begin{align}
 \mathcal{L}_{\text{flow}}(\theta)
 &=
-\mathbb{E}_{(T(x_{\text{data}}),x_{\text{data}})\sim\tilde{\gamma},\,t\sim\Unif([0,1])}\left[
-\|-\nabla_{\hat{x}} V_\theta(\hat{x}_t)-v\|_2^2
+\mathbb{E}_{(y^0,x^\mathrm{data})\sim\tilde{\gamma},\,t\sim\Unif([0,1])}\left[
+\|-\nabla_{\hat{x}} V_\theta(\hat{x}^t)-v\|_2^2
 \right],\\
 \mathcal{L}_{\text{ER}}(\theta)
 &=
-\mathbb{E}_{x\sim p_{\text{data}}}[V_\theta(x)]
+\mathbb{E}_{x\sim p^\mathrm{data}}[V_\theta(x)]
 -\mathbb{E}_{\tilde{x}\sim \text{sg}\,p_\theta}[V_\theta(\tilde{x})].
 \end{align}
 Relaxations of the transport objective near $t=1$ are discussed in Appendix~\ref{app:flow-weighting}.

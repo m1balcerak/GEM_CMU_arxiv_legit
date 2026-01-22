@@ -49,7 +49,7 @@ Energy matching learns a parameterized ($\theta$) scalar \emph{potential} ($V_\t
 \item \textbf{Near-equilibrium refinement:} near equilibrium, $V_\theta$ acts as an EBM energy and defines a Gibbs density with unit temperature.
 \end{itemize}
 This separates learning into a \emph{global} transport-alignment term and a \emph{local} density refinement term.
-A two-regime temperature $\varepsilon(\cdot)$ is used: $\varepsilon(t)=0$ off-manifold (transport regime) and $\varepsilon(t)=1$ near equilibrium (mixing regime). 
+A two-regime temperature $\epsilon(\cdot)$ is used: $\epsilon(t)=0$ off-manifold (transport regime) and $\epsilon(t)=1$ near equilibrium (mixing regime). 
 This switch of regime (i)injects exploration, (ii) helps to prevent mode collapse, and (iii) stabilizes the Gibbs distribution in the mixing regime.
 
 In continuous space, a JKO step for the energy-and-entropy functional reads
@@ -59,7 +59,7 @@ In continuous space, a JKO step for the energy-and-entropy functional reads
 \arg\min_{\rho}\;
 \frac{1}{2\Delta t}\,W_2^2(\rho,\rho_t)\nonumber\\
 &\quad+\;\int V_\theta(x)\,\rho(x)\,\mathrm{d}x\nonumber\\
-&\quad+\;\varepsilon(t)\int \rho(x)\log\rho(x)\,\mathrm{d}x.
+&\quad+\;\epsilon(t)\int \rho(x)\log\rho(x)\,\mathrm{d}x.
 \end{align}
 
 % \paragraph{Transport learning (off-manifold).}
@@ -99,15 +99,15 @@ $\mathcal{L}_{\mathrm{OT}}$ allows source-initialized negative samples ($x^{-}$)
 
 \paragraph{Sampling (two regimes).}
 Sampling starts from a transport-aligned drift and switches to a mixing via an effective temperature
-$\varepsilon(t)$. In continuous time, this is the time-inhomogeneous SDE
+$\epsilon(t)$. In continuous time, this is the time-inhomogeneous SDE
 \begin{equation}
 \mathrm{d}X_t
 =
 -\nabla_x V_\theta(X_t)\,\mathrm{d}t
-+\sqrt{2\,\varepsilon(t)}\,\mathrm{d}W_t,
++\sqrt{2\,\epsilon(t)}\,\mathrm{d}W_t,
 \end{equation}
-which reduces to an ODE when $\varepsilon(t)=0$ (off-manifold) and becomes a stochastic dynamics as
-the regime switches and $\varepsilon(t)\to 1$. In practice, this dynamics needs to be integrated over time.
+which reduces to an ODE when $\epsilon(t)=0$ (off-manifold) and becomes a stochastic dynamics as
+the regime switches and $\epsilon(t)\to 1$. In practice, this dynamics needs to be integrated over time.
 
 \paragraph{Related work: discrete diffusion/flow matching and control.}
 Recent progress in discrete graph generation is dominated by denoising diffusion and CTMC

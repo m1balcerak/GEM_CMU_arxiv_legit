@@ -3,39 +3,51 @@
 
 Property regressors are trained on clean molecules, so evaluating them on noisy graphs is
 ill-posed when bonds and valences are corrupted. We measure the degradation by computing test
-MAE as a function of noise level $t$ along the diffusion path. We use 10k test molecules and
-report four representative properties (SAS, logS, logP, QED). As expected, errors are large for
+MAE as a function of denoising time $t$ along the diffusion path. We use 10k test molecules and
+report four representative properties (TPSA, logS, logP, QED). As expected, errors are large for
 noisy inputs and only become reasonable at $t=1$ (fully denoised, clean samples).
-Figure~\ref{fig:regressor-noise} summarizes the trend.
+Figure~\ref{fig:regressor-noise} summarizes the trend. Solid lines are marginal-noise regressors;
+dashed lines are uniform-noise regressors.
 
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}
 \begin{axis}[
   width=\columnwidth,
-  height=0.58\columnwidth,
-  xlabel={$t$ (noise level)},
+  height=0.65\columnwidth,
+  xlabel={Denoising time $t$},
   ylabel={Test MAE},
   xmin=0, xmax=1,
-  ymin=0, ymax=0.8,
+  ymin=0, ymax=1.1,
   grid=both,
   grid style={line width=0.3pt, draw=gray!30},
-  tick label style={font=\scriptsize},
+  tick label style={font=\small},
   label style={font=\small},
-  legend style={font=\scriptsize, draw=none, fill=none},
-  legend pos=north east,
+  legend style={font=\fontsize{6}{7}\selectfont, draw=none, fill=none, cells={anchor=west}, at={(1.01,1.0)}, anchor=north east},
+  legend columns=2,
+  legend image post style={xscale=0.5},
 ]
-\addplot+[thick, blue] coordinates {
-  (0.0, 0.4171967224)
-  (0.2, 0.4084696747)
-  (0.4, 0.3828861816)
-  (0.6, 0.3446883911)
-  (0.8, 0.2791697571)
-  (1.0, 0.0690200127)
+\addplot+[thick, blue, solid, mark=none] coordinates {
+  (0.0, 0.25916087890625)
+  (0.2, 0.257115021484375)
+  (0.4, 0.252433107421875)
+  (0.6, 0.235796013671875)
+  (0.8, 0.1833322119140625)
+  (1.0, 0.02114986657714844)
 };
-\addlegendentry{SAS}
+\addlegendentry{TPSA/50 (margi.)}
 
-\addplot+[thick, orange!80!black] coordinates {
+\addplot+[thick, blue, dashed, mark=none] coordinates {
+  (0.0, 0.25931730078125)
+  (0.2, 0.257358630859375)
+  (0.4, 0.252378265625)
+  (0.6, 0.240960873046875)
+  (0.8, 0.20287095703125)
+  (1.0, 0.024920642578125)
+};
+\addlegendentry{TPSA/50 (unif.)}
+
+\addplot+[thick, orange!80!black, solid, mark=none] coordinates {
   (0.0, 0.4423901184)
   (0.2, 0.4363820099)
   (0.4, 0.4203746033)
@@ -43,9 +55,19 @@ Figure~\ref{fig:regressor-noise} summarizes the trend.
   (0.8, 0.3152096558)
   (1.0, 0.0594828186)
 };
-\addlegendentry{logS}
+\addlegendentry{logS (margi.)}
 
-\addplot+[thick, purple!70!black] coordinates {
+\addplot+[thick, orange!80!black, dashed, mark=none] coordinates {
+  (0.0, 0.4384821198)
+  (0.2, 0.4365656372)
+  (0.4, 0.4292946228)
+  (0.6, 0.4080485626)
+  (0.8, 0.3465020111)
+  (1.0, 0.0561543186)
+};
+\addlegendentry{logS (unif.)}
+
+\addplot+[thick, purple!70!black, solid, mark=none] coordinates {
   (0.0, 0.7199128723)
   (0.2, 0.7027059631)
   (0.4, 0.6730399292)
@@ -53,9 +75,19 @@ Figure~\ref{fig:regressor-noise} summarizes the trend.
   (0.8, 0.4690968353)
   (1.0, 0.0782309380)
 };
-\addlegendentry{logP}
+\addlegendentry{logP (margi.)}
 
-\addplot+[thick, green!60!black] coordinates {
+\addplot+[thick, purple!70!black, dashed, mark=none] coordinates {
+  (0.0, 0.7122465149)
+  (0.2, 0.7079793396)
+  (0.4, 0.6892063049)
+  (0.6, 0.6472913635)
+  (0.8, 0.5287614197)
+  (1.0, 0.0743568142)
+};
+\addlegendentry{logP (unif.)}
+
+\addplot+[thick, green!60!black, solid, mark=none] coordinates {
   (0.0, 0.0852654148)
   (0.2, 0.0842592201)
   (0.4, 0.0810060917)
@@ -63,11 +95,42 @@ Figure~\ref{fig:regressor-noise} summarizes the trend.
   (0.8, 0.0599623322)
   (1.0, 0.0234130266)
 };
-\addlegendentry{QED}
+\addlegendentry{QED (margi.)}
+
+\addplot+[thick, green!60!black, dashed, mark=none] coordinates {
+  (0.0, 0.0857948933)
+  (0.2, 0.0853343445)
+  (0.4, 0.0841610649)
+  (0.6, 0.0802927971)
+  (0.8, 0.0680123455)
+  (1.0, 0.0258289015)
+};
+\addlegendentry{QED (unif.)}
 \end{axis}
 \end{tikzpicture}
-\caption{\footnotesize \textbf{Regressor Noise Sensitivity.} Test MAE of time/noise-conditioned property regressors versus noise level $t$
-(0 = fully noised, 1 = clean/denoised). Each point averages 10k test molecules. Errors are large for
-noisy inputs and only reasonable at $t=1$.}
+\caption{\footnotesize Test MAE of time/noise-conditioned property regressors versus denoising time $t$
+(0 = fully noised, 1 = clean/denoised). Each point averages 10k test molecules. Solid lines are
+marginal-noise regressors; dashed lines are uniform-noise regressors. TPSA MAE is scaled by
+$1/50$ for visualization. Errors are large for noisy inputs and only become reasonable around
+$t=1$.}
 \label{fig:regressor-noise}
 \end{figure}
+
+\begin{table}[t]
+\centering
+\small
+\begingroup
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Regressor & logS $\ge$ -2.25 & QED $\ge$ 0.9 & logP $\le$ 1.5 \\
+ & CVUN $\uparrow$ & CVUN $\uparrow$ & CVUN $\uparrow$ \\
+\midrule
+Clean & 0.531 & 0.154 & 0.552 \\
+Noise-conditioned  & \textbf{0.836} & \textbf{0.422} & \textbf{0.846} \\
+\bottomrule
+\end{tabular}
+\endgroup
+\caption{\footnotesize \textbf{Regressor ablations (GEM).} Clean regressors are time-independent and trained only on valid molecules. Noise-conditioned regressors are time-dependent and trained on uniformly noised graphs. We report CVUN for each property condition on MOSES.}
+\label{tab:regressor-ablations}
+\end{table}
