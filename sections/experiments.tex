@@ -119,31 +119,11 @@ geometry.
 
 
 
-We implement the geodesic path as a spline (Bezier) interpolation over node/edge logits in the
-probability simplex, then sample discrete graphs along evenly spaced points on the path. The linear
-baseline uses the same endpoints and sampling protocol. Appendix~\ref{app:geodesic-details} provides
-the implementation details.
- 
-In the embedding space we consider paths $\hat{\gamma}(t)$ and use the local geometry induced by
-\eqref{eq:loc-cost}. Define
-\begin{equation}
-\|\dot{\hat{\gamma}}(t)\|_{\mathrm{loc}}^2
-=\lambda_X\sum_{i\in\mathcal{V}}\|\dot{\hat{\gamma}}_i(t)\|^2
-+\lambda_E\sum_{i<j}\|\dot{\hat{\gamma}}_{ij}(t)\|^2,
-\end{equation}
-and the energy-weighted length
-\begin{equation}
-L_\theta(\gamma)=\int_0^1 \exp\!\big(\beta V_\theta(\hat{\gamma}(t))\big)\,
-\|\dot{\hat{\gamma}}(t)\|_{\mathrm{loc}}\,\mathrm{d}t.
-\end{equation}
-We optimize the geodesic objective
-\begin{equation}
-\mathcal{J}_{\mathrm{geo}}(\gamma)
-=
-L_\theta(\gamma)
-\;+\lambda_{ME}\int_0^1 V_\theta(\hat{\gamma}(t))\,\mathrm{d}t,
-\end{equation}
-Additional details are in Appendix~\ref{app:geodesic-details}.
+We implement geodesics as Bezier splines over node/edge logits in the probability simplex and compare
+against a cost-only (linear) baseline. We optimize an energy-weighted length
+$L_\theta(\gamma)=\int_0^1 \exp\!\big(\beta V_\theta(\hat{\gamma}(t))\big)\|\dot{\hat{\gamma}}(t)\|_{\mathrm{loc}}\,dt$
+with an average-energy regularizer $\lambda_{ME}\int_0^1 V_\theta(\hat{\gamma}(t))\,dt$; full details
+and discretization are in Appendix~\ref{app:geodesic-details}.
 
 \begin{figure}[H]
 \centering
@@ -165,6 +145,6 @@ Additional details are in Appendix~\ref{app:geodesic-details}.
   \node[blue, anchor=west] at (1.9,2.8) {GEM energy-weighted geodesic};
   \node[gray, anchor=west] at (1.9,2.3) {cost-only geodesic};
 \end{tikzpicture}
-\caption{\footnotesize \textbf{Validity Along Geodesics.} Expected average validity vs.\ endpoint distance (cost-induced) for GEM energy-weighted versus cost-only geodesics.}
+\caption{\footnotesize \textbf{Validity Along Geodesics.} Expected average validity vs.\ endpoint distance (cost-induced) for GEM energy-weighted versus cost-only geodesics. \textcolor{red}{[WiP]}}
 \label{fig:geodesic-validity}
 \end{figure}
