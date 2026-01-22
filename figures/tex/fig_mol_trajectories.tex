@@ -1,0 +1,54 @@
+\begin{figure*}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.15]
+  % Layout constants
+  \def\boxsize{2.4}
+  \def\gap{2.5}
+  \def\rowgap{2.3}
+  \def\arrowlen{0.3}
+
+  % Row 1 (GEM, skip duplicate C)
+  \foreach \fname [count=\i from 0] in {
+      figures/interpolation/gem_00,
+      figures/interpolation/gem_01,
+      figures/interpolation/gem_03,
+      figures/interpolation/gem_04,
+      figures/interpolation/gem_05,
+      figures/interpolation/gem_06} {
+    \node[inner sep=0pt] at (\i*\gap+0.5*\boxsize,0.5*\boxsize)
+      {\includesvg[width=\boxsize cm]{\fname}};
+    \node[anchor=north west, font=\scriptsize\bfseries] at (\i*\gap+0.05*\boxsize,0.98*\boxsize)
+      {\ifnum\i=0 initial\else\ifnum\i=5 final\else\relax\fi\fi};
+  }
+  \foreach \i in {0,1,2,3,4} {
+    \draw[->, line width=0.4pt, opacity=0.3]
+      ({\i*\gap + 0.5*(\gap+\boxsize) - 0.5*\arrowlen}, {0.5*\boxsize})
+      -- ({\i*\gap + 0.5*(\gap+\boxsize) + 0.5*\arrowlen}, {0.5*\boxsize});
+  }
+
+  % Row 2 (linear, skip duplicate C)
+  \foreach \fname [count=\i from 0] in {
+      figures/interpolation/linear_00,
+      figures/interpolation/linear_01,
+      figures/interpolation/linear_03,
+      figures/interpolation/linear_04,
+      figures/interpolation/linear_05,
+      figures/interpolation/linear_06} {
+    \node[inner sep=0pt] at (\i*\gap+0.5*\boxsize,-\rowgap+0.5*\boxsize)
+      {\includesvg[width=\boxsize cm]{\fname}};
+    \node[anchor=north west, font=\scriptsize\bfseries] at (\i*\gap+0.05*\boxsize,-\rowgap+0.98*\boxsize)
+      {\ifnum\i=0 initial\else\ifnum\i=5 final\else\relax\fi\fi};
+  }
+  \foreach \i in {0,1,2,3,4} {
+    \draw[->, line width=0.4pt, opacity=0.3]
+      ({\i*\gap + 0.5*(\gap+\boxsize) - 0.5*\arrowlen}, {-\rowgap+0.5*\boxsize})
+      -- ({\i*\gap + 0.5*(\gap+\boxsize) + 0.5*\arrowlen}, {-\rowgap+0.5*\boxsize});
+  }
+
+  % Row labels (above rows)
+  \node[anchor=west, font=\small\bfseries] at (0,\boxsize+0.30) {GEM energy-weighted geodesic:};
+  \node[anchor=west, font=\small\bfseries] at (0,-\rowgap+\boxsize+0.30) {Cost-only geodesic:};
+\end{tikzpicture}
+\caption{\footnotesize \textbf{GEM Energy-Weighted vs Cost-Only Geodesics.} Molecule trajectories along continuous geodesic paths for MOSES. Top row: GEM energy-weighted geodesic; bottom row: cost-only geodesic. Boxes indicate samples along the continuous path.}
+\label{fig:mol-trajectories}
+\end{figure*}

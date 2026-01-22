@@ -1,0 +1,33 @@
+\begin{table*}[h]
+\centering
+\small
+\textbf{MOSES} ($\sim$1.5M molecules)\\[2pt]
+\begingroup
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcc cc cc cc}
+\toprule
+Method
+& \multicolumn{2}{c}{Condition: logS $\ge$ -2.25}
+& \multicolumn{2}{c}{Condition: QED $\ge$ 0.9}
+& \multicolumn{2}{c}{Condition: TPSA $\le$ 50}
+& \multicolumn{2}{c}{Condition: logP $\le$ 1.5} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9}
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$
+& C.V.U.N. $\uparrow$ & C.V.U. $\uparrow$ \\
+\midrule
+Training samples (MOSES) & 0 & 0.24 & 0 & 0.16 & 0 & 0.21 & 0 & 0.15 \\
+\midrule
+\multicolumn{9}{l}{\textit{Noise Initialization}} \\
+\midrule
+G-VFM$^*$~\citep{eijkelboom2025controlledvfm} & 0.72 & 0.75 & 0.26 & 0.28 & 0.72 & 0.80 & 0.70 & 0.74 \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & 0.74 & 0.79 & 0.26 & 0.31 & 0.77 & \textbf{0.82} & 0.78 & 0.82 \\
+\textbf{GEM (Ours)} & \textbf{0.80} & \textbf{0.81} & \textbf{0.40} & \textbf{0.40} & \textbf{0.80} & 0.81 & \textbf{0.85} & \textbf{0.85} \\
+\bottomrule
+\end{tabular}
+\endgroup
+\vspace{0.15cm}
+\caption{\footnotesize \textbf{Property Conditioning.} MOSES conditional generation under property constraints. $C.V.U.N.$ is the fraction meeting the condition and valid, unique, novel simultaneously; $C.V.U.$ is the fraction meeting the condition and valid, unique. All entries are percentages. $C$, $V$, $U$, and $N$ denote condition satisfaction, validity, uniqueness, and novelty, respectively. 1k inference steps. Evaluated on 5k samples.$^*$ reproduced, same architecture (other than a small energy-head for GEM \cref{app:perm-invariance}).}
+\label{tab:moses-conditional}
+\end{table*}
