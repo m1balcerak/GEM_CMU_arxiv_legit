@@ -4,7 +4,7 @@ Graph generation requires handling of discrete variables and permutation invaria
 
 \paragraph{Graph representation.}
 We consider a discrete state space $\mathcal{X}:=\big(\mathcal{X}_{\mathrm{node}}\big)^{n}\times\big(\mathcal{X}_{\mathrm{edge}}\big)^{\binom{n}{2}}$ to represent undirected graphs. A graph $x\in \mathcal{X}$ contains a set of $n$ nodes $\mathcal{V}=\{1,\dots,n\}$ and edges $\mathcal{E}$ defining the connectivity between these nodes. Each node $i\in\mathcal{V}$ has a node class $x_i \in \mathcal{X}_{\mathrm{node}}$ (e.g.\ an atom type), and each edge $(i,j)\in\mathcal{E}$ has an edge class $x_{ij}\in\mathcal{X}_{\mathrm{edge}}$ (e.g.\ a bond type).
-Note that $\mathcal{X}_{\mathrm{edge}}$ includes $\varnothing$ denoting a ``no-edge'' class.% We can obtain the edges from the edge features as
+Note that $\mathcal{X}_{\mathrm{edge}}$ includes $\varnothing$ denoting a ``no-edge'' class. % We can obtain the edges from the edge features as
 % $
 % \mathcal{E}=\{(i,j): 1\le i<j\le n,\; x_{ij}\neq \varnothing\}.
 % $
