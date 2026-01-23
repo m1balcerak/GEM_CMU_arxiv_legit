@@ -44,7 +44,7 @@ Here, $n$ is the maximum number of nodes in the training dataset; smaller graphs
 
 
 \subsection{JKO-Style Variational Objective for Discrete Probability Spaces}
-We introduce a JKO-style objective adapted to discrete graph configurations. Our goal is twofold: i) We preserve the Gibbs equilibrium associated with the learned energy $V_\theta$ and ii) remain well-defined on a finite state space where sampling proceeds via discrete edits rather than continuous trajectories. Hence, we avoid time-indexed dynamics, which are cumbersome for discrete jumps and often dominated by 'do-nothing moves' (self-loops or near-identity edits arising from invalid/high-cost proposals under graph constraints), by using an energy-based switch $\epsilon(x)$ and a coupling-based transport term defined over valid graphs. The switch is binary: $\epsilon(x)=0$ in the transport regime and $\epsilon(x)=1$ in the mixing regime; in our sampler it is triggered once the chain either reaches the expected energy level for graphs with that node count or hits a local minimum under greedy edits.
+We introduce a JKO-style objective adapted to discrete graph configurations. Our goal is twofold: i) We preserve the Gibbs equilibrium associated with the learned energy $V_\theta$ and ii) remain well-defined on a finite state space where sampling proceeds via discrete edits rather than continuous trajectories. Hence, we avoid time-indexed dynamics, which are cumbersome for discrete jumps, by using an energy-based switch $\epsilon(x)$ and a coupling-based transport term defined over valid graphs. The switch is binary: $\epsilon(x)=0$ in the transport regime and $\epsilon(x)=1$ in the mixing regime; in our sampler it is triggered once the chain either reaches the expected energy level for graphs with that node count or hits a local minimum under greedy edits.
 
 %his choice directly motivates the multi-site, geometry-aware sampler:
 
@@ -60,7 +60,20 @@ with the objective
 \frac{1}{2\eta}\,\inf_{\gamma\in\Pi(\pi_k,\pi)}\mathcal{A}(\gamma)\nonumber +\sum_{x\in\mathcal{X}} V_\theta(x)\,\pi(x)\nonumber\\
 &\quad+\sum_{x\in\mathcal{X}} \epsilon(x)\,\pi(x)\log\pi(x).
 \end{align}
-We note that this formulation differs from the traditional JKO step. While the traditional JKO involves minimization of the kinetic term over couplings between $\pi_k$ and $\pi$, yielding $W_2^2$ in the continuous setting, we are operating in a discrete state space. Hence, we work with an action $\mathcal{A}(\gamma)$ induced by a cost function $c(x,y)$ defined between two graphs $x$ and $y$. \#FIXME A pointwise stationarity condition along paired graphs $(x,y)$ from an optimal coupling is, up to an additive constant,
+\paragraph{Kinetic action.}
+Given a coupling $\gamma$ with $(X_0,X_1)\sim\gamma$, define the interpolant $I_t=(1-t)X_0+tX_1$, its marginal $\rho_t^\gamma$, and conditional drift $b_t^\gamma(x)=\mathbb{E}[X_1-X_0\mid I_t=x]$. The induced kinetic action is
+\begin{equation}\label{eq:kinetic-action}
+\mathcal{A}(\gamma)
+\;:=\;
+\int_0^1 \int \|b_t^\gamma(x)\|^2\,\rho_t^\gamma(\mathrm{d}x)\,\mathrm{d}t.
+\end{equation}
+For quadratic cost, $W_2^2(\rho_0,\rho_1)\le\mathcal{A}(\gamma)\le\mathbb{E}_\gamma[\|X_1-X_0\|^2]$,
+with equality for optimal deterministic (Monge) couplings; we thus use tractable couplings (e.g., minibatch
+matching) and treat $\mathcal{A}(\gamma)$ as a restricted geometry that upper-bounds the Wasserstein distance.
+This differs from the traditional JKO step, which computes the infimum over couplings between $\pi_k$ and $\pi$;
+here we work with a tractable coupling and its induced action $\mathcal{A}(\gamma)$ defined by a cost
+function $c(x,y)$ between graphs $x$ and $y$.
+A pointwise stationarity condition along paired graphs $(x,y)$ from a coupling is, up to an additive constant,
 \begin{equation}
 \frac{1}{2\eta}\,c(x,y)
 \;+\;V_\theta(x)
@@ -81,7 +94,7 @@ with $\mathcal{A}(\tilde{\gamma})$, yielding
 \frac{1}{2\eta}\,\mathcal{A}(\tilde{\gamma})
 \;+\sum_{x\in\mathcal{X}} V_\theta(x)\,\pi_{k+1}(x).
 \end{equation}
-By \eqref{eq:kinetic-action}--\eqref{eq:kinetic-action-bound}, $\mathcal{A}(\tilde{\gamma})$ upper-bounds
+By the standard kinetic-action bound, $\mathcal{A}(\tilde{\gamma})$ upper-bounds
 the OT discrepancy, and this relaxed term is tractable to compute. This motivates a \emph{transport-aligned
 drift} based on the displacement between coupled samples; we use this to supervise
 $-\nabla_{\hat{x}}V_\theta$ along the coupling paths. We evaluate gradients with respect to the
@@ -94,17 +107,8 @@ explicit time index, making it natural for jump processes and MCMC chains.
 
 
 
-\subsection{Permutation-Invariant Minibatch OT}
-
-While for the targeted potential $V_\theta(x)$, permutation invariance can be naturally enforced by construction as $V_\theta$ is produced by a permutation-equivariant graph transformer with an invariant readout to a scalar (see Appendix~\ref{app:perm-invariance} for details), so $V_\theta(\sigma \cdot x)=V_\theta(x)$ and the Gibbs distribution $\pi_\theta(x)\propto \exp(-V_\theta(x))$ are invariant. 
-Here, $\sigma\in S_n: \mathcal{V}\rightarrow\mathcal{V}$ is a permutation that acts on node indices and induces a relabeling of the
-graph: $(\sigma\cdot x)_i=x_{\sigma(i)}$ and $(\sigma\cdot x)_{ij}=x_{\sigma(i)\sigma(j)}$ and $S_n$ is the symmetry group of $n$ element.
-
-To additionally enforce permutation invariance during the transport phase, we introduce a Gromov-Wasserstein (GW) cost function for pairing slection:
-
-
-\paragraph{Local embedding discrepancy and fused GW cost.}
-We measure local discrepancies in the embedding by
+\subsection{Local and Permutation-Invariant Geometries}
+The potential $V_\theta$ is permutation-invariant by construction (Appendix~\ref{app:perm-invariance}), so the geometry used for pairing should also respect node relabelings. Here, $\sigma\in S_n$ acts on node indices and induces a relabeling of the graph: $(\sigma\cdot x)_i=x_{\sigma(i)}$ and $(\sigma\cdot x)_{ij}=x_{\sigma(i)\sigma(j)}$. We measure local discrepancies in the embedding by
 \begin{equation}\label{eq:loc-cost}
 c_{\mathrm{loc}}(x,y)
 \;\coloneqq\;
@@ -112,8 +116,7 @@ c_{\mathrm{loc}}(x,y)
 +
 \lambda_\mathcal{E}\|\hat{x}_{\mathcal{E}}-\hat{y}_{\mathcal{E}}\|^2_2,
 \end{equation}
-with $\lambda_\mathcal{V},\lambda_\mathcal{E}>0$ scaling node and edge contributions. To compare graphs in a permutation-invariant way,
-we lift this local geometry to a fused discrepancy by optimizing over node relabelings:
+with $\lambda_\mathcal{V},\lambda_\mathcal{E}>0$ scaling node and edge contributions. To compare graphs in a permutation-invariant way, we lift this local geometry by optimizing over node relabelings:
 \begin{equation}\label{eq:fgw-cost}
 c_{\mathrm{FGW}}(x,y)
 =
@@ -122,22 +125,11 @@ c_{\mathrm{FGW}}(x,y)
 c_{\mathrm{loc}}(x,\sigma\cdot y)
 \right\}.
 \end{equation}
-This quantity is used for minibatch pairings and transport supervision.
-
-%In the sampler, we avoid re-solving for $\sigma$ at every step and instead use $c_{\mathrm{loc}}$ as a local surrogate for small edits.
-
-
-\paragraph{Minibatch couplings and transport-aligned supervision.}
-Given minibatches from a source $\pi_0$ and the data $\pi_\mathrm{data}$, we compute a permutation-invariant minibatch matching using an approximation to $c_{\mathrm{FGW}}$, obtaining a coupling
-$\tilde{\gamma}$ and a pairing map $T$ that assigns each data graph $x^\mathrm{data}$ to a source
-graph $y^0:=T(x^\mathrm{data})$.\\
-Exact evaluation of $c_{\mathrm{FGW}}$ is NP-hard for graph matching or quadratic assignment and thus computationally infeasible. In molecule-like settings, we use node-matching alignments (with light
-edge tie-breakers), while for a uniform source we use fast histogram signatures; see
-Appendix~\ref{app:matching}. Since we transport from $\pi_0$ toward $\pi_\mathrm{data}$, these
-pairings provide off-manifold supervision: the displacement
-$v=\hat{x}^\mathrm{data}-\hat{y}^0$ defines a transport-aligned drift, which
-we use to find $-\nabla_{\hat{x}}V_\theta$ via training objective
-(Section~\ref{sec:training}).
+This quantity is used for minibatch pairings and transport supervision. Exact evaluation is
+intractable, so we use fast approximations: histogram matching for noisy--clean pairing and
+node-matching for molecule--molecule pairing (Appendix~\ref{app:matching}). These pairings define
+displacements $v=\hat{x}^\mathrm{data}-\hat{y}^0$ that supervise the transport-aligned drift used to
+train $-\nabla_{\hat{x}}V_\theta$ (Section~\ref{sec:training}).
 
 
 \subsection{Proposal Generation during Transport and Mixing}

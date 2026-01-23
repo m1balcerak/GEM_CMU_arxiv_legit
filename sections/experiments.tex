@@ -1,34 +1,36 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We report unconditional generation on MOSES in the main text and on QM9 in
-Appendix~\ref{app:qm9-uncond}, property optimization under thresholded targets (logP, logS, QED, TPSA),
-and geodesic comparisons in the learned space. We report validity, uniqueness, novelty, $V.U.N.$,
-and \gls*{fcd} (lower is better), and we consider two initialization regimes: noise initialization
-starts from easy-to-sample noise and must reach chemically valid molecules, while data initialization
-starts from training molecules and must make novel yet valid edits (diffusion/CTMC or MCMC). MOSES is
-a large-scale dataset (about 1.5M molecules), while QM9 is smaller; we use MOSES for scale and QM9 as
-a compact comparison.
+We report unconditional generation on MOSES and QM9 in the main text, property optimization under
+thresholded targets (logP, logS, QED, TPSA), and geodesic comparisons in the learned space. We report
+validity, uniqueness, novelty, $V.U.N.$, and \gls*{fcd} (lower is better), and we consider two
+initialization regimes: noise initialization starts from easy-to-sample noise and must reach
+chemically valid molecules, while data initialization starts from training molecules and must make
+novel yet valid edits (diffusion/CTMC or MCMC). MOSES is a larger scale dataset (about 1.5M molecules),
+while QM9 is smaller; we use MOSES for scale and QM9 as a compact comparison.
 %
 A concise conceptual summary of the baselines used in our experiments is provided in
 Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix~\ref{app:exp-setup}.
 
 \subsection*{Unconditional generation}
-\paragraph{MOSES: Baselines vs.\ GEM.}
-Table~\ref{tab:uncond-moses} reports unconditional metrics on MOSES; QM9 results are in
-Appendix~\ref{app:qm9-uncond} (Table~\ref{tab:uncond-qm9}).
-Across both Noise Initialization and Data Initialization, GEM improves V.U.N.\ and \gls*{fcd}.
+\paragraph{MOSES.}
+Table~\ref{tab:uncond-main} (top) reports MOSES results. Across both noise and data initialization,
+GEM improves V.U.N.\ and \gls*{fcd} over the baselines.
 Figure~\ref{fig:moses-vun-steps} reports performance versus inference steps, and
 Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.\ Data Initialization.
 \begin{table}[h]
 \centering
 \small
-\textbf{MOSES} ($\sim$1.5M molecules)\\[2pt]
+\captionsetup[subtable]{position=top,skip=3pt,font=bf}
+\begin{subtable}[t]{\columnwidth}
+\centering
+\subcaption{MOSES ($\sim$1.5M molecules).}
+\label{tab:uncond-moses}
 \begin{tabular}{lcc}
 \toprule
 Method & V.U.N. $\uparrow$ & \gls*{fcd} $\downarrow$ \\
 \midrule
-Training samples (MOSES) & 0.0 & 0.09 \\
+Training samples (MOSES) & 0.0 & 0.25 \\
 \midrule
 \multicolumn{3}{l}{\textit{Noise Initialization}} \\
 \midrule
@@ -43,12 +45,38 @@ GraphEBM$^*$~\citep{liu2021graphebm} & 32.16 & 7.31 \\
 \textbf{GEM (Ours)} & \textbf{89.81} & \textbf{0.76} \\
 \bottomrule
 \end{tabular}
-\caption{\footnotesize \textbf{Unconditional Generation.} MOSES results grouped by initialization.
-$V.U.N.$ is the valid-unique-novel fraction (higher is better); \gls*{fcd} measures the distance
-between generated and MOSES molecules in ChemNet feature space (lower is better). $^*$ reproduced
-with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs use a small energy head. Architecture
-details are in Appendix~\ref{app:perm-invariance}. 25k generations. Budget of 1000 inference steps.}
-\label{tab:uncond-moses}
+\end{subtable}
+\par\addvspace{11pt}
+\begin{subtable}[t]{\columnwidth}
+\centering
+\subcaption{QM9 ($\sim$0.15M molecules).}
+\label{tab:uncond-qm9}
+\begin{tabular}{lccc}
+\toprule
+Method & V.U. $\uparrow$ & Novelty $\uparrow$ & \gls*{fcd} $\downarrow$ \\
+\midrule
+Training samples (QM9) & 100 & 0 & 0.04 \\
+\midrule
+\multicolumn{4}{l}{\textit{Noise Initialization}} \\
+\midrule
+GraphEBM~\citep{liu2021graphebm} & 8.07 & 0.62 & 7.16 \\
+VFM~\citep{eijkelboom2024vfm} & \textbf{99.81} & 0.49 & \textbf{0.44} \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & 96.81 & 0.36 & 0.81 \\
+\textbf{GEM (Ours)} & 97.11 & \textbf{0.63} & 0.92 \\
+\midrule
+\multicolumn{4}{l}{\textit{Data Initialization}} \\
+\midrule
+GraphEBM$^*$~\citep{liu2021graphebm} & 21.53 & 0.48 & 5.15 \\
+\textbf{GEM (Ours)} & \textbf{98.51} & \textbf{0.51} & \textbf{0.31} \\
+\bottomrule
+\end{tabular}
+\end{subtable}
+\caption{\footnotesize \textbf{Unconditional Generation.} Results grouped by initialization. MOSES
+reports $V.U.N.$ (valid-unique-novel) and \gls*{fcd} (lower is better); QM9 reports $V.U.$, novelty,
+and \gls*{fcd}. $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs use
+a small energy head. Architecture details are in Appendix~\ref{app:perm-invariance}. MOSES: 25k
+generations, 1000 inference steps. QM9: 10k generations, 750 inference steps.}
+\label{tab:uncond-main}
 \end{table}
 
 %A schematic of MCMC evolution for GEM on QM9 and MOSES is shown in Appendix~\ref{app:sampling}
@@ -66,8 +94,8 @@ details are in Appendix~\ref{app:perm-invariance}. 25k generations. Budget of 10
 
 
 \paragraph{QM9.}
-QM9 unconditional metrics are reported in Appendix~\ref{app:qm9-uncond}
-(Table~\ref{tab:uncond-qm9}). GEM is on pair with diffusion-based baseline in Noise Initialization setup, while state-of-the-art on the Data Initialization setup. 
+Table~\ref{tab:uncond-main} (bottom) shows QM9 results. GEM is competitive with diffusion-based
+baselines under noise initialization and is strongest under data initialization.
 
 \subsection*{Property optimization}
 We evaluate property optimization under molecular threshold constraints (above/below a target),
@@ -83,7 +111,7 @@ on noisy or invalid graphs, and targets (logS $\ge$ -2.25, logP $\le$ 1.5, QED $
 TPSA $\le$ 50) are chosen so unconditional MOSES samples satisfy the constraint at roughly a 20\%
 rate, yielding comparable difficulty across properties.
 Table~\ref{tab:moses-conditional} reports single-property conditioning results, and
-Appendix~\ref{app:baselines} summarizes joint constraints (Table~\ref{tab:moses-conditional-joint}).
+Appendix~\ref{app:baselines} summarizes joint constraints.
 GEM maintains strong validity, uniqueness, and novelty while improving constraint satisfaction
 relative to baselines.
 GEM draws a candidate pool of size $N_{\mathrm{select}}$ from the training set, ranks by the
@@ -98,24 +126,13 @@ cached.
 We compute geodesics between molecules and compare against a linear interpolation baseline.
 Shortest paths in high-dimensional spaces have been studied in particular through energy-based
 models; see, e.g., \citet{bethune2025follow}.
-All alignments are within fixed node counts, using node-matching to define couplings between pairs.
-We sample 1000 molecules, form same-size pairs, and for each pair construct (i) an energy-weighted
-geodesic and (ii) a linear interpolation along the coupling. From the continuous path we obtain
-discrete graphs via categorical sampling, then compute the average validity along each path.
 We plot average validity versus the endpoint distance induced by the matching cost
-$c_{\mathrm{FGW}}$ (node-matching, Appendix~\ref{app:matching}), comparing geodesic vs.\ linear;
-see Figure~\ref{fig:geodesic-validity}. Qualitative paths are shown in
+$c_{\mathrm{FGW}}$ (Appendix~\ref{app:matching}), comparing energy-weighted geodesics to cost-only
+baselines; see Figure~\ref{fig:geodesic-validity}. Qualitative paths are shown in
 Figure~\ref{fig:mol-trajectories}.
-We report the length ratio $L_{\mathrm{geo}}/L_{\mathrm{lin}}$ and the correlation between energy and
-validity along the path; energy-weighted geodesics consistently preserve validity and shorten paths
-relative to cost-only geodesics, confirming that the learned energy captures chemically meaningful
-geometry.
-
-We implement geodesics as Bezier splines over node/edge logits in the probability simplex and compare
-against a cost-only (linear) baseline. We optimize an energy-weighted length
-$L_\theta(\gamma)=\int_0^1 \exp\!\big(\beta V_\theta(\hat{\gamma}(t))\big)\|\dot{\hat{\gamma}}(t)\|_{\mathrm{loc}}\,dt$
-with an average-energy regularizer $\lambda_{ME}\int_0^1 V_\theta(\hat{\gamma}(t))\,dt$; full details
-and discretization are in Appendix~\ref{app:geodesic-details}.
+Energy-weighted geodesics consistently preserve validity relative to cost-only geodesics, confirming
+that the learned energy captures chemically meaningful geometry. Full protocol, pairing,
+optimization, and discretization details are in Appendix~\ref{app:geodesic-details}.
 
 \begin{figure}[h]
 \centering
