@@ -1,22 +1,22 @@
-\begin{figure*}[htbp]
+\begin{figure*}[h]
 \centering
-\begin{tikzpicture}[scale=1.15]
+\begin{tikzpicture}
   % Layout constants
-  \def\boxsize{2.4}
-  \def\gap{2.5}
-  \def\rowgap{2.3}
-  \def\arrowlen{0.3}
+  \def\boxsize{2.5}
+  \def\gap{2.625}
+  \def\rowgap{2.625}
+  \def\arrowlen{0.3125}
 
   % Row 1 (GEM, skip duplicate C)
   \foreach \fname [count=\i from 0] in {
-      figures/interpolation/gem_00,
-      figures/interpolation/gem_01,
-      figures/interpolation/gem_03,
-      figures/interpolation/gem_04,
-      figures/interpolation/gem_05,
-      figures/interpolation/gem_06} {
+      figures/interpolation/gem_00_svg-tex.pdf,
+      figures/interpolation/gem_01_svg-tex.pdf,
+      figures/interpolation/gem_03_svg-tex.pdf,
+      figures/interpolation/gem_04_svg-tex.pdf,
+      figures/interpolation/gem_05_svg-tex.pdf,
+      figures/interpolation/gem_06_svg-tex.pdf} {
     \node[inner sep=0pt] at (\i*\gap+0.5*\boxsize,0.5*\boxsize)
-      {\includesvg[width=\boxsize cm]{\fname}};
+      {\includegraphics[width=\boxsize cm]{\fname}};
     \node[anchor=north west, font=\scriptsize\bfseries] at (\i*\gap+0.05*\boxsize,0.98*\boxsize)
       {\ifnum\i=0 initial\else\ifnum\i=5 final\else\relax\fi\fi};
   }
@@ -28,14 +28,14 @@
 
   % Row 2 (linear, skip duplicate C)
   \foreach \fname [count=\i from 0] in {
-      figures/interpolation/linear_00,
-      figures/interpolation/linear_01,
-      figures/interpolation/linear_03,
-      figures/interpolation/linear_04,
-      figures/interpolation/linear_05,
-      figures/interpolation/linear_06} {
+      figures/interpolation/linear_00_svg-tex.pdf,
+      figures/interpolation/linear_01_svg-tex.pdf,
+      figures/interpolation/linear_03_svg-tex.pdf,
+      figures/interpolation/linear_04_svg-tex.pdf,
+      figures/interpolation/linear_05_svg-tex.pdf,
+      figures/interpolation/linear_06_svg-tex.pdf} {
     \node[inner sep=0pt] at (\i*\gap+0.5*\boxsize,-\rowgap+0.5*\boxsize)
-      {\includesvg[width=\boxsize cm]{\fname}};
+      {\includegraphics[width=\boxsize cm]{\fname}};
     \node[anchor=north west, font=\scriptsize\bfseries] at (\i*\gap+0.05*\boxsize,-\rowgap+0.98*\boxsize)
       {\ifnum\i=0 initial\else\ifnum\i=5 final\else\relax\fi\fi};
   }

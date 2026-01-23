@@ -96,6 +96,8 @@ cached.
 
 \subsection*{Geodesic analysis}
 We compute geodesics between molecules and compare against a linear interpolation baseline.
+Shortest paths in high-dimensional spaces have been studied in particular through energy-based
+models; see, e.g., \citet{bethune2025follow}.
 All alignments are within fixed node counts, using node-matching to define couplings between pairs.
 We sample 1000 molecules, form same-size pairs, and for each pair construct (i) an energy-weighted
 geodesic and (ii) a linear interpolation along the coupling. From the continuous path we obtain
@@ -109,21 +111,13 @@ validity along the path; energy-weighted geodesics consistently preserve validit
 relative to cost-only geodesics, confirming that the learned energy captures chemically meaningful
 geometry.
 
-\input{figures/tex/fig_mol_trajectories}
-
-
-
-
-
-
-
 We implement geodesics as Bezier splines over node/edge logits in the probability simplex and compare
 against a cost-only (linear) baseline. We optimize an energy-weighted length
 $L_\theta(\gamma)=\int_0^1 \exp\!\big(\beta V_\theta(\hat{\gamma}(t))\big)\|\dot{\hat{\gamma}}(t)\|_{\mathrm{loc}}\,dt$
 with an average-energy regularizer $\lambda_{ME}\int_0^1 V_\theta(\hat{\gamma}(t))\,dt$; full details
 and discretization are in Appendix~\ref{app:geodesic-details}.
 
-\begin{figure}[H]
+\begin{figure}[h]
 \centering
 \begin{tikzpicture}[scale=0.95]
   \draw[->, thick] (0,0) -- (5.2,0) node[below, xshift=-1.5cm] {endpoint distance (cost-induced)};
@@ -146,3 +140,5 @@ and discretization are in Appendix~\ref{app:geodesic-details}.
 \caption{\footnotesize \textbf{Validity Along Geodesics.} Expected average validity vs.\ endpoint distance (cost-induced) for GEM energy-weighted versus cost-only geodesics. \textcolor{red}{[WiP]}}
 \label{fig:geodesic-validity}
 \end{figure}
+
+\input{figures/tex/fig_mol_trajectories}

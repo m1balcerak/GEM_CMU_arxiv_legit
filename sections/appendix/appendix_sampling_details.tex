@@ -1,0 +1,68 @@
+\section{Sampling proposal implementation details}
+\label{app:sampling-details}
+
+\paragraph{Gradient features.}
+We use gradient-informed proposals on the discrete graph space with target density
+\(\pi_\theta(x)\propto \exp\left(-V_\theta(x)\right)\). We allow an effective inverse temperature
+\(\beta_{\mathrm{mh}}\) in the MH ratio below (\(\beta_{\mathrm{mh}}=1\) for the base model). We denote
+the gradients with respect to real-valued one-hot node and edge features as follows.
+\begin{align}
+g^\mathcal{V} & := \operatorname{reshape}_{n,l_{\mathrm{node}}}\big(\nabla_{\hat{x}_\mathcal{V}} V_\theta(\hat{x})\big) \in \mathbb{R}^{n\times l_{\mathrm{node}}}\nonumber\\
+g^\mathcal{E} & := \operatorname{reshape}_{\binom{n}{2},l_{\mathrm{edge}}}\big(\nabla_{\hat{x}_\mathcal{E}} V_\theta(\hat{x})\big) \in \mathbb{R}^{\binom{n}{2}\times l_{\mathrm{edge}}}\nonumber
+\end{align}
+Since we are working with undirected graphs, we use symmetrized edge gradients
+\(g_{ij}=g_{ji}=\tfrac{1}{2}(g_{ij}+g_{ji})\) from the graph transformer.
+
+\paragraph{Factorized proposal (multi-site).}
+We sample all nodes and undirected edges independently from categorical logits
+\begin{align}
+\ell^\mathcal{V}_{i,c_i} & = \beta_{\mathrm{prop}}\big(g^\mathcal{V}_{i,x_i}-g^\mathcal{V}_{i,c_i}\big)-\lambda_\mathcal{V}\,\mathbb{I}_{\{c_i \neq x_i\}};~\forall~c_i \in \mathcal{X}_\mathrm{node}, \nonumber \\
+\ell^\mathcal{E}_{{ij},c_{ij}} &= \beta_{\mathrm{prop}}\big(g^\mathcal{E}_{ij,x_{ij}}-g^\mathcal{E}_{ij,c_{ij}}\big)
+-\lambda_\mathcal{E}\,\mathbb{I}_{\{c_{ij}\ne x_{ij}\}};~\forall~c_{ij} \in \mathcal{X}_\mathrm{edge} \nonumber
+\end{align}
+so the full proposal factorizes as
+\begin{equation}
+\begin{aligned}
+q_{\beta_{\mathrm{prop}}}(x\to y)
+&=
+\prod_{i\in\mathcal{V}}\mathrm{Cat}\left(y_i;\mathrm{softmax}(\ell_i^\mathcal{V})\right)\\
+&\quad\times\prod_{i<j}\mathrm{Cat}\left(y_{ij};\mathrm{softmax}(\ell_{ij}^\mathcal{E})\right).
+\end{aligned}
+\end{equation}
+The current class has logit \(0\) (the \textit{stay} option), while \(\lambda_\mathcal{V},\lambda_\mathcal{E}\)
+penalize changes.
+
+\paragraph{Metropolis--Hastings refinement (single beta).}
+For the standard Langevin proposal we set \(\beta_{\mathrm{prop}}=\beta_{\mathrm{mh}}=\beta\) and accept
+\begin{equation}
+\begin{aligned}
+\alpha(x,y)
+&=\min\{1,\exp(\Delta(x,y))\},\\
+\Delta(x,y)
+&=-\beta_{\mathrm{mh}}\big(V_\theta(y)-V_\theta(x)\big)
++\log\frac{q_{\beta_{\mathrm{prop}}}(y\to x)}{q_{\beta_{\mathrm{prop}}}(x\to y)}.
+\end{aligned}
+\end{equation}
+
+\paragraph{Two-betas simulated annealing.}
+We decouple the proposal temperature and target temperature by using
+\(\beta_{\mathrm{prop}}\) in the logits above, while \(\beta_{\mathrm{mh}}\) controls the MH ratio.
+Optionally, \(\beta_{\mathrm{mh}}\) is annealed across MCMC steps:
+\begin{equation}
+\beta_{\mathrm{mh}}(s)=
+\begin{cases}
+\beta_{\mathrm{mh}}^{\mathrm{init}}+\Delta\beta\,\dfrac{s}{S_{\mathrm{anneal}}-1}, & 0\le s<S_{\mathrm{anneal}},\\[6pt]
+\beta_{\mathrm{mh}}^{\mathrm{final}}, & s\ge S_{\mathrm{anneal}}.
+\end{cases}
+\end{equation}
+where \(\Delta\beta=\beta_{\mathrm{mh}}^{\mathrm{final}}-\beta_{\mathrm{mh}}^{\mathrm{init}}\).
+
+\paragraph{Do-nothing resampling and proposal diffusion.}
+If the independently sampled proposal equals the current state (all sites \textit{stay}),
+we resample after softening the logits to increase randomness:
+\(\beta_{\mathrm{prop}}\leftarrow\rho\,\beta_{\mathrm{prop}}\),
+\(\lambda_\mathcal{V}\leftarrow\rho\,\lambda_\mathcal{V}\),
+\(\lambda_\mathcal{E}\leftarrow\rho\,\lambda_\mathcal{E}\) with \(0<\rho<1\).
+We repeat this a bounded number of times; if no change occurs, we keep the current
+state and accumulate the \textit{stay} probability in \(\log q\). The reverse
+transition uses the same resampling rule, preserving the MH ratio.
