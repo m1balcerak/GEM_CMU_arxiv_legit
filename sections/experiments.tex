@@ -18,9 +18,7 @@ Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix
 Table~\ref{tab:uncond-moses} reports unconditional metrics on MOSES; QM9 results are in
 Appendix~\ref{app:qm9-uncond} (Table~\ref{tab:uncond-qm9}).
 Across both Noise Initialization and Data Initialization, GEM improves V.U.N.\ and \gls*{fcd}.
-Validity, novelty, and uniqueness can be improved post-hoc via rejection sampling, so diffusion
-baselines already reach strong V.U.N., but \gls*{fcd} is less amenable to such correction; we see a
-clear gap on MOSES. Figure~\ref{fig:moses-vun-steps} reports performance versus inference steps, and
+Figure~\ref{fig:moses-vun-steps} reports performance versus inference steps, and
 Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.\ Data Initialization.
 \begin{table}[h]
 \centering
@@ -53,8 +51,8 @@ details are in Appendix~\ref{app:perm-invariance}. 25k generations. Budget of 10
 \label{tab:uncond-moses}
 \end{table}
 
-A schematic of MCMC evolution for GEM on QM9 and MOSES is shown in Appendix~\ref{app:sampling}
-(Figure~\ref{fig:appendix-mcmc-traj}).
+%A schematic of MCMC evolution for GEM on QM9 and MOSES is shown in Appendix~\ref{app:sampling}
+%(Figure~\ref{fig:appendix-mcmc-traj}).
 
 \input{figures/tex/fig_moses_vun_steps}
 
@@ -69,7 +67,7 @@ A schematic of MCMC evolution for GEM on QM9 and MOSES is shown in Appendix~\ref
 
 \paragraph{QM9.}
 QM9 unconditional metrics are reported in Appendix~\ref{app:qm9-uncond}
-(Table~\ref{tab:uncond-qm9}).
+(Table~\ref{tab:uncond-qm9}). GEM is on pair with diffusion-based baseline in Noise Initialization setup, while state-of-the-art on the Data Initialization setup. 
 
 \subsection*{Property optimization}
 We evaluate property optimization under molecular threshold constraints (above/below a target),
