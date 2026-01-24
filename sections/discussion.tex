@@ -3,16 +3,14 @@ GEM enables compositional, inference-time control by adding energy terms, as sho
 experiments (Section~\ref{sec:experiments}). The learned energy also enables interpretable diagnostics,
 including geodesic analysis and likelihood-ratio calibration.
 
-\subsection*{Limitations}
-At very small inference budgets, diffusion-based baselines can reach strong performance with fewer steps;
+\paragraph{Limitations} At very small inference budgets, diffusion-based baselines can reach strong performance with fewer steps;
 Figure~\ref{fig:moses-vun-steps} shows that in the few-step regime our current GEM sampler trails the
 diffusion baseline. More broadly, EBMs for generation rely on gradient-based velocity parameterization,
 which typically requires both forward and backward passes per step and implies an inherent $\sim$2--3$\times$
 theoretical slowdown relative to purely forward samplers.
 
 
-\subsection*{Future directions}
-An immediate extension is 3D molecule generation, composing a strong graph prior with geometric
+\paragraph{Future directions} An immediate extension is 3D molecule generation, composing a strong graph prior with geometric
 constraints at inference time. Relative likelihoods can support scalable refinement and
 generalization diagnostics by testing energy rankings on held-out regions.
 

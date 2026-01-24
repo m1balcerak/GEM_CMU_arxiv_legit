@@ -1,62 +1,32 @@
 \section{Introduction}
 \label{sec:introduction}
 
-The generative modeling of structured objects in discrete spaces, such as graphs, is central in scientific and industrial applications. Think, for instance, of molecular discovery for new drugs.
+Generative modeling of discrete structured objects, such as graphs, is a central challenge across many scientific and industrial applications, including drug discovery and materials design.
 
-The complexity of the task lies primarily in the intrinsic combinatorial structure of the \emph{data distribution}, which captures the likelihood of certain, domain-specific patterns.
+The key difficulty arises from the combinatorial complexity of the underlying data distribution, where domain-specific constraints and patterns significantly shape high-probability regions.
 %
-The nowadays mainstream approaches for \emph{unconditional} generation are \glspl{dm} and \gls{fm}, which learn to transform samples from a simple distribution, such as a Gaussian or uniform, into the data distribution. 
-%
-In discrete domains, these
-methods typically rely on discrete-time diffusion~\citep{vignac2022digress} or continuous-time Markov chain constructions~\citep{campbell2024generative,qinmadeira2024defog} to handle the non-differentiable state space. 
-%
-%\begin{mdframed}[hidealllines=true,backgroundcolor=red!5]
-While effective for \emph{unconditional} generation, controlling these models at inference
-time can be cumbersome: steering samples toward user-specified property targets typically requires
-specialized guidance mechanisms that are tied to the \emph{training-time} process.
+Current state-of-the-art models for unconditional graph generation predominantly rely on discrete diffusion~\citep{vignac2022digress} or continuous-time Markov chains~\citep{campbell2024generative,qinmadeira2024defog}, translating samples from simple reference distributions into complex graph structures. Although effective in generating realistic unconditional samples, these methods struggle when enforcing user-specified properties or constraints, as the guidance typically occurs off-manifold—where property regressors and conditioning functions are inherently less reliable.
 %\end{mdframed}
 
-We believe that the solution to this challenge are \glspl{ebm}. \gls{ebm} provide a complementary viewpoint to \glspl{dm} and \gls{fm} by representing the data distribution via a single scalar energy~\citep{hinton2002training}. Their main practical appeal is
-\emph{conditional} generation: constraints, priors, and property objectives can be incorporated at \emph{inference time} by adding corresponding energy terms, enabling flexible conditional sampling without retraining~\citep{du2019implicit, du2025learning}. On graphs, this perspective is particularly attractive because constraints and priors can be injected directly into the energy at inference time, and permutation invariance can be easily enforced by construction.
-%
-However, \glspl{ebm} have historically underperformed as high-fidelity generators, largely because sampling is difficult: \gls{mcmc} mixing can be slow in high-dimensional discrete spaces, and energies are poorly constrained away from observed data. For instance, existing methods such as GraphEBM~\citep{liu2021graphebm} lag behind state-of-the-art approaches.
+Energy-based models (EBMs) offer a complementary perspective that naturally addresses these limitations~\citep{hinton2002training}. EBMs represent the data distribution implicitly through a single scalar energy function, enabling the direct incorporation of constraints, priors, or property-based objectives at inference time without retraining~\citep{du2019implicit, du2025learning}. Particularly for graph generation, EBMs have the advantage that permutation invariance and graph-structured constraints can be explicitly and elegantly integrated into the energy. Yet, historically, EBMs have struggled with sample quality, primarily due to poor sampling efficiency in discrete, combinatorial domains, as exemplified by existing methods like GraphEBM~\citep{liu2021graphebm}. Consequently, discrete EBMs have predominantly served as scoring models for out-of-distribution detection rather than as competitive generative samplers~\citep{wu2023energy,fuchsgruber2024energy}.
 
-Consequently, \glspl{ebm} on discrete spaces have been so far restricted to \emph{scoring} mechanisms for out-of-distribution detection and uncertainty quantification~\citep{wu2023energy,fuchsgruber2024energy}, rather than as state-of-the-art generative samplers.
 
-Energy Matching~\citep{balcerak2025energy} bridges these perspectives in continuous spaces by learning a \emph{time-independent}
-potential that simultaneously (i) provides guidance for moving samples from a reference
-distribution toward the data and (ii) defines a Boltzmann-like probability density near the data via contrastive
-refinement. This regularizes energies off-support while retaining the compositional control advantages
-of EBMs. Rather than simulating a time-indexed ODE/SDE, we sample directly on the discrete graph space
-using local edit proposals inside an \gls{mcmc} chain. This avoids continuous relaxations and matches
-the combinatorial nature of graphs. Extending this idea to graphs requires two ingredients: transport
-supervision that respects graph symmetries, and discrete sampling mechanisms that are efficient enough
-to make energy-based generation competitive.
+Energy Matching~\citep{balcerak2025energy} bridges these perspectives in continuous spaces by learning a time-independent potential that simultaneously (i) guides samples from a reference distribution toward data, and (ii) defines a Boltzmann-like density near data via contrastive refinement. This regularizes energies off-support while retaining the compositional advantages of Energy-Based Models (EBMs). However, the continuous formulation still relies on explicit, time-indexed sampling schedules (via ordinary or stochastic differential equations; ODEs/SDEs) to trigger exploration and mixing. Extending Energy Matching to discrete graph spaces, we remove this explicit time dependence entirely, instead using local edits within a Markov Chain Monte Carlo (MCMC) sampler. Here, an energy-dependent criterion implicitly switches between exploration (transport) and refinement regimes, naturally matching the combinatorial structure of graphs. Effective graph-based generation thus requires symmetry-aware transport supervision and efficient discrete sampling strategies.
 
 \Gls{jko} provides a variational framework for optimization in spaces of probability measures, where each
 step balances an energy against a distance (or discrepancy) rooted in \gls{ot}, such as the Wasserstein
 metric~\citep{lanzetti2025firstorder,lanzetti2024variational,terpin2024learning}. This perspective motivates OT-inspired transport supervision given a geometry.
 For graphs, \gls{gw}-type costs offer permutation-respecting
 comparisons~\citep{krzakala2024any2graph}. At the same time, computing exact Wasserstein geodesics is
-typically impractical at scale. Importantly, stochastic interpolants with data-dependent couplings provide
-a principled way to work with tractable, possibly suboptimal couplings: a fixed coupling induces an
-admissible transport path whose kinetic action upper-bounds $W_2^2$, yielding a \emph{relaxed
-Wasserstein geometry} suitable for learning transport-aligned dynamics without solving exact
-OT~\citep{albergo2024stochastic}. This motivates using efficient approximate graph couplings to supervise
-global guidance, while relying on Metropolis--Hastings (MH) refinement to ensure a valid energy-based
-generative model on the discrete space.
-
+typically impractical at scale. Importantly, stochastic interpolants~\citep{albergoBuildingNormalizingFlows2023} with data-dependent couplings~\citep{albergo2024stochastic} provide a principled way to work with tractable, possibly suboptimal couplings; i.e., minibatch coupling induces practically useful paths that guide sampling toward data-supported regions without requiring exact solutions to optimal transport. This motivates using efficient approximate graph couplings to supervise global guidance toward high-probability regions, combined with local refinement steps to ensure effective exploration and validity
 \input{figures/overview_simple_figure}
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=blue!5]
 \paragraph{Contributions.}
-We propose \acrlong{gem}\footnote{Code will be released upon acceptance.}, a controllable energy-based generative framework for
-graphs that combines:
-(i) OT-style global guidance from tractable, permutation-aware graph couplings under a relaxed transport
-geometry,
-(ii) a learned time-independent potential defining an explicit Gibbs model, and
-(iii) efficient sampling based on MH updates with geometry-aware discrete proposals.
-This yields a practical route to high-quality graph generation while preserving the compositional
-advantages of energy-based modeling, enabling inference-time control by adding constraint and objective
-energies.
+We propose \acrlong{gem}\footnote{Code will be released upon acceptance.}, a state-of-the-art discrete energy-based model for graphs, achieving unconditional generation quality competitive with leading discrete diffusion models. GEM combines:
+(i) global transport guidance through permutation-invariant graph couplings under a relaxed OT geometry,
+(ii) a learned, time-independent potential explicitly defining a Gibbs distribution over graphs, and
+(iii) efficient geometry-aware local edit proposals combined with Metropolis–Hastings sampling.
+
+GEM uniquely retains the compositional and controllable properties of energy-based models, enabling inference-time incorporation of constraints or objectives into the energy. Additionally, its explicit energy structure naturally facilitates computing graph geodesics—minimum-energy edit paths aligned with the learned data geometry—and enables state-of-the-art conditional generation. GEM also achieves state-of-the-art generation of novel graphs by editing existing samples.
 \end{mdframed}

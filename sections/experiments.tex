@@ -18,7 +18,7 @@ Table~\ref{tab:uncond-main} (top) reports MOSES results. Across both noise and d
 GEM improves V.U.N.\ and \gls*{fcd} over the baselines.
 Figure~\ref{fig:moses-vun-steps} reports performance versus inference steps, and
 Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.\ Data Initialization.
-\begin{table}[h]
+\begin{table}[t]
 \centering
 \small
 \captionsetup[subtable]{position=top,skip=3pt,font=bf}
@@ -77,6 +77,7 @@ and \gls*{fcd}. $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeir
 a small energy head. Architecture details are in Appendix~\ref{app:perm-invariance}. MOSES: 25k
 generations, 1000 inference steps. QM9: 10k generations, 750 inference steps.}
 \label{tab:uncond-main}
+\vspace{-10pt}
 \end{table}
 
 %A schematic of MCMC evolution for GEM on QM9 and MOSES is shown in Appendix~\ref{app:sampling}
@@ -93,11 +94,10 @@ generations, 1000 inference steps. QM9: 10k generations, 750 inference steps.}
 
 
 
-\paragraph{QM9.}
-Table~\ref{tab:uncond-main} (bottom) shows QM9 results. GEM is competitive with diffusion-based
+\paragraph{QM9.} Table~\ref{tab:uncond-main} (bottom) shows QM9 results. GEM is competitive with diffusion-based
 baselines under noise initialization and is strongest under data initialization.
 
-\subsection*{Property optimization}
+\paragraph{Property Optimization.}
 We evaluate property optimization under molecular threshold constraints (above/below a target),
 following~\citep{ninniri2025graph}: we train a GraphTransformer regressor \(f_\phi\) for
 differentiable guidance and define \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
@@ -122,7 +122,7 @@ cached.
 \input{tables/tex/tab_moses_conditional}
 
 
-\subsection*{Geodesic analysis}
+\paragraph{Geodesic Analysis}
 We compute geodesics between molecules and compare against a linear interpolation baseline.
 Shortest paths in high-dimensional spaces have been studied in particular through energy-based
 models; see, e.g., \citet{bethune2025follow}.
@@ -134,7 +134,7 @@ Energy-weighted geodesics consistently preserve validity relative to cost-only g
 that the learned energy captures chemically meaningful geometry. Full protocol, pairing,
 optimization, and discretization details are in Appendix~\ref{app:geodesic-details}.
 
-\begin{figure}[h]
+\begin{figure}[t]
 \centering
 \begin{tikzpicture}[scale=0.95]
   \draw[->, thick] (0,0) -- (5.2,0) node[below, xshift=-1.5cm] {endpoint distance (cost-induced)};
