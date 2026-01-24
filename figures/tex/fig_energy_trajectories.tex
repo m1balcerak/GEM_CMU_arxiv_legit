@@ -74,7 +74,7 @@
 \vspace{0.25cm}
 
 \begin{tikzpicture}[xscale=0.99, yscale=1.06]
-  \draw[->, thick] (0,0) -- (7.2,0) node[midway, below=14pt] {Inference MCMC steps};
+  \draw[->, thick] (0,0) -- (7.2,0) node[midway, below=14pt] {Inference \glsentryshort{mcmc} steps};
   \draw[->, thick] (0,0) -- (0,3.35);
   \node[rotate=90] at (-0.9,1.6) {Fraction};
 
@@ -129,6 +129,6 @@
     \node[anchor=west, font=\scriptsize] at (0.7,0.15) {Novelty (data initialized)};
   \end{scope}
 \end{tikzpicture}
-\caption{\footnotesize \textbf{Energy and Sampling Trajectories.} Top: energy evolution for noise- vs.\ data-initialized chains, with mean $\pm$ 1 std bands and reference levels at $\mathbb{E}_{x\sim \pi_\mathrm{data}}[V_\theta(x)]$ and $\mathbb{E}_{x\sim \pi_0}[V_\theta(x)]$. Noise-initialized chains use greedy proposals to reach the data manifold; data-initialized chains use annealing to recover novelty. Bottom: validity and novelty trajectories for data-initialized (green) and noise-initialized (red) chains over inference MCMC steps. Uniqueness stays around 100\%.}
+\caption{\footnotesize \textbf{Energy and Sampling Trajectories.} Top: energy evolution for noise- vs.\ data-initialized chains, with mean $\pm$ 1 std bands and reference levels at $\mathbb{E}_{x\sim \pi_\mathrm{data}}[V_\theta(x)]$ and $\mathbb{E}_{x\sim \pi_0}[V_\theta(x)]$. Noise-initialized chains use greedy proposals to reach the data manifold; data-initialized chains use annealing to recover novelty. Bottom: validity and novelty trajectories for data-initialized (green) and noise-initialized (red) chains over inference \gls{mcmc} steps. Uniqueness stays around 100\%.}
 \label{fig:moses-energy-and-metrics}
 \end{figure}

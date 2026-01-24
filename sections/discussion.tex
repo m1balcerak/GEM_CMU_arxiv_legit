@@ -1,11 +1,11 @@
 \section{Discussion}
-GEM enables compositional, inference-time control by adding energy terms, as shown in the conditional
+\gls{gem} enables compositional, inference-time control by adding energy terms, as shown in the conditional
 experiments (Section~\ref{sec:experiments}). The learned energy also enables interpretable diagnostics,
 including geodesic analysis and likelihood-ratio calibration.
 
 \paragraph{Limitations} At very small inference budgets, diffusion-based baselines can reach strong performance with fewer steps;
-Figure~\ref{fig:moses-vun-steps} shows that in the few-step regime our current GEM sampler trails the
-diffusion baseline. More broadly, EBMs for generation rely on gradient-based velocity parameterization,
+Figure~\ref{fig:moses-vun-steps} shows that in the few-step regime our current \gls{gem} sampler trails the
+diffusion baseline. More broadly, \glspl{ebm} for generation rely on gradient-based velocity parameterization,
 which typically requires both forward and backward passes per step and implies an inherent $\sim$2--3$\times$
 theoretical slowdown relative to purely forward samplers.
 
@@ -15,8 +15,8 @@ constraints at inference time. Relative likelihoods can support scalable refinem
 generalization diagnostics by testing energy rankings on held-out regions.
 
 \section{Conclusion}
-We introduced GEM, a Graph Energy Matching framework that learns a single explicit potential for
-graph generation while directly modeling relative likelihoods. Because control is implemented by
-adding energies, GEM accommodates new constraints at inference time without being tied to a fixed
+We introduced \gls{gem}, a Graph Energy Matching framework that learns a single explicit potential
+while directly modeling relative likelihoods. Because control is implemented by adding energies,
+\gls{gem} accommodates new constraints at inference time without being tied to a fixed
 forward process, enabling flexible and compositional conditioning. The resulting sampler achieves
 high-quality samples while keeping the model interpretable through its energy landscape.

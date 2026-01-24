@@ -15,14 +15,14 @@ feature) and is trained with
 \min_\phi~\mathbb{E}_{(x_1,y)\sim \mathcal{D},~t\sim p(t),~x_t\sim q_t(\cdot\mid x_1)}
 \big[\|f_\phi(x_t,t)-y\|_2^2\big].
 \end{equation}
-During GEM sampling we do not explicitly track diffusion time, so we use an energy-based proxy to
+During \gls{gem} sampling we do not explicitly track diffusion time, so we use an energy-based proxy to
 set $t$: we linearly increase $t$ between the noise and data energy bands and clamp to $t=1$ once
 the chain reaches the data distribution, using $t=1$ for the remainder of generation.
 
 Property regressors are trained on clean molecules, so evaluating them on noisy graphs is
 ill-posed when bonds and valences are corrupted. We measure the degradation by computing test
-MAE as a function of denoising time $t$ along the diffusion path. We use 10k test molecules and
-report four representative properties (TPSA, logS, logP, QED). As expected, errors are large for
+\gls{mae} as a function of denoising time $t$ along the diffusion path. We use 10k test molecules and
+report four representative properties (\gls{tpsa}, logS, logP, \gls{qed}). As expected, errors are large for
 noisy inputs and only become reasonable at $t=1$ (fully denoised, clean samples).
 Figure~\ref{fig:regressor-noise} summarizes the trend. Solid lines are marginal-noise regressors;
 dashed lines are uniform-noise regressors.
@@ -34,7 +34,7 @@ dashed lines are uniform-noise regressors.
   width=\columnwidth,
   height=0.65\columnwidth,
   xlabel={Denoising time $t$},
-  ylabel={Test MAE},
+  ylabel={Test \acrshort{mae}},
   xmin=0, xmax=1,
   ymin=0, ymax=1.1,
   grid=both,
@@ -53,7 +53,7 @@ dashed lines are uniform-noise regressors.
   (0.8, 0.1833322119140625)
   (1.0, 0.02114986657714844)
 };
-\addlegendentry{TPSA/50 (margi.)}
+\addlegendentry{\acrshort{tpsa}/50 (margi.)}
 
 \addplot+[thick, blue, dashed, mark=none] coordinates {
   (0.0, 0.25931730078125)
@@ -63,7 +63,7 @@ dashed lines are uniform-noise regressors.
   (0.8, 0.20287095703125)
   (1.0, 0.024920642578125)
 };
-\addlegendentry{TPSA/50 (unif.)}
+\addlegendentry{\acrshort{tpsa}/50 (unif.)}
 
 \addplot+[thick, orange!80!black, solid, mark=none] coordinates {
   (0.0, 0.4423901184)
@@ -113,7 +113,7 @@ dashed lines are uniform-noise regressors.
   (0.8, 0.0599623322)
   (1.0, 0.0234130266)
 };
-\addlegendentry{QED (margi.)}
+\addlegendentry{\acrshort{qed} (margi.)}
 
 \addplot+[thick, green!60!black, dashed, mark=none] coordinates {
   (0.0, 0.0857948933)
@@ -123,12 +123,12 @@ dashed lines are uniform-noise regressors.
   (0.8, 0.0680123455)
   (1.0, 0.0258289015)
 };
-\addlegendentry{QED (unif.)}
+\addlegendentry{\acrshort{qed} (unif.)}
 \end{axis}
 \end{tikzpicture}
-\caption{\footnotesize Test MAE of time/noise-conditioned property regressors versus denoising time $t$
+\caption{\footnotesize Test \acrshort{mae} of time/noise-conditioned property regressors versus denoising time $t$
 (0 = fully noised, 1 = clean/denoised). Each point averages 10k test molecules. Solid lines are
-marginal-noise regressors; dashed lines are uniform-noise regressors. TPSA MAE is scaled by
+marginal-noise regressors; dashed lines are uniform-noise regressors. \acrshort{tpsa} \acrshort{mae} is scaled by
 $1/50$ for visualization. Errors are large for noisy inputs and only become reasonable around
 $t=1$.}
 \label{fig:regressor-noise}
@@ -141,14 +141,14 @@ $t=1$.}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lccc}
 \toprule
-Regressor & logS $\ge$ -2.25 & QED $\ge$ 0.9 & logP $\le$ 1.5 \\
- & CVUN $\uparrow$ & CVUN $\uparrow$ & CVUN $\uparrow$ \\
+Regressor & logS $\ge$ -2.25 & \acrshort{qed} $\ge$ 0.9 & logP $\le$ 1.5 \\
+ & \glsentryshort{cvun} $\uparrow$ & \glsentryshort{cvun} $\uparrow$ & \glsentryshort{cvun} $\uparrow$ \\
 \midrule
 Clean & 0.531 & 0.154 & 0.552 \\
 Noise-conditioned  & \textbf{0.836} & \textbf{0.422} & \textbf{0.846} \\
 \bottomrule
 \end{tabular}
 \endgroup
-\caption{\footnotesize \textbf{Regressor ablations (GEM).} Clean regressors are time-independent and trained only on valid molecules. Noise-conditioned regressors are time-dependent and trained on uniformly noised graphs. We report CVUN for each property condition on MOSES.}
+\caption{\footnotesize \textbf{Regressor ablations (\gls{gem}).} Clean regressors are time-independent and trained only on valid molecules. Noise-conditioned regressors are time-dependent and trained on uniformly noised graphs. We report \gls{cvun} for each property condition on MOSES.}
 \label{tab:regressor-ablations}
 \end{table}

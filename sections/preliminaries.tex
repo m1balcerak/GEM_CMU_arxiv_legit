@@ -46,13 +46,13 @@
 Energy matching learns a parameterized ($\theta$) scalar \emph{potential} ($V_\theta$) for a data space ($\mathcal{X}$), i.e., $V_\theta:\mathcal{X}\to\mathbb{R}$. The scalar potential $V_\theta$ plays two roles.
 \begin{itemize}
 \item \textbf{Off-manifold guidance:} away from the data distribution, the vector field $-\nabla_x V_\theta$ is trained to align with transport-like directions that move samples from an easy-to-sample source distribution toward the data.
-\item \textbf{Near-equilibrium refinement:} near equilibrium, $V_\theta$ acts as an EBM energy and defines a Gibbs density with unit temperature.
+\item \textbf{Near-equilibrium refinement:} near equilibrium, $V_\theta$ acts as an \gls{ebm} and defines a Gibbs density with unit temperature.
 \end{itemize}
 This separates learning into a \emph{global} transport-alignment term and a \emph{local} density refinement term.
 A two-regime temperature $\epsilon(\cdot)$ is used: $\epsilon(t)=0$ off-manifold (transport regime) and $\epsilon(t)=1$ near equilibrium (mixing regime).
 This regime switch (i) injects exploration, (ii) helps prevent mode collapse, and (iii) stabilizes the Gibbs distribution in the mixing regime.
 
-In continuous space, a JKO step for the energy-and-entropy functional reads
+In continuous space, a \gls{jko} step for the energy-and-entropy functional reads
 \begin{align}
 \rho_{t+\Delta t}
 &=
@@ -99,29 +99,29 @@ $\mathcal{L}_{\mathrm{OT}}$ allows source-initialized negative samples ($x^{-}$)
 
 \paragraph{Sampling (two regimes).}
 Sampling starts from a transport-aligned drift and switches to a mixing via an effective temperature
-$\epsilon(t)$. In continuous time, this is the time-inhomogeneous SDE
+$\epsilon(t)$. In continuous time, this is the time-inhomogeneous \gls{sde}
 \begin{equation}
 \mathrm{d}X_t
 =
 -\nabla_x V_\theta(X_t)\,\mathrm{d}t
 +\sqrt{2\,\epsilon(t)}\,\mathrm{d}W_t,
 \end{equation}
-which reduces to an ODE when $\epsilon(t)=0$ (off-manifold) and becomes a stochastic dynamics as
+which reduces to an \gls{ode} when $\epsilon(t)=0$ (off-manifold) and becomes a stochastic dynamics as
 the regime switches and $\epsilon(t)\to 1$. In practice, this dynamics needs to be integrated over time.
 
 \paragraph{Related work: discrete diffusion/flow matching and control.}
-Recent progress in discrete graph generation is dominated by denoising diffusion and CTMC
+Recent progress in discrete graph generation is dominated by denoising diffusion and \glspl{ctmc}
 formulations. DiGress~\citep{vignac2022digress} extends discrete diffusion to categorical node and edge
-attributes, while discrete CTMCs~\citep{campbell2024generative} move to a continuous-time graph diffusion process. Discrete
-Flow Models (DFMs) show that flow-like probability paths on discrete spaces can be realized via
-CTMCs~\citep{campbell2024generative}, and DeFoG~\citep{qinmadeira2024defog} instantiates this discrete
+attributes, while discrete \glspl{ctmc}~\citep{campbell2024generative} move to a continuous-time graph diffusion process. Discrete
+\Glspl{dfm} show that flow-like probability paths on discrete spaces can be realized via
+\glspl{ctmc}~\citep{campbell2024generative}, and DeFoG~\citep{qinmadeira2024defog} instantiates this discrete
 flow-matching viewpoint for graphs, emphasizing a more flexible separation between training and
-sampling. Variational Flow Matching (VFM) recasts flow matching as variational inference over
+sampling. \gls{vfm} recasts flow matching as variational inference over
 trajectory endpoints, and CatFlow applies this to categorical data with strong results on graphs~\citep{eijkelboom2024vfm}.
-For controllable generation, diffusion/CTMC guidance typically assumes access to a time- or
+For controllable generation, diffusion/\gls{ctmc} guidance typically assumes access to a time- or
 noise-dependent conditional signal along the path (e.g., a regressor/classifier for $p(y\mid x_t,t)$ or
 $p_t(y\mid x_t)$). In discrete settings this often requires training a dedicated predictor on noised
-latents across noise levels (or separate conditional/unconditional models for CFG), adding extra
+latents across noise levels (or separate conditional/unconditional models for \gls{cfg}), adding extra
 training and coupling the control mechanism to the chosen noising process~\citep{schiff2024discreteguidance,eijkelboom2025controlledvfm}.
 Moreover, property prediction on heavily corrupted graphs is ill-posed because bonds and valences are
 often invalid, so regressor accuracy naturally degrades away from clean samples; we quantify this

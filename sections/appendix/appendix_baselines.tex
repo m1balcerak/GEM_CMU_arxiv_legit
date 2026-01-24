@@ -5,21 +5,21 @@ We briefly summarize the baseline methods referenced in the experiments to clari
 assumptions behind each comparison.
 
 \paragraph{GraphEBM.}
-GraphEBM~\citep{liu2021graphebm} learns a scalar energy over molecular graphs with a GNN and relies on
-MCMC (e.g., Metropolis-Hastings over local graph edits) for sampling, without an explicit transport
+GraphEBM~\citep{liu2021graphebm} learns a scalar energy over molecular graphs with a \gls{gnn} and relies on
+\gls{mcmc} (e.g., \gls{mh} over local graph edits) for sampling, without an explicit transport
 or flow-matching objective.
 
 \paragraph{DeFoG.}
 DeFoG~\citep{qinmadeira2024defog} formulates graph generation as discrete flow matching, learning
-CTMC transition rates that connect source and data distributions; sampling follows the learned
+\gls{ctmc} transition rates that connect source and data distributions; sampling follows the learned
 continuous-time dynamics.
 
-\paragraph{VFM.}
-Variational Flow Matching (VFM)~\citep{eijkelboom2024vfm} reframes flow matching as variational
+\paragraph{\gls{vfm}.}
+\gls{vfm}~\citep{eijkelboom2024vfm} reframes flow matching as variational
 inference over trajectory endpoints, yielding globally consistent objectives for discrete graph
-generation via CTMC paths.
+generation via \gls{ctmc} paths.
 
-\paragraph{G-VFM.}
-G-VFM~\citep{eijkelboom2025controlledvfm} extends VFM with equivariant conditioning mechanisms to
+\paragraph{G-\gls{vfm}.}
+G-\gls{vfm}~\citep{eijkelboom2025controlledvfm} extends \gls{vfm} with equivariant conditioning mechanisms to
 support controllable generation, typically by incorporating property guidance into the flow-matching
 framework.

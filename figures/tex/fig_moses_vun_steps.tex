@@ -3,9 +3,9 @@
 \begin{tikzpicture}[scale=0.95]
   \draw[->, thick] (0,0) -- (6.2,0) node[midway, below=8pt] {inference steps};
   \draw[->, thick] (0,0) -- (0,4.0);
-  \node[rotate=90] at (-0.95,2.0) {V.U.N.};
+  \node[rotate=90] at (-0.95,2.0) {\glsentryshort{vun}};
   \draw[->, thick] (6.2,0) -- (6.2,4.0);
-  \node[rotate=90] at (7.1,2.0) {FCD};
+  \node[rotate=90] at (7.1,2.0) {\glsentryshort{fcd}};
 
   % Title
   \node[font=\small\bfseries] at (3.1,4.35) {Performance vs Inference Steps};
@@ -73,19 +73,19 @@
   % Legend
   \begin{scope}[shift={(2.25,1.35)}]
     \draw[blue!70!black, thick] (0.15,1.65) -- (0.6,1.65);
-    \node[anchor=west, font=\scriptsize] at (0.7,1.65) {GEM (noise init.) V.U.N.};
+    \node[anchor=west, font=\scriptsize] at (0.7,1.65) {\glsentryshort{gem} (noise init.) \glsentryshort{vun}};
     \draw[orange!90!black, thick] (0.15,1.38) -- (0.6,1.38);
-    \node[anchor=west, font=\scriptsize] at (0.7,1.38) {GEM (data init.) V.U.N.};
+    \node[anchor=west, font=\scriptsize] at (0.7,1.38) {\glsentryshort{gem} (data init.) \glsentryshort{vun}};
     \draw[green!60!black, thick] (0.15,1.11) -- (0.6,1.11);
-    \node[anchor=west, font=\scriptsize] at (0.7,1.11) {DeFoG V.U.N.};
+    \node[anchor=west, font=\scriptsize] at (0.7,1.11) {DeFoG \glsentryshort{vun}};
     \draw[blue!70!black, thick, dash dot] (0.15,0.80) -- (0.6,0.80);
-    \node[anchor=west, font=\scriptsize] at (0.7,0.80) {GEM (noise init.) FCD};
+    \node[anchor=west, font=\scriptsize] at (0.7,0.80) {\glsentryshort{gem} (noise init.) \glsentryshort{fcd}};
     \draw[orange!90!black, thick, dash dot] (0.15,0.53) -- (0.6,0.53);
-    \node[anchor=west, font=\scriptsize] at (0.7,0.53) {GEM (data init.) FCD};
+    \node[anchor=west, font=\scriptsize] at (0.7,0.53) {\glsentryshort{gem} (data init.) \glsentryshort{fcd}};
     \draw[green!60!black, thick, dash dot] (0.15,0.26) -- (0.6,0.26);
-    \node[anchor=west, font=\scriptsize] at (0.7,0.26) {DeFoG FCD};
+    \node[anchor=west, font=\scriptsize] at (0.7,0.26) {DeFoG \glsentryshort{fcd}};
   \end{scope}
 \end{tikzpicture}
-\caption{\footnotesize \textbf{V.U.N. and FCD vs Steps.} V.U.N. (higher is better) and FCD (lower is better) versus inference steps on MOSES for GEM noise initialization (uniform) with greedy warmup proposal, GEM data initialization with annealed proposal, and DeFoG (marginal noise).}
+\caption{\footnotesize \textbf{\acrshort{vun} and \acrshort{fcd} vs Steps.} \acrshort{vun} (higher is better) and \acrshort{fcd} (lower is better) versus inference steps on MOSES for \gls{gem} noise initialization (uniform) with greedy warmup proposal, \gls{gem} data initialization with annealed proposal, and DeFoG (marginal noise).}
 \label{fig:moses-vun-steps}
 \end{figure}

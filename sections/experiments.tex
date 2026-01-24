@@ -2,12 +2,12 @@
 \label{sec:experiments}
 
 We report unconditional generation on MOSES and QM9 in the main text, property optimization under
-thresholded targets (logP, logS, QED, TPSA), and geodesic comparisons in the learned space. We report
-validity, uniqueness, novelty, $V.U.N.$, and \gls*{fcd} (lower is better), and we consider two
-initialization regimes: noise initialization starts from easy-to-sample noise and must reach
-chemically valid molecules, while data initialization starts from training molecules and must make
-novel yet valid edits (diffusion/CTMC or MCMC). MOSES is a larger scale dataset (about 1.5M molecules),
-while QM9 is smaller; we use MOSES for scale and QM9 as a compact comparison.
+thresholded targets (logP, logS, \gls{qed}, \gls{tpsa}), and geodesic comparisons in the learned space. We report
+\gls{vun} and \gls{fcd} (lower is better), and we consider two initialization regimes: noise initialization
+starts from easy-to-sample noise and must reach chemically valid molecules, while data initialization
+starts from training molecules and must make novel yet valid edits (diffusion/\gls{ctmc} or \gls{mcmc}).
+MOSES is a larger scale dataset (about 1.5M molecules), while QM9 is smaller; we use MOSES for scale and
+QM9 as a compact comparison.
 %
 A concise conceptual summary of the baselines used in our experiments is provided in
 Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix~\ref{app:exp-setup}.
@@ -15,7 +15,7 @@ Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix
 \subsection*{Unconditional generation}
 \paragraph{MOSES.}
 Table~\ref{tab:uncond-main} (top) reports MOSES results. Across both noise and data initialization,
-GEM improves V.U.N.\ and \gls*{fcd} over the baselines.
+\gls{gem} improves \gls{vun} and \gls{fcd} over the baselines.
 Figure~\ref{fig:moses-vun-steps} reports performance versus inference steps, and
 Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.\ Data Initialization.
 \begin{table}[t]
@@ -28,21 +28,21 @@ Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.
 \label{tab:uncond-moses}
 \begin{tabular}{lcc}
 \toprule
-Method & V.U.N. $\uparrow$ & \gls*{fcd} $\downarrow$ \\
+Method & \acrshort{vun} $\uparrow$ & \acrshort{fcd} $\downarrow$ \\
 \midrule
 Training samples (MOSES) & 0.0 & 0.25 \\
 \midrule
 \multicolumn{3}{l}{\textit{Noise Initialization}} \\
 \midrule
 GraphEBM$^*$~\citep{liu2021graphebm} & 8.12 & 9.83 \\
-VFM$^*$~\citep{eijkelboom2024vfm} & 81.39 & 2.71 \\
+\gls{vfm}$^*$~\citep{eijkelboom2024vfm} & 81.39 & 2.71 \\
 DeFoG$^*$~\citep{qinmadeira2024defog} & 82.21 & 1.95 \\
-\textbf{GEM (Ours)} & \textbf{85.61} & \textbf{1.50} \\
+\textbf{\gls{gem} (Ours)} & \textbf{85.61} & \textbf{1.50} \\
 \midrule
 \multicolumn{3}{l}{\textit{Data Initialization}} \\
 \midrule
 GraphEBM$^*$~\citep{liu2021graphebm} & 32.16 & 7.31 \\
-\textbf{GEM (Ours)} & \textbf{89.81} & \textbf{0.76} \\
+\textbf{\gls{gem} (Ours)} & \textbf{89.81} & \textbf{0.76} \\
 \bottomrule
 \end{tabular}
 \end{subtable}
@@ -53,27 +53,27 @@ GraphEBM$^*$~\citep{liu2021graphebm} & 32.16 & 7.31 \\
 \label{tab:uncond-qm9}
 \begin{tabular}{lccc}
 \toprule
-Method & V.U. $\uparrow$ & Novelty $\uparrow$ & \gls*{fcd} $\downarrow$ \\
+Method & \glsentryshort{vu} $\uparrow$ & Novelty $\uparrow$ & \acrshort{fcd} $\downarrow$ \\
 \midrule
 Training samples (QM9) & 100 & 0 & 0.04 \\
 \midrule
 \multicolumn{4}{l}{\textit{Noise Initialization}} \\
 \midrule
 GraphEBM~\citep{liu2021graphebm} & 8.07 & 0.62 & 7.16 \\
-VFM~\citep{eijkelboom2024vfm} & \textbf{99.81} & 0.49 & \textbf{0.44} \\
+\gls{vfm}~\citep{eijkelboom2024vfm} & \textbf{99.81} & 0.49 & \textbf{0.44} \\
 DeFoG$^*$~\citep{qinmadeira2024defog} & 96.81 & 0.36 & 0.81 \\
-\textbf{GEM (Ours)} & 97.11 & \textbf{0.63} & 0.92 \\
+\textbf{\gls{gem} (Ours)} & 97.11 & \textbf{0.63} & 0.92 \\
 \midrule
 \multicolumn{4}{l}{\textit{Data Initialization}} \\
 \midrule
 GraphEBM$^*$~\citep{liu2021graphebm} & 21.53 & 0.48 & 5.15 \\
-\textbf{GEM (Ours)} & \textbf{98.51} & \textbf{0.51} & \textbf{0.31} \\
+\textbf{\gls{gem} (Ours)} & \textbf{98.51} & \textbf{0.51} & \textbf{0.31} \\
 \bottomrule
 \end{tabular}
 \end{subtable}
 \caption{\footnotesize \textbf{Unconditional Generation.} Results grouped by initialization. MOSES
-reports $V.U.N.$ (valid-unique-novel) and \gls*{fcd} (lower is better); QM9 reports $V.U.$, novelty,
-and \gls*{fcd}. $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeira2024defog}; EBMs use
+reports \acrshort{vun} and \acrshort{fcd} (lower is better); QM9 reports \gls{vu}, novelty,
+and \acrshort{fcd}. $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeira2024defog}; \glspl{ebm} use
 a small energy head. Architecture details are in Appendix~\ref{app:perm-invariance}. MOSES: 25k
 generations, 1000 inference steps. QM9: 10k generations, 750 inference steps.}
 \label{tab:uncond-main}
@@ -94,7 +94,7 @@ generations, 1000 inference steps. QM9: 10k generations, 750 inference steps.}
 
 
 
-\paragraph{QM9.} Table~\ref{tab:uncond-main} (bottom) shows QM9 results. GEM is competitive with diffusion-based
+\paragraph{QM9.} Table~\ref{tab:uncond-main} (bottom) shows QM9 results. \gls{gem} is competitive with diffusion-based
 baselines under noise initialization and is strongest under data initialization.
 
 \paragraph{Property Optimization.}
@@ -103,18 +103,18 @@ following~\citep{ninniri2025graph}: we train a GraphTransformer regressor \(f_\p
 differentiable guidance and define \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
 then run the same proposal kernel $q_\theta(x\!\to\!y)$ using \(-\nabla_x V_\theta^{\mathrm{cond}}(x)\),
 with the Metropolis--Hastings acceptance ratio modified accordingly; for fairness, all methods use
-noise-conditioned regressors (GEM clean-regressor ablation in Appendix~\ref{app:regressor-noise},
+noise-conditioned regressors (\gls{gem} clean-regressor ablation in Appendix~\ref{app:regressor-noise},
 Figure~\ref{fig:regressor-noise}, Table~\ref{tab:regressor-ablations}) and we feed regressor time via
 an energy-based proxy that increases linearly until the chain reaches the data distribution, then
 clamps to $t=1$ (Appendix~\ref{app:regressor-noise}). Noise-conditioned regressors are more reliable
-on noisy or invalid graphs, and targets (logS $\ge$ -2.25, logP $\le$ 1.5, QED $\ge$ 0.9,
-TPSA $\le$ 50) are chosen so unconditional MOSES samples satisfy the constraint at roughly a 20\%
+on noisy or invalid graphs, and targets (logS $\ge$ -2.25, logP $\le$ 1.5, \gls{qed} $\ge$ 0.9,
+\gls{tpsa} $\le$ 50) are chosen so unconditional MOSES samples satisfy the constraint at roughly a 20\%
 rate, yielding comparable difficulty across properties.
 Table~\ref{tab:moses-conditional} reports single-property conditioning results, and
 Appendix~\ref{app:baselines} summarizes joint constraints.
-GEM maintains strong validity, uniqueness, and novelty while improving constraint satisfaction
+\gls{gem} maintains strong validity, uniqueness, and novelty while improving constraint satisfaction
 relative to baselines.
-GEM draws a candidate pool of size $N_{\mathrm{select}}$ from the training set, ranks by the
+\gls{gem} draws a candidate pool of size $N_{\mathrm{select}}$ from the training set, ranks by the
 precomputed property values, and initializes the $B$ inference chains with the top-$B$ molecules
 that satisfy the condition; this takes virtually no time because the training-set properties are
 cached.
@@ -126,7 +126,7 @@ cached.
 We compute geodesics between molecules and compare against a linear interpolation baseline.
 Shortest paths in high-dimensional spaces have been studied in particular through energy-based
 models; see, e.g., \citet{bethune2025follow}.
-We plot average validity versus the endpoint distance induced by the matching cost
+We plot average validity versus the endpoint distance induced by the \gls{fgw} matching cost
 $c_{\mathrm{FGW}}$ (Appendix~\ref{app:matching}), comparing energy-weighted geodesics to cost-only
 baselines; see Figure~\ref{fig:geodesic-validity}. Qualitative paths are shown in
 Figure~\ref{fig:mol-trajectories}.
@@ -151,10 +151,10 @@ optimization, and discretization details are in Appendix~\ref{app:geodesic-detai
   \draw[thick, blue] plot[smooth] coordinates {(0.0,2.8) (1.2,2.5) (2.2,2.0) (3.2,1.6) (4.2,1.3)};
   \draw[thick, gray] plot[smooth] coordinates {(0.0,1.1) (1.2,0.9) (2.2,0.7) (3.2,0.6) (4.2,0.5)};
 
-  \node[blue, anchor=west] at (1.9,2.8) {GEM energy-weighted geodesic};
+  \node[blue, anchor=west] at (1.9,2.8) {\gls{gem} energy-weighted geodesic};
   \node[gray, anchor=west] at (1.9,2.3) {cost-only geodesic};
 \end{tikzpicture}
-\caption{\footnotesize \textbf{Validity Along Geodesics.} Expected average validity vs.\ endpoint distance (cost-induced) for GEM energy-weighted versus cost-only geodesics. \textcolor{red}{[WiP]}}
+\caption{\footnotesize \textbf{Validity Along Geodesics.} Expected average validity vs.\ endpoint distance (cost-induced) for \gls{gem} energy-weighted versus cost-only geodesics. \textcolor{red}{[WiP]}}
 \label{fig:geodesic-validity}
 \end{figure}
 

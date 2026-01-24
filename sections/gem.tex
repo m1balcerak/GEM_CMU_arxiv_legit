@@ -1,6 +1,6 @@
 \section{Graph Energy Matching}
 \label{sec:gem}
-Graph generation requires handling of discrete variables and permutation invariance. In this work, we introduce a permutation-invariant minibatch OT and a multi-regime stochastic sampling strategy, together with a JKO-style variational objective for discrete probability spaces, which allows us to extend Energy Matching to graphs.
+Graph generation requires handling of discrete variables and permutation invariance. In this work, we introduce a permutation-invariant minibatch \gls{ot} and a multi-regime stochastic sampling strategy, together with a \gls{jko}-style variational objective for discrete probability spaces, which allows us to extend Energy Matching to graphs.
 
 \paragraph{Graph representation.}
 We consider a discrete state space $\mathcal{X}:=\big(\mathcal{X}_{\mathrm{node}}\big)^{n}\times\big(\mathcal{X}_{\mathrm{edge}}\big)^{\binom{n}{2}}$ to represent undirected graphs. A graph $x\in \mathcal{X}$ contains a set of $n$ nodes $\mathcal{V}=\{1,\dots,n\}$ and edges $\mathcal{E}$ defining the connectivity between these nodes. Each node $i\in\mathcal{V}$ has a node class $x_i \in \mathcal{X}_{\mathrm{node}}$ (e.g.\ an atom type), and each edge $(i,j)\in\mathcal{E}$ has an edge class $x_{ij}\in\mathcal{X}_{\mathrm{edge}}$ (e.g.\ a bond type).
@@ -43,13 +43,13 @@ Here, $n$ is the maximum number of nodes in the training dataset; smaller graphs
 
 
 
-\subsection{JKO-Style Variational Objective for Discrete Probability Spaces}
-We introduce a JKO-style objective adapted to discrete graph configurations. Our goal is twofold: i) We preserve the Gibbs equilibrium associated with the learned energy $V_\theta$ and ii) remain well-defined on a finite state space where sampling proceeds via discrete edits rather than continuous trajectories. Hence, we avoid time-indexed dynamics, which are cumbersome for discrete jumps, by using an energy-based switch $\epsilon(x)$ and a coupling-based transport term defined over valid graphs. The switch is binary: $\epsilon(x)=0$ in the transport regime and $\epsilon(x)=1$ in the mixing regime; in our sampler it is triggered once the chain either reaches the expected energy level for graphs with that node count or hits a local minimum under greedy edits.
+\subsection{\gls{jko}-Style Variational Objective for Discrete Probability Spaces}
+We introduce a \gls{jko}-style objective adapted to discrete graph configurations. Our goal is twofold: i) We preserve the Gibbs equilibrium associated with the learned energy $V_\theta$ and ii) remain well-defined on a finite state space where sampling proceeds via discrete edits rather than continuous trajectories. Hence, we avoid time-indexed dynamics, which are cumbersome for discrete jumps, by using an energy-based switch $\epsilon(x)$ and a coupling-based transport term defined over valid graphs. The switch is binary: $\epsilon(x)=0$ in the transport regime and $\epsilon(x)=1$ in the mixing regime; in our sampler it is triggered once the chain either reaches the expected energy level for graphs with that node count or hits a local minimum under greedy edits.
 
 %his choice directly motivates the multi-site, geometry-aware sampler:
 
 
-Given a distribution $\pi_k$, we consider the JKO update at $k+1$
+Given a distribution $\pi_k$, we consider the \gls{jko} update at $k+1$
 \begin{equation}
 \pi_{k+1}=\arg\min_{\pi}\,\mathcal{J}(\pi).
 \end{equation}
@@ -70,7 +70,7 @@ Given a coupling $\gamma$ with $(X_0,X_1)\sim\gamma$, define the interpolant $I_
 For quadratic cost, $W_2^2(\rho_0,\rho_1)\le\mathcal{A}(\gamma)\le\mathbb{E}_\gamma[\|X_1-X_0\|^2]$,
 with equality for optimal deterministic (Monge) couplings; we thus use tractable couplings (e.g., minibatch
 matching) and treat $\mathcal{A}(\gamma)$ as a restricted geometry that upper-bounds the Wasserstein distance.
-This differs from the traditional JKO step, which computes the infimum over couplings between $\pi_k$ and $\pi$;
+This differs from the traditional \gls{jko} step, which computes the infimum over couplings between $\pi_k$ and $\pi$;
 here we work with a tractable coupling and its induced action $\mathcal{A}(\gamma)$ defined by a cost
 function $c(x,y)$ between graphs $x$ and $y$.
 A pointwise stationarity condition along paired graphs $(x,y)$ from a coupling is, up to an additive constant,
@@ -86,7 +86,7 @@ At the data distribution, the transport term vanishes, so with $\epsilon(x)=1$, 
 \end{equation}
 
 However, further away from the data regime, in the off-equilibrium regime with $\epsilon(x)=0$, the functional can be analyzed by relaxing the kinetic term. We rely on a fixed coupling $\tilde{\gamma}$ between the source $\pi_0$ and the data distribution
-$\pi_\mathrm{data}$ (e.g.\ minibatch OT), which induces a path between them and replaces the infimum
+$\pi_\mathrm{data}$ (e.g.\ minibatch \gls{ot}), which induces a path between them and replaces the infimum
 with $\mathcal{A}(\tilde{\gamma})$, yielding
 \begin{equation}
 \widetilde{\mathcal{J}}(\pi_{k+1};\tilde{\gamma})
@@ -95,13 +95,13 @@ with $\mathcal{A}(\tilde{\gamma})$, yielding
 \;+\sum_{x\in\mathcal{X}} V_\theta(x)\,\pi_{k+1}(x).
 \end{equation}
 By the standard kinetic-action bound, $\mathcal{A}(\tilde{\gamma})$ upper-bounds
-the OT discrepancy, and this relaxed term is tractable to compute. This motivates a \emph{transport-aligned
+the \gls{ot} discrepancy, and this relaxed term is tractable to compute. This motivates a \emph{transport-aligned
 drift} based on the displacement between coupled samples; we use this to supervise
 $-\nabla_{\hat{x}}V_\theta$ along the coupling paths. We evaluate gradients with respect to the
 continuous embedding $\hat{x}$ introduced above, which makes the potential landscape well-defined away from
 equilibrium and yields a training signal along the predefined coupling paths.
 We note that $\epsilon(x)$ is constant in each regime and does not require an
-explicit time index, making it natural for jump processes and MCMC chains.
+explicit time index, making it natural for jump processes and \gls{mcmc} chains.
 
 
 
@@ -116,7 +116,7 @@ c_{\mathrm{loc}}(x,y)
 +
 \lambda_\mathcal{E}\|\hat{x}_{\mathcal{E}}-\hat{y}_{\mathcal{E}}\|^2_2,
 \end{equation}
-with $\lambda_\mathcal{V},\lambda_\mathcal{E}>0$ scaling node and edge contributions. To compare graphs in a permutation-invariant way, we lift the local cost by optimizing over node relabelings:
+with $\lambda_\mathcal{V},\lambda_\mathcal{E}>0$ scaling node and edge contributions. To compare graphs in a permutation-invariant way, we lift the local cost by optimizing over node relabelings to obtain the \gls{fgw} cost:
 \begin{equation}\label{eq:fgw-cost}
 c_{\mathrm{FGW}}(x,y)
 =
@@ -136,14 +136,14 @@ train $-\nabla_{\hat{x}}V_\theta$ (Section~\ref{sec:training}).
 
 \paragraph{Local cost for proposals.}
 To generate proposals, we propose \emph{local edits} of the current graph. We can thus use the local surrogate $c_{\mathrm{loc}}$ from \eqref{eq:loc-cost}, which
-serves as a local approximation of the fused GW costs when edits are small. Therefore, we are not required to solve for $\sigma$ at each step to minimize over permutations. \\
+serves as a local approximation of the \gls{fgw} costs when edits are small. Therefore, we are not required to solve for $\sigma$ at each step to minimize over permutations. \\
 We use two proposal mechanisms, separated by
 regime: a deterministic greedy descent in
 the transport regime and a stochastic geometry-aware kernel in the mixing regime (at the data distribution)
 
 \paragraph{Transport-regime greedy proposal.}\label{par:transport-greedy}
 In the transport regime, we use a deterministic greedy proposal: for each site $s$, we choose the locally best edit
-$c_s^\star$ and its energy change $\Delta_s$, then apply the $N$ most negative edits in parallel. The MCMC
+$c_s^\star$ and its energy change $\Delta_s$, then apply the $N$ most negative edits in parallel. The \gls{mcmc}
 chain stops (energy-based switch) when no negative $\Delta_s$ remain or when $V_\theta(x)$ drops below a
 reference energy level for the given node count, $\mathbb{E}_{\pi_\mathrm{data}}[V_\theta(x)\mid n]$, which we
 estimate and cache during training. This update is accepted with probability $1$.
@@ -201,14 +201,14 @@ We use two initialization regimes with aligned proposal schedules:
 \item \textbf{Noise initialization:} sample the node count from the empirical histogram, then draw node/edge
 types uniformly (uniform noise) or from empirical marginals (marginal noise). These start far from
 the data manifold, so we run transport with greedy proposals until the energy-based switch (see
-\Cref{par:transport-greedy}), then enter MH mixing with the proposal in
+\Cref{par:transport-greedy}), then enter \gls{mh} mixing with the proposal in
 \eqref{eq:loc-kernel-explicit} and acceptance in \eqref{eq:mh-accept}.
 \item \textbf{Data initialization:} draw graphs from the training set (novelty starts at zero by
 construction). We skip transport and start directly in mixing with the same proposal
 \eqref{eq:loc-kernel-explicit}, using a higher initial proposal temperature that is annealed before
 fixed-temperature mixing (Appendix~\ref{app:sampling-details}).
 \end{itemize}
-All initializations start near-zero $V.U.N.$ (valid-unique-novel). Figure~\ref{fig:moses-energy-and-metrics}
+All initializations start near-zero \gls{vun}. Figure~\ref{fig:moses-energy-and-metrics}
 summarizes the resulting energy trajectories under noise vs.\ data initialization and the
 corresponding proposal regimes.
 
@@ -234,5 +234,5 @@ enforces detailed balance:
 so $\pi_\theta$ is stationary for the mixing dynamics~\citep{metropolis1953equation,hastings1970monte}.
 The locality term ties the sampler directly to the same quadratic form induced by the graph cost, while
 dropping the permutation search is justified by the locality of edits under a fixed labeling.
-Implementation details of the proposal kernel (factorized logits, two-temperature MH, and do-nothing
+Implementation details of the proposal kernel (factorized logits, two-temperature \gls{mh}, and do-nothing
 resampling) are provided in Appendix~\ref{app:sampling-details}.

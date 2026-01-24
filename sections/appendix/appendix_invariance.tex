@@ -27,7 +27,7 @@ so $h$ is invariant.
 ]
   \node[module] (graph) {Graph input $x$\\(node + edge features)};
   \node[module, right=of graph] (gt) {Graph Transformer\\(equivariant)};
-  \node[module, right=of gt] (pool) {Invariant readout\\$\sum_i X_i,\;\sum_{i\ne j} E_{ij}$ + MLP};
+  \node[module, right=of gt] (pool) {Invariant readout\\$\sum_i X_i,\;\sum_{i\ne j} E_{ij}$ + \glsentryshort{mlp}};
   \node[module, right=of pool] (energy) {$V_\theta(x)\in\mathbb{R}$};
 
   \draw[arrow] (graph) -- (gt);
@@ -39,7 +39,7 @@ so $h$ is invariant.
 \end{figure}
 
 The scalar energy is obtained by an invariant readout that first pools the
-equivariant features and then applies an MLP:
+equivariant features and then applies an \gls{mlp}:
 \begin{equation}
 \begin{aligned}
 \bar{X} &= \sum_{i\in\mathcal{V}} X^{(L)}_i,\qquad
@@ -48,6 +48,6 @@ V_\theta(x,h) &= \mathrm{MLP}\big([\bar{X},\bar{E},h^{(L)}]\big).
 \end{aligned}
 \end{equation}
 The sums are invariant to permutations, so the concatenated vector
-$(\bar{X},\bar{E},h^{(L)})$ is invariant. Therefore any MLP applied to it is
+$(\bar{X},\bar{E},h^{(L)})$ is invariant. Therefore any \gls{mlp} applied to it is
 also invariant. This matches the sum-pooled energy head in the implementation
 (with a masked off-diagonal sum).

@@ -4,7 +4,7 @@
 \paragraph{Gradient features.}
 We use gradient-informed proposals on the discrete graph space with target density
 \(\pi_\theta(x)\propto \exp\left(-V_\theta(x)\right)\). We allow an effective inverse temperature
-\(\beta_{\mathrm{mh}}\) in the MH ratio below (\(\beta_{\mathrm{mh}}=1\) for the base model). We denote
+\(\beta_{\mathrm{mh}}\) in the \gls{mh} ratio below (\(\beta_{\mathrm{mh}}=1\) for the base model). We denote
 the gradients with respect to real-valued one-hot node and edge features as follows.
 \begin{align}
 g^\mathcal{V} & := \operatorname{reshape}_{n,l_{\mathrm{node}}}\big(\nabla_{\hat{x}_\mathcal{V}} V_\theta(\hat{x})\big) \in \mathbb{R}^{n\times l_{\mathrm{node}}}\nonumber\\
@@ -46,8 +46,8 @@ For the standard Langevin proposal we set \(\beta_{\mathrm{prop}}=\beta_{\mathrm
 
 \paragraph{Two-betas simulated annealing.}
 We decouple the proposal temperature and target temperature by using
-\(\beta_{\mathrm{prop}}\) in the logits above, while \(\beta_{\mathrm{mh}}\) controls the MH ratio.
-Optionally, \(\beta_{\mathrm{mh}}\) is annealed across MCMC steps:
+\(\beta_{\mathrm{prop}}\) in the logits above, while \(\beta_{\mathrm{mh}}\) controls the \gls{mh} ratio.
+Optionally, \(\beta_{\mathrm{mh}}\) is annealed across \gls{mcmc} steps:
 \begin{equation}
 \beta_{\mathrm{mh}}(s)=
 \begin{cases}
@@ -65,4 +65,4 @@ we resample after softening the logits to increase randomness:
 \(\lambda_\mathcal{E}\leftarrow\rho\,\lambda_\mathcal{E}\) with \(0<\rho<1\).
 We repeat this a bounded number of times; if no change occurs, we keep the current
 state and accumulate the \textit{stay} probability in \(\log q\). The reverse
-transition uses the same resampling rule, preserving the MH ratio.
+transition uses the same resampling rule, preserving the \gls{mh} ratio.
