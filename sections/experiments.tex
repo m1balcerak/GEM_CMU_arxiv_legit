@@ -102,7 +102,7 @@ We evaluate property optimization under molecular threshold constraints (above/b
 following~\citep{ninniri2025graph}: we train a GraphTransformer regressor \(f_\phi\) for
 differentiable guidance and define \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
 then run the same proposal kernel $q_\theta(x\!\to\!y)$ using \(-\nabla_x V_\theta^{\mathrm{cond}}(x)\),
-with the Metropolis--Hastings acceptance ratio modified accordingly; for fairness, all methods use
+with the \gls{mh} acceptance ratio modified accordingly; for fairness, all methods use
 noise-conditioned regressors (\gls{gem} clean-regressor ablation in Appendix~\ref{app:regressor-noise},
 Figure~\ref{fig:regressor-noise}, Table~\ref{tab:regressor-ablations}) and we feed regressor time via
 an energy-based proxy that increases linearly until the chain reaches the data distribution, then
