@@ -8,6 +8,7 @@
 \usepackage{svg}
 % hyperref makes hyperlinks in the resulting PDF.
 \usepackage{hyperref}
+\usepackage[dvipsnames]{xcolor}
 
 % Attempt to make hyperref and algorithmic work together better:
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
@@ -80,7 +81,9 @@ Transport-Aligned Energy-Based Modeling for Graph Generation}
 \printAffiliationsAndNotice{}  % no special notice (required even if empty)
 
 \begin{abstract}
-Energy-based models (EBMs) offer a natural route to controllable generation in discrete domains by composing objectives and constraints directly into a scalar energy. However, EBMs for graphs often assign unreliable off-distribution energies, which degrades sampling and leads to a sizable fidelity gap relative to discrete diffusion models. We introduce Graph Energy Matching (GEM), a generative framework for graphs that closes this gap. Motivated by a discrete Jordan–Kinderlehrer–Otto (JKO) perspective, GEM learns a single permutation-invariant potential that simultaneously provides transport-aligned guidance from a simple source distribution toward data-supported regions, and likelihood-based refinement within these high-probability regions. GEM samples using an energy-based switch between a transport phase with gradient-informed edits to rapidly reach high-probability configurations and a Metropolis–Hastings mixing phase with local, geometry-aware proposals. On MOSES and QM9, GEM achieves unconditional generation quality on par with, and in some settings exceeding, state-of-the-art discrete diffusion models. Beyond sample quality, the learned potential enables effective test-time constraint composition—outperforming strong baselines in property-conditioned generation—and its explicit relative-likelihood structure further facilitates capabilities such as computing geodesics, minimum-energy edit paths aligned with the learned data geometry.
+%Energy-based models (EBMs) model rel likelihood explicitly which enables probabilistic inference - exciting things at inference ..... (beyond control, control is e.g.)
+
+Energy-based models (EBMs) offer a natural route to controllable generation in discrete domains (e.g., graphs) by composing objectives and constraints directly into a scalar energy. However, EBMs for graphs often assign unreliable off-distribution energies, which degrades sampling and leads to a sizable fidelity gap relative to discrete diffusion models. We introduce Graph Energy Matching (GEM), a generative framework for graphs that closes this gap. Motivated by a discrete Jordan–Kinderlehrer–Otto (JKO) perspective, GEM learns a permutation-invariant potential that simultaneously provides transport-aligned guidance from a noise to data, and likelihood-based refinement within high-probability regions. GEM samples using an energy-based switch between a transport phase with gradient-informed edits to rapidly reach high-probability configurations and a Metropolis–Hastings mixing phase with local, geometry-aware proposals. On molecular graph benchmarks (MOSES, QM9), GEM matches or exceeds strong discrete diffusion baselines. Beyond sample quality alone, GEM's learned potential naturally enables property-constrained generation at test-time, and its explicit relative-likelihood structure further supports analyses such as computing geodesics—minimum-energy edit paths aligned with the learned data geometry.
 \end{abstract}
 
 %MAIN TEXT
