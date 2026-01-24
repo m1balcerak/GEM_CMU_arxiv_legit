@@ -1,6 +1,6 @@
 \section{Graph Energy Matching}
 \label{sec:gem}
-Graph generation requires handling of discrete variables and permutation invariance. Within this work, we thus introduce a permutation-invariant minibatch OT and a multi-regime stochastic sampling strategy together with a JKO-Style Variational Objective for Discrete Probability Spaces that allows us to extend Energy Matching to graphs.
+Graph generation requires handling of discrete variables and permutation invariance. In this work, we introduce a permutation-invariant minibatch OT and a multi-regime stochastic sampling strategy, together with a JKO-style variational objective for discrete probability spaces, which allows us to extend Energy Matching to graphs.
 
 \paragraph{Graph representation.}
 We consider a discrete state space $\mathcal{X}:=\big(\mathcal{X}_{\mathrm{node}}\big)^{n}\times\big(\mathcal{X}_{\mathrm{edge}}\big)^{\binom{n}{2}}$ to represent undirected graphs. A graph $x\in \mathcal{X}$ contains a set of $n$ nodes $\mathcal{V}=\{1,\dots,n\}$ and edges $\mathcal{E}$ defining the connectivity between these nodes. Each node $i\in\mathcal{V}$ has a node class $x_i \in \mathcal{X}_{\mathrm{node}}$ (e.g.\ an atom type), and each edge $(i,j)\in\mathcal{E}$ has an edge class $x_{ij}\in\mathcal{X}_{\mathrm{edge}}$ (e.g.\ a bond type).
@@ -14,13 +14,13 @@ x_\mathcal{V}  :=[x_i]_{i=1}^n\in(\mathcal{X}_{\mathrm{node}})^n;\quad
 x_\mathcal{E}  :=[x_{ij}]_{ i<j}\in\big(\mathcal{X}_{\mathrm{edge}}\big)^{\binom{n}{2}}\nonumber
 \end{equation}
 % We consider undirected graphs, so that $x_{ji}=x_{ij}$.
-We embed the node and edge categorical feature vectors $x_\mathcal{V}$ and $x_\mathcal{E}$ using a real-valued one-hot encoding and treat them as continuous features using
+We embed the node and edge categorical feature vectors $x_\mathcal{V}$ and $x_\mathcal{E}$ using a real-valued one-hot encoding and treat them as continuous features via
 \[
 \phi_{\mathcal{V}} :\mathcal{X}_{\mathrm{node}}\to\mathbb{R}^{l_{\mathrm{node}}};\quad
 \phi_{\mathcal{E}} :\mathcal{X}_{\mathrm{edge}}\to\mathbb{R}^{l_{\mathrm{edge}}}
 \]
-Where $l_{\mathrm{node}}=|\mathcal{X}_{\mathrm{node}}|$ and $l_{\mathrm{edge}}=|\mathcal{X}_{\mathrm{edge}}|$ denotes number of node classes and edge classes, respectively. We denote the real-valued node $\hat{x}_{\mathcal{V}}\in\mathbb{R}^{n l_{\mathrm{node}}}$ and edge $\hat{x}_{\mathcal{E}}\in\mathbb{R}^{\binom{n}{2}l_{\mathrm{edge}}}$ features and the corresponding graph representation 
-$\hat{x}$ as
+where $l_{\mathrm{node}}=|\mathcal{X}_{\mathrm{node}}|$ and $l_{\mathrm{edge}}=|\mathcal{X}_{\mathrm{edge}}|$ denote the numbers of node and edge classes, respectively. We denote the real-valued node features $\hat{x}_{\mathcal{V}}\in\mathbb{R}^{n l_{\mathrm{node}}}$ and edge features $\hat{x}_{\mathcal{E}}\in\mathbb{R}^{\binom{n}{2}l_{\mathrm{edge}}}$, and the corresponding graph representation 
+$\hat{x}$, as
 % \begin{equation}
 % \hat{x}_{\mathcal{V}}:=[\phi_{\mathcal{V}}(x_i)]_{i=1}^n; \quad \hat{x}_{\mathcal{E}}:=[\phi_{\mathcal{E}}(x_{ij})]_{ i<j};\quad \hat{x}:=\big[\hat{x}_{\mathcal{V}}, \hat{x}_{\mathcal{E}}\big]. \nonumber
 % \end{equation}
@@ -100,7 +100,7 @@ drift} based on the displacement between coupled samples; we use this to supervi
 $-\nabla_{\hat{x}}V_\theta$ along the coupling paths. We evaluate gradients with respect to the
 continuous embedding $\hat{x}$ introduced above, which makes the potential landscape well-defined away from
 equilibrium and yields a training signal along the predefined coupling paths.
-We want to point out that $\epsilon(x)$ is constant in each regime and does not require an
+We note that $\epsilon(x)$ is constant in each regime and does not require an
 explicit time index, making it natural for jump processes and MCMC chains.
 
 
@@ -136,9 +136,9 @@ train $-\nabla_{\hat{x}}V_\theta$ (Section~\ref{sec:training}).
 
 \paragraph{Local cost for proposals.}
 To generate proposals, we propose \emph{local edits} of the current graph. We can thus use the local surrogate $c_{\mathrm{loc}}$ from \eqref{eq:loc-cost}, which
-serves as a local approximation of the fused GW costs when edits are small. Therefore, we are not required to resolve for $\sigma$ at each step to minimize over permutations. \\
+serves as a local approximation of the fused GW costs when edits are small. Therefore, we are not required to solve for $\sigma$ at each step to minimize over permutations. \\
 We use two proposal mechanisms, separated by
-regime:  a deterministic greedy descent in
+regime: a deterministic greedy descent in
 the transport regime and a stochastic geometry-aware kernel in the mixing regime (at the data distribution)
 
 \paragraph{Transport-regime greedy proposal.}\label{par:transport-greedy}
