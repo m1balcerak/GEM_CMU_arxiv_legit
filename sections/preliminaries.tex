@@ -4,7 +4,7 @@ Energy matching learns a scalar potential \( V_\theta:\mathcal{X}\to\mathbb{R} \
 
 These roles separate model learning into a \emph{global} transport-alignment and a \emph{local} density-refinement term. A simple time-dependent temperature schedule to switch between these regimes, e.g., \(\epsilon(t)=0\) for \(t<1\) (transport) and \(\epsilon(t)=1\) for \(t\ge 1\) (mixing), (i) injects exploration, (ii) mitigates mode collapse, and (iii) stabilizes sampling from the Gibbs distribution \(\propto \exp(-V_\theta(x))\).
 
-Energy Matching can be understood through an optimization-in-probability-spaces perspective, expressed via the \gls{jko}) scheme from density $\rho_t$ to $\rho_{t+\Delta t}$:
+Energy Matching can be understood through an optimization-in-probability-spaces perspective, expressed via the \gls{jko} scheme from density $\rho_t$ to $\rho_{t+\Delta t}$:
 \begin{align}
 \label{jko_em}
 \rho_{t+\Delta t}

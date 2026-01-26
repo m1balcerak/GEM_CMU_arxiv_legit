@@ -28,8 +28,8 @@ We use a flow-matching loss and an energy refinement term:
 \right],\\
 \mathcal{L}_{\text{CL}}(\theta)
 &=
-\mathbb{E}_{x\sim p^\mathrm{data}}[V_\theta(x)]
--\mathbb{E}_{\tilde{x}\sim \text{sg}\,p_\theta}[V_\theta(\tilde{x})].
+\mathbb{E}_{x\sim \pi_\mathrm{data}}[V_\theta(x)]
+-\mathbb{E}_{\tilde{x}\sim \text{sg}\,\pi_\theta}[V_\theta(\tilde{x})].
 \end{align} 
 The loss $\mathcal{L}_{\text{CL}}$ remains as defined in \cref{eq:cl}, except that the sampling method employs the discrete proposals introduced in \cref{proposals}, rather than the continuous SDE from \cref{em_sde}. Note that we supervise the model solely at discrete graph candidates, as the proposals require evaluation of energies and gradients only at discrete graph states.
 

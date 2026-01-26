@@ -1,7 +1,6 @@
 \section{Graph Energy Matching}
 \label{sec:gem}
-We extend continuous Energy Matching methods to discrete graph spaces through a novel variational formulation tailored specifically for discrete probability distributions. Our formulation employs an energy-based switching mechanism that clearly separates \emph{transport} and \emph{mixing} sampling regimes without requiring explicit indexing of time or noise levels. Sampling is efficiently facilitated through deterministic greedy proposals in the transport regime or stochastic gradient-informed proposals during mixing, alongside an annealing strategy to efficiently generate novel samples from optionally given data samples via incremental edits.
-\textbf{TODO: mention epsilon.}
+We extend continuous Energy Matching methods to discrete graph spaces through a novel transport-aligned discrete proposal tailored specifically for discrete probability distributions. Our formulation employs an energy-based switching mechanism that clearly separates \emph{transport} and \emph{mixing} sampling regimes without requiring explicit indexing of time or noise levels. Sampling is efficiently facilitated through deterministic greedy proposals in the transport regime or stochastic gradient-informed proposals during mixing, alongside an annealing strategy to efficiently generate novel samples from optionally given data samples via incremental edits. The sampler uses a temperature $\epsilon$ to control stochasticity: the transport regime is the deterministic $\epsilon\to 0$ limit, while the mixing regime uses $\epsilon>0$.
 \paragraph{Graph representation.} 
 We consider a discrete state space $\mathcal{X}:=\big(\mathcal{X}_{\mathrm{node}}\big)^{n}\times\big(\mathcal{X}_{\mathrm{edge}}\big)^{\binom{n}{2}}$ to represent undirected graphs. A graph $x\in \mathcal{X}$ contains a set of $n$ nodes $\mathcal{V}=\{1,\dots,n\}$ and edges $\mathcal{E}$ defining the connectivity between these nodes. Each node $i\in\mathcal{V}$ has a node class $x_i \in \mathcal{X}_{\mathrm{node}}$ (e.g.\ an atom type), and each edge $(i,j)\in\mathcal{E}$ has an edge class $x_{ij}\in\mathcal{X}_{\mathrm{edge}}$ (e.g.\ a bond type). The edge space $\mathcal{X}_{\mathrm{edge}}$ includes an element indicating the absence of an edge.
 
@@ -56,17 +55,17 @@ train $-\nabla_{\hat{x}}V_\theta$ (Section~\ref{sec:training}).
 \input{figures/tex/fig_proposal_scoring}
 
 
-\subsection{Discrete Transport-Aligned Proposal  ($\epsilon=0$)}{\color{red} TODO: point to details}
+\subsection{Discrete Transport-Aligned Proposal ($\epsilon\to 0$)}{\color{red} TODO: point to details}
 
 \label{proposals}
-Motivated by the JKO formulation in \Cref{jko_em}, we now derive two discrete kernels corresponding to two distinct sampling regimes, i.e., the transport-dominated regime ($\epsilon=0$) and the mixing regime ($\epsilon>0$).
+Motivated by the JKO formulation in \Cref{jko_em}, we now derive two discrete kernels corresponding to two distinct sampling regimes, i.e., the transport-dominated regime (deterministic $\epsilon\to 0$ limit) and the mixing regime ($\epsilon>0$).
 
 We assume the energy function takes the form $V_\theta(x) := \tilde{V}_\theta(\hat{x})$, differentiable in the continuous embedding ($\hat{x}$) provided by a neural network parameterization. Similarly, we assume the cost is given by $c(x,y):=\tilde{c}(\hat{x},\hat{y})$, differentiable in both arguments. Starting from a discrete probability distribution $\pi_k$, 
 
 Given an optimal coupling $\gamma$ (in practice approximated using tractable methods, e.g.,~\cite{albergo2024stochastic,tong2024improving}) and its induced transport map $T$, we assume $T$ admits a consistent representation of the form $y=T(x) \iff \hat{y}=\tilde{T}(\hat{x})$, where $\tilde{T}$ is a continuous map that realizes $T$ under the embedding. The deterministic proposal is then defined as the delta measure $\delta_{T(x)}(y)$. Expressing the JKO variational objective from \Cref{jko_em} as an optimization over transport maps (see \Cref{app:jko}) and substituting the time-step parameter $\Delta t$ with the jump step-size $\eta$ yields:
 \begin{equation}
 \label{eq:new_T}
-    T(x)\in\arg\min_{y\sim\pi_{k+1}}\left\{\frac{1}{2\eta}c(x,y)+V_\theta(y)\right\},
+    T(x)\in\arg\min_{y\in\mathcal{X}}\left\{\frac{1}{2\eta}c(x,y)+V_\theta(y)\right\},
 \end{equation}
 where $\pi_{k+1}=T_{\#}\pi_k$ denotes the pushforward of $\pi_k$ under $T$.
 
@@ -85,9 +84,9 @@ which implies
 \end{equation}
 This optimality condition fully characterizes the solution and can thus be directly employed as a training objective. We utilize this approach in \Cref{sec:training}, incorporating the global, permutation-invariant cost from \Cref{eq:fgw-cost}.
 
-We are now, at sampling, trying to solve \Cref{eq:new_T} given a trained network on the above objective. We want to make the proposal local as to iterate the descent in the potential in more than one-shot such that we can also do a taylor expension on $V(y)$ around x. Rather than controlling the step-size parameter $\eta$, we simplify the (local) greedy proposal by restricting the kernel to at most $N$ edits per jump. For this proposal we consider the cost to be $c_{\mathrm{loc}}(x,y)$ with $\lambda_\mathcal{V}=\lambda_\mathcal{E}$ which yields fixed costs for every such candidate - which means the cost is constant and can be neglected within the search. Linearizing $V_\theta(y)\approx V_\theta(x)+(y - x)^\top\nabla V_\theta(x)$ around $x$, we deterministically select the top-$N$ candidate edits ranked by steepest descent. Formally, the candidate set $C_N(x)$ is defined as the set of all edits achievable by exactly $N$ discrete modifications (changing/removing edges or changing nodes) starting from state $x$. The greedy  proposal is thus given by:
+We are now, at sampling, trying to solve \Cref{eq:new_T} given a trained network on the above objective. We want to make the proposal local as to iterate the descent in the potential in more than one-shot such that we can also do a taylor expension on $V(y)$ around x. Rather than controlling the step-size parameter $\eta$, we simplify the (local) greedy proposal by restricting the kernel to exactly $N$ edits per jump. For this proposal we consider the cost to be $c_{\mathrm{loc}}(x,y)$ with $\lambda_\mathcal{V}=\lambda_\mathcal{E}$ which yields fixed costs for every such candidate - which means the cost is constant and can be neglected within the search. Linearizing $V_\theta(y)\approx V_\theta(x)+\Delta\hat{x}^\top\nabla_{\hat{x}} V_\theta(\hat{x})$ around $\hat{x}$, with $\Delta\hat{x}=\hat{y}-\hat{x}$, we deterministically select the top-$N$ candidate edits ranked by steepest descent. Formally, the candidate set $C_N(x)$ is defined as the set of all edits achievable by exactly $N$ discrete modifications (changing/removing edges or changing nodes) starting from state $x$. The greedy  proposal is thus given by:
 \begin{gather}
-y^*(x) = x + \arg\min_{\Delta x \in C_N(x)} \Delta x^\top\nabla V_\theta(x), \\
+y^*(x) = x + \arg\min_{\Delta x \in C_N(x)} (\Delta\hat{x})^\top\nabla_{\hat{x}} V_\theta(\hat{x}), \\
 q_{\text{greedy}}(x\to y) = \delta_{y^*(x)}(y).
 \end{gather}
 
@@ -159,7 +158,7 @@ resampling) are provided in Appendix~\ref{app:sampling-details}.
 
 \paragraph{Determining the Regime}
 \label{switch}
-We control the regime through an energy-based binary indicator~$\epsilon$: the transport regime corresponds to $\epsilon=0$, while the mixing regime corresponds to $\epsilon>0$. If initialized at noise, the sampler follows deterministic greedy edits guided strictly by negative gradient directions. Transition from transport to mixing occurs when the Markov chain either reaches the target energy (defined as the mean data energy estimated during training) or becomes trapped in a local minimum—no valid gradient-improving edits exist—for all samples, whichever happens first. Once triggered, the sampler enters the stochastic Langevin-based mixing regime. More about proposal schedules in \Cref{init_prop}.
+We control the regime through an energy-based binary indicator $s\in\{0,1\}$: $s=0$ selects transport (deterministic $\epsilon\to 0$ limit), while $s=1$ selects mixing (finite $\epsilon>0$). If initialized at noise, the sampler follows deterministic greedy edits guided strictly by negative gradient directions. Transition from transport to mixing occurs when the Markov chain either reaches the target energy (defined as the mean data energy estimated during training) or becomes trapped in a local minimum—no valid gradient-improving edits exist—for all samples, whichever happens first. Once triggered, the sampler enters the stochastic Langevin-based mixing regime. More about proposal schedules in \Cref{init_prop}.
 
 \paragraph{Init.... TODO}
 \label{init_prop}
