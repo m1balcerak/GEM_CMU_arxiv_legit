@@ -1,5 +1,5 @@
-\section{Discussion}
-\gls{gem} enables compositional, inference-time control by adding energy terms, as shown in the conditional
+\section{Discussion: Remove parts into experiments and rest in conclusion TODO}
+\gls{gem} matches or exceed baseline models for molecular graph benchmarks in both the unconditional and conditional setting. It enables compositional, inference-time control by adding energy terms, as shown in the conditional
 experiments (Section~\ref{sec:experiments}). The learned energy also enables interpretable diagnostics,
 including geodesic analysis and likelihood-ratio calibration.
 
@@ -10,13 +10,25 @@ which typically requires both forward and backward passes per step and implies a
 theoretical slowdown relative to purely forward samplers.
 
 
-\paragraph{Future directions} An immediate extension is 3D molecule generation, composing a strong graph prior with geometric
-constraints at inference time. Relative likelihoods can support scalable refinement and
-generalization diagnostics by testing energy rankings on held-out regions.
+\paragraph{Future directions} 
+A promising extension is 3D molecular generation: GEM can retain a strong graph prior while adding geometric energies such as distance/torsion constraints or pharmacophore terms at inference time. Additionally, GEM’s explicit energy landscape could be used for a broader diagnostics toolkit: relative likelihood rankings and
+energy-weighted geodesics can be used to quantify generalization or flag out-of-distribution regions. In particular, if the minimum-energy geodesic between two molecular (scaffold) families has a high-energy barrier, the model likely has low support (is effectively out-of-distribution) in the intermediates, so generations requiring that edit transition should be treated as low-trust.
+
+
+%Old
+%An immediate extension is 3D molecule generation, composing a strong graph prior with geometric
+%constraints at inference time. Relative likelihoods can support scalable refinement and
+%generalization diagnostics by testing energy rankings on held-out regions.
 
 \section{Conclusion}
-We introduced \gls{gem}, a Graph Energy Matching framework that learns a single explicit potential
-while directly modeling relative likelihoods. Because control is implemented by adding energies,
-\gls{gem} accommodates new constraints at inference time without being tied to a fixed
-forward process, enabling flexible and compositional conditioning. The resulting sampler achieves
-high-quality samples while keeping the model interpretable through its energy landscape.
+We introduced \emph{Graph Energy Matching} (GEM), a sampling-based framework that bridges fast transport toward the data manifold with principled \gls{mcmc} mixing under a learned energy model. This separation yields two practical advantages: (i) it enables high-quality unconditional molecular generation across both noise-start and data-initialized (editing) regimes, and (ii) it supports inference-time conditioning by simply augmenting the energy with task-specific constraints, without retraining the base model. Empirically, GEM is competitive with strong diffusion/\gls{ctmc} baselines on MOSES and QM9, and it performs effective property optimization under threshold constraints. Beyond generation quality, GEM exposes an explicit energy landscape that can be utilized for relative likelihood comparisons and geodesic analyses, providing a complementary diagnostic view of model support and controllability in learned molecular space. While gradient-based energies and multi-step sampling introduce additional compute relative to purely forward generators, GEM offers a flexible and analyzable foundation for controllable graph generation.
+
+
+
+
+%Old
+%We introduced \gls{gem}, a Graph Energy Matching framework that learns a single explicit potential
+%while directly modeling relative likelihoods. Because control is implemented by adding energies,
+%\gls{gem} accommodates new constraints at inference time without being tied to a fixed
+%forward process, enabling flexible and compositional conditioning. The resulting sampler achieves
+%high-quality samples while keeping the model interpretable through its energy landscape.

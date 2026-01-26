@@ -1,11 +1,13 @@
 \section{Permutation-invariant energy parameterization}\label{app:perm-invariance}
-
+FIME: Check notation and masking/padding
 We implement the potential with a node/edge/global graph transformer backbone
 (the GraphTransformer used in our codebase). Each layer is permutation equivariant:
 for any relabeling $\sigma$, hidden node and edge features transform as
 $(X,E)\mapsto (\sigma\!\cdot\!X,\sigma\!\cdot\!E)$. The global feature $h$ collects
 extra graph-level features and is updated through permutation-invariant summaries,
 so $h$ is invariant.
+
+Here, $n$ denotes the maximum number of nodes observed in the training dataset; smaller graphs are padded and masked following standard conventions for graph diffusion models~\citep{vignac2022digress,qinmadeira2024defog}.
 
 \begin{figure}[h]
 \centering

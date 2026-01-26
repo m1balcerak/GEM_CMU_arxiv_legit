@@ -1,7 +1,7 @@
 \subsection{Training objectives}
 \label{sec:training}
 
-\paragraph{Minibatch coupling.}
+\paragraph{Interpolation and Minibatch coupling.}
 Given minibatches $x^0 \sim \pi_0$ and $x^\mathrm{data} \sim \pi_\mathrm{data}$, we match samples using a
 permutation-invariant approximation to the \gls{fgw}-type graph cost $c(x^0,x^\mathrm{data})$
 (Section~\ref{sec:gem} and Appendix~\ref{app:matching}), obtaining a pairing map $T$ induced by the
@@ -9,12 +9,7 @@ minibatch coupling. Each data graph $x^\mathrm{data}$ is paired with a source gr
 denote their embeddings by $\hat{y}^0$ and $\hat{x}^\mathrm{data}$. Define the
 displacement in the embedding space as $v=\hat{x}^\mathrm{data}-\hat{y}^0$.
 We sample a \emph{discrete} interpolant $x^t:=(x^t_\mathcal{V},x^t_\mathcal{E})$, where $x_\mathcal{V}^t:= [x_i^t]_{i=1}^n$ and $x_\mathcal{E}^t := [x_{ij}^t]_{i<j}$ by independently sampling each node and edge from the endpoint graphs.
-% \begin{equation}
-% x^t\sim \mathrm{Cat}\left(t\,\mathbf{e}((x^\mathrm{data})s) + (1-t)\,\mathbf{e}((y^0)_s)\right),
-% \, t\sim\Unif([0,1]),
-% \end{equation}
-% \begin{equation}
-% t \sim \Unif([0,1]),\qquad
+
 \begin{eqnarray}
 x_i^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{V}\big(y_i^0\big) + t\,\phi_\mathcal{V}\big(x_i^{\mathrm{data}}\big)\Big)\\
 x_{ij}^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{E}\big(y_{ij}^0\big) + t\,\phi_\mathcal{E}\big(x_{ij}^{\mathrm{data}}\big)\Big)
@@ -26,25 +21,27 @@ to evaluate $\nabla_{\hat{x}} V_\theta(\hat{x}^t)$.
 \paragraph{Objectives.}
 We use a flow-matching loss and an energy refinement term:
 \begin{align}
-\mathcal{L}_{\text{flow}}(\theta)
+\mathcal{L}_{\text{Flow}}(\theta)
 &=
 \mathbb{E}_{(y^0,x^\mathrm{data})\sim\tilde{\gamma},\,t\sim\Unif([0,1])}\left[
 \|-\nabla_{\hat{x}} V_\theta(\hat{x}^t)-v\|_2^2
 \right],\\
-\mathcal{L}_{\text{ER}}(\theta)
+\mathcal{L}_{\text{CL}}(\theta)
 &=
 \mathbb{E}_{x\sim p^\mathrm{data}}[V_\theta(x)]
 -\mathbb{E}_{\tilde{x}\sim \text{sg}\,p_\theta}[V_\theta(\tilde{x})].
-\end{align}
+\end{align} 
+The loss $\mathcal{L}_{\text{CL}}$ remains as defined in \cref{eq:cl}, except that the sampling method employs the discrete proposals introduced in \cref{proposals}, rather than the continuous SDE from \cref{em_sde}. Note that we supervise the model solely at discrete graph candidates, as the proposals require evaluation of energies and gradients only at discrete graph states.
+
 Relaxations of the transport objective near $t=1$ are discussed in Appendix~\ref{app:flow-weighting}.
 We minimize
 \begin{equation}
 \min_\theta\;
-\mathcal{L}_{\text{flow}}(\theta)
-+\lambda_{\text{ER}}\,
-\mathcal{L}_{\text{ER}}(\theta).
+\mathcal{L}_{\text{Flow}}(\theta)
++\lambda_{\text{CL}}\,
+\mathcal{L}_{\text{CL}}(\theta).
 \end{equation}
-We use a warm-up of $N_{\mathrm{warmup}}$ iterations with only $\mathcal{L}_{\text{flow}}$ before
-turning on $\mathcal{L}_{\text{ER}}$, following the continuous formulation~\citep{balcerak2025energy};
+We use a warm-up of $N_{\mathrm{warmup}}$ iterations with only $\mathcal{L}_{\text{Flow}}$ before
+turning on $\mathcal{L}_{\text{CL}}$, following the continuous formulation~\citep{balcerak2025energy};
 the same intuition carries over to the discrete case by yielding better negatives closer to the data
 manifold.

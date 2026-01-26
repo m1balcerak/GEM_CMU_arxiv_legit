@@ -1,12 +1,12 @@
 \begin{figure}[h]
 \centering
-\resizebox{\columnwidth}{!}{%
+\resizebox{0.95\columnwidth}{!}{%
 \begin{tikzpicture}[>=Latex, font=\small]
 
 % ---------------- Panel box ----------------
 \def\W{11.2}
 \def\H{4.9}
-\node[font=\small\bfseries] at (\W/2,\H-0.20)
+\node[font=\small\bfseries] at (\W/2,\H+0.25)
 {Discrete, geometry-aware energy-based proposal (local edits)};
 
 % ---------------- Center + shells ----------------
@@ -19,12 +19,13 @@
 \draw[gray!75, dashed, line width=0.7pt] (xhat) circle[radius=\rOne];
 \draw[gray!60, dashed, line width=0.7pt] (xhat) circle[radius=\rTwo];
 \draw[gray!50, dashed, line width=0.7pt] (xhat) circle[radius=\rThr];
-\node[gray!60, font=\scriptsize, align=center] at ($(xhat)+(-2.15,1.20)$)
-{cost isolines\\$c_{\mathrm{loc}}(x,y)=\mathrm{const}$};
 
-\node[gray!80, font=\scriptsize\bfseries] at ($(xhat)+(115:\rOne)+(0.06,-0.24)$) {1 flip};
-\node[gray!75, font=\scriptsize\bfseries] at ($(xhat)+(115:\rTwo)+(0.06,-0.26)$) {2 flips};
-\node[gray!70, font=\scriptsize\bfseries] at ($(xhat)+(115:\rThr)+(0.06,-0.28)$) {3 flips};
+\node[gray!60, font=\scriptsize, align=center] at ($(xhat)+(-2.3,1.2)$)
+{distance penalty\\isolines};
+
+\node[gray!80, font=\scriptsize\bfseries] at ($(xhat)+(115:\rOne)+(0.06,-0.24)$) {1 edit};
+\node[gray!75, font=\scriptsize\bfseries] at ($(xhat)+(115:\rTwo)+(0.06,-0.26)$) {2 edits};
+\node[gray!70, font=\scriptsize\bfseries] at ($(xhat)+(115:\rThr)+(0.06,-0.28)$) {3 edits};
 
 \filldraw[black, fill=orange!85] (xhat) circle (2.2pt);
 \node[font=\scriptsize, anchor=north east] at ($(xhat)+(-0.06,-0.12)$) {$\hat{x}$};
@@ -33,27 +34,24 @@
 % ---------------- Gradient direction ----------------
 \pgfmathsetmacro{\gdeg}{30} % degrees
 \coordinate (gend) at ($(xhat)+(\gdeg:3.05)$);
-\draw[->, ultra thick, green!60!black] (xhat) -- (gend)
-  node[below right, xshift=0pt, yshift=-6pt, font=\small\bfseries]
+\draw[->, ultra thick, green!60!black] (xhat) -- (gend);
+\node[font=\small\bfseries, anchor=west, green!40!black]
+  at ($(xhat)+(1.8,1.0)$)
   {$-\nabla_{\hat{x}} V_\theta(\hat{x})$};
 
 % ---------------- Dot area encodes probability ----------------
-% schematic score on a candidate shell: exp( A r cos(theta-g) - B r^2 )
-\pgfmathsetmacro{\A}{2.0}  % gradient tilt strength (visual)
-\pgfmathsetmacro{\B}{1.0}  % locality decay (visual)
+\pgfmathsetmacro{\A}{2.0}
+\pgfmathsetmacro{\B}{1.0}
 
-% max over shells at angle = gdeg
 \pgfmathsetmacro{\sOne}{exp(\A*\rOne - \B*\rOne*\rOne)}
 \pgfmathsetmacro{\sTwo}{exp(\A*\rTwo - \B*\rTwo*\rTwo)}
 \pgfmathsetmacro{\sThr}{exp(\A*\rThr - \B*\rThr*\rThr)}
 \pgfmathsetmacro{\smax}{max(\sOne,max(\sTwo,\sThr))}
 
-% radius mapping: area ~ p  -> radius ~ sqrt(p)
-\pgfmathsetmacro{\radMin}{0.35}   % pt
-\pgfmathsetmacro{\radScale}{2.25} % pt
+\pgfmathsetmacro{\radMin}{0.35}
+\pgfmathsetmacro{\radScale}{2.25}
 
 \newcommand{\DrawRing}[3]{%
-  % #1 radius, #2 list of angles, #3 fill color
   \foreach \ang in {#2} {%
     \pgfmathsetmacro{\score}{exp(\A*#1*cos(\ang-\gdeg) - \B*#1*#1)}%
     \pgfmathsetmacro{\p}{\score/\smax}%
@@ -62,22 +60,25 @@
   }%
 }
 
-% candidates on quantized cost shells (schematic)
 \DrawRing{\rOne}{0,30,60,90,120,150,180,210,240,270,300,330}{blue!70}
 \DrawRing{\rTwo}{15,45,75,105,135,165,195,225,255,285,315,345}{blue!70}
 \DrawRing{\rThr}{0,45,90,135,180,225,270,315}{blue!70}
 
-% ---------------- Minimal legend + equation ----------------
-\node[draw, rounded corners, fill=white, inner sep=3pt,
-      font=\scriptsize, anchor=north]
-  at (\W/2,\H-0.55)
-{$q_\theta(x\to y)\propto \exp\Big((\hat{y}-\hat{x})^\top \big(-\beta\nabla_{\hat{x}} V_\theta(\hat{x})\big)+\lambda_c (\hat{y}-\hat{x})^\top \nabla_{\hat{x}} c_{\mathrm{loc}}(\hat{x},\hat{y})\Big)$};
+% ---------------- Legend + equation (spaced higher) ----------------
+\node[draw, rounded corners, fill=white, inner sep=6pt,
+      font=\small, anchor=north, align=left]
+  at (\W/2,\H-0.05)
+{$q_\mathrm{mixing}(x\to y)\propto \exp\bigl(
+- \|\hat{y}_{\mathcal{V}}-\hat{x}_{\mathcal{V}}\|_2^2
+- \|\hat{y}_{\mathcal{E}}-\hat{x}_{\mathcal{E}}\|_2^2$\\[4pt]
+$\quad\quad\quad\quad\quad\quad - \beta^L\,\nabla V_\theta(\hat{x})^\top(\hat{y}-\hat{x})\bigr)$};
 
-\node[font=\small, anchor=west] at (6.65,3.25)
-{dot area $\propto\, q_\theta(x\to y)$};
+% ---------------- Dot area explanation repositioned ----------------
+\node[font=\small, anchor=west] at (5.6,1.9)
+{dot area $\propto\, q_\mathrm{mixing}(x\to y)$};
 
 \end{tikzpicture}%
 }
-\caption{\textbf{Proposal Scoring.} Proposal scoring for local graph edits. Dot area encodes $q_\theta(x\to y)$ on approximately regular cost shells; gradient alignment increases weight while the locality penalty suppresses larger edits. If the proposal stays at the origin, we resample to encourage exploration and reduce stagnation. Unequal weights yield different node/edge step sizes.}
+\caption{\textbf{Proposal Scoring.} Local graph edit proposals with scoring given by $q_\mathrm{mixing}(x\to y)$. Dot area encodes proposal probabilities; alignment with the gradient direction increases probability, while distance penalties (with equal node/edge weights $\lambda^L_{\mathcal{V}} = \lambda^L_{\mathcal{E}} = 1$ for illustrative purposes) discourage larger edits. If the proposal stays at the origin, we resample to encourage exploration and reduce stagnation.}
 \label{fig:proposal-middle-softmax-alpha-half}
 \end{figure}

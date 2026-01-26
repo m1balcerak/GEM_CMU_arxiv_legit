@@ -1,86 +1,63 @@
-\section{Preliminaries}
+\section{Preliminaries: Energy Matching and JKO }
 
-\paragraph{Energy matching and a learned potential.}
-Energy matching learns a parameterized ($\theta$) scalar \emph{potential} ($V_\theta$) for a data space ($\mathcal{X}$), i.e., $V_\theta:\mathcal{X}\to\mathbb{R}$. The scalar potential $V_\theta$ plays two roles.
-\begin{itemize}
-\item \textbf{Off-manifold guidance:} away from the data distribution, the vector field $-\nabla_x V_\theta$ is trained to align with transport-like directions that move samples from an easy-to-sample source distribution toward the data.
-\item \textbf{Near-equilibrium refinement:} near equilibrium, $V_\theta$ acts as an \gls{ebm} and defines a Gibbs density with unit temperature.
-\end{itemize}
-This separates learning into a \emph{global} transport-alignment term and a \emph{local} density refinement term.
-A two-regime temperature $\epsilon(\cdot)$ is used: $\epsilon(t)=0$ off-manifold (transport regime) and $\epsilon(t)=1$ near equilibrium (mixing regime).
-This regime switch (i) injects exploration, (ii) helps prevent mode collapse, and (iii) stabilizes the Gibbs distribution in the mixing regime.
+Energy matching learns a scalar potential \( V_\theta:\mathcal{X}\to\mathbb{R} \), parameterized by \(\theta\), on a continuous data space \(\mathcal{X}\). It simultaneously serves two complementary roles: (i)~off-manifold guidance, directing samples toward the data manifold via the gradient field \(-\nabla_x V_\theta\), and (ii)~near-equilibrium refinement, characterizing the data distribution on the manifold as an \gls{ebm} with Gibbs density \(\propto \exp(-V_\theta(x))\).
 
-In continuous space, a \gls{jko} step for the energy-and-entropy functional reads
+These roles separate model learning into a \emph{global} transport-alignment and a \emph{local} density-refinement term. A simple time-dependent temperature schedule to switch between these regimes, e.g., \(\epsilon(t)=0\) for \(t<1\) (transport) and \(\epsilon(t)=1\) for \(t\ge 1\) (mixing), (i) injects exploration, (ii) mitigates mode collapse, and (iii) stabilizes sampling from the Gibbs distribution \(\propto \exp(-V_\theta(x))\).
+
+Energy Matching can be understood through an optimization-in-probability-spaces perspective, expressed via the \gls{jko}) scheme from density $\rho_t$ to $\rho_{t+\Delta t}$:
 \begin{align}
+\label{jko_em}
 \rho_{t+\Delta t}
 &=
 \arg\min_{\rho}\;
-\frac{1}{2\Delta t}\,W_2^2(\rho,\rho_t)\nonumber\\
-&\quad+\;\int V_\theta(x)\,\rho(x)\,\mathrm{d}x\nonumber\\
-&\quad+\;\epsilon(t)\int \rho(x)\log\rho(x)\,\mathrm{d}x.
+\frac{1}{2\Delta t}\,\inf_{\gamma\in\Gamma(\rho_t,\rho)}\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]\nonumber\\
+&\quad+\;\int V_\theta(y)\,\rho(y)\,\mathrm{d}y\nonumber\\
+&\quad+\;\epsilon(t)\int \rho(y)\log\rho(y)\,\mathrm{d}y,
 \end{align}
+where the cost function \( c(x,y) \) measures the amount of displacement when transporting mass from \(x\) to \(y\), and constitutes a design choice---in continuous spaces typically chosen as \( c(x,y)=\|x - y\|^2 \).
 
-% \paragraph{Transport learning (off-manifold).}
-\paragraph{Off-manifold guidance.}
-These first-order optimality conditions in Wasserstein space~\citep{lanzetti2025firstorder,lanzetti2024variational} motivate two objectives~\citep{balcerak2025energy}:
-(i) away from data, transport directions are matched; (ii) near equilibrium, the energy is refined to recover the Gibbs distribution.
-Given optimally paired endpoints $(X_0,X_1)\sim\gamma$ with transport map $\gamma$ between the source distribution space $X_0\in \mathcal{X}_0$ and data distribution space $X_1\in \mathcal{X}_1$ and $t\sim\Unif([0,1])$, we define $X_t=(1-t)X_0+tX_1$ and
-$v=X_1-X_0$. The potential $V_\theta$ is trained by matching the gradient field to $v$:
+The coupling \(\gamma\in\Gamma(\rho,\rho_t)\) is a joint distribution that characterizes a transport plan: it precisely describes how mass from the current configuration \(\rho_t\) is relocated to form the new distribution \(\rho\). Intuitively, \(\gamma(x,y)\) encodes ``how much mass from each location \(x\sim\rho_t\) is transported to each new location \(y\sim\rho\)'', thus determining the optimal reassignment of mass that minimizes the expected transportation cost \(\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]\).
+
+\paragraph{Off-manifold transport guidance.}
+Based on first-order optimality conditions in Wasserstein space~\citep{lanzetti2024variational,lanzetti2025firstorder} applied to the functional in~\cref{jko_em}, Energy Matching defines two clear learning objectives. Given tractably coupled pairs \((x,y)\sim\gamma\) (e.g., obtained via minibatch matching rather than solving for the globally optimal coupling), we associate \(x_0\) with the noise/source distribution (\(\rho_{0}\)) and \(x_1\) with the data/target distribution (\(\rho_{\mathrm{data}}\)). Intermediate points are sampled as \(x_t=(1-t)x_0+t x_1\) for \(t\sim\Unif([0,1])\). Defining the empirical transport direction \(v=x_1 - x_0\), the \(V_\theta\) is trained via a flow-like objective:
 \begin{equation}
-\mathcal{L}_{\mathrm{OT}}
+\mathcal{L}_{\mathrm{Flow}}
 =
-\mathbb{E}_{(X_0,X_1)\sim\gamma,\;t\sim\Unif([0,1])}
-\big[\|\nabla_x V_\theta(X_t) + v\|^2\big].
+\mathbb{E}_{(x,y)\sim\gamma,\,t\sim\Unif([0,1])}\big[\|\nabla_{x_t} V_\theta(x_t) + v\|^2\big].
 \end{equation}
 
-% \paragraph{Energy refinement (near-equilibrium).}
-\paragraph{Near-equilibrium refinement.}
-As $t\to\infty$, the equilibrium distribution is
+\paragraph{Near-equilibrium energy refinement.}
+At equilibrium (\(t\to\infty\) in Eq.~\eqref{jko_em} and in the mixing regime \(\epsilon(t)=1\)), the stationary distribution induced by \(V_\theta\) is given by:
 \begin{equation}
-\rho_{t\to\infty}(x)\;\propto\;\exp\!\left(-V_\theta(x)\right).
+\rho_{t\to\infty}(x)\propto \exp(-V_\theta(x)).
 \end{equation}
-The refinement of $\rho_{t\to\infty}$ uses
+
+Refinement of the equilibrium density is achieved using the contrastive loss (CL) (see Appendix \ref{app:energy-refinement}):
 \begin{equation}
-\mathcal{L}_{\mathrm{ER}}
+\label{eq:cl}
+\mathcal{L}_{\mathrm{CL}}
 =
-\mathbb{E}_{x^{+}\sim p_{\mathrm{data}}}\!\left[V_\theta(x^{+})\right]
+\mathbb{E}_{x^{+}\sim \rho_{\mathrm{data}}}[V_\theta(x^{+})]
 -
-\mathbb{E}_{x^{-}\sim \operatorname{sg}(p_{t\to\infty})}\!\left[V_\theta(x^{-})\right],
+\mathbb{E}_{x^{-}\sim\operatorname{sg}(\rho_{t\to\infty})}[V_\theta(x^{-})],
 \end{equation}
-where $x^{-}$ are sampled using Langevin dynamics, i.e., with a stop-gradient ($\operatorname{sg}$) through the sampler.
-The sampling chain to generate these $x^{-}$ is initialized from the source or from data with a tunable mixing probability.
-A warm-up phase with only
-$\mathcal{L}_{\mathrm{OT}}$ allows source-initialized negative samples ($x^{-}$) to reach low-energy regions, followed by optimization of
+where negative samples \(x^{-}\) are generated via Langevin dynamics initialized either from the source or from data, with gradients stopped (\(\operatorname{sg}\)) during sampling. Training begins with an initial warm-up phase using only \(\mathcal{L}_{\mathrm{Flow}}\), followed by joint optimization of:
 \begin{equation}
-\mathcal{L}(\theta)=\mathcal{L}_{\mathrm{OT}}(\theta)+\lambda_{\mathrm{ER}}\,\mathcal{L}_{\mathrm{ER}}(\theta).
+\mathcal{L}(\theta)=\mathcal{L}_{\mathrm{Flow}}(\theta)+\lambda_{\mathrm{CL}}\,\mathcal{L}_{\mathrm{CL}}(\theta).
 \end{equation}
 
 \paragraph{Sampling (two regimes).}
-Sampling starts from a transport-aligned drift and switches to a mixing via an effective temperature
-$\epsilon(t)$. In continuous time, this is the time-inhomogeneous \gls{sde}
+Sampling starts from a transport-aligned drift and switches to refinement via an effective temperature
+$\epsilon(t)$. In continuous time, this corresponds to the time-inhomogeneous \gls{sde}
 \begin{equation}
-\mathrm{d}X_t
+\label{em_sde}
+\mathrm{d}x_t
 =
--\nabla_x V_\theta(X_t)\,\mathrm{d}t
+-\nabla_{x_t} V_\theta(x_t)\,\mathrm{d}t
 +\sqrt{2\,\epsilon(t)}\,\mathrm{d}W_t,
 \end{equation}
-which reduces to an \gls{ode} when $\epsilon(t)=0$ (off-manifold) and becomes a stochastic dynamics as
-the regime switches and $\epsilon(t)\to 1$. In practice, this dynamics needs to be integrated over time.
+which reduces to an \gls{ode} when $\epsilon(t)=0$ and becomes stochastic as $\epsilon(t)\to 1$.
+In practice, sampling corresponds to explicitly integrating \cref{em_sde} over a fixed time interval.
 
-\paragraph{Related work: discrete diffusion/flow matching and control.}
-Recent progress in discrete graph generation is dominated by denoising diffusion and \glspl{ctmc}
-formulations. DiGress~\citep{vignac2022digress} extends discrete diffusion to categorical node and edge
-attributes, while discrete \glspl{ctmc}~\citep{campbell2024generative} move to a continuous-time graph diffusion process. Discrete
-\Glspl{dfm} show that flow-like probability paths on discrete spaces can be realized via
-\glspl{ctmc}~\citep{campbell2024generative}, and DeFoG~\citep{qinmadeira2024defog} instantiates this discrete
-flow-matching viewpoint for graphs, emphasizing a more flexible separation between training and
-sampling. \gls{vfm} recasts flow matching as variational inference over
-trajectory endpoints, and CatFlow applies this to categorical data with strong results on graphs~\citep{eijkelboom2024vfm}.
-For controllable generation, diffusion/\gls{ctmc} guidance typically assumes access to a time- or
-noise-dependent conditional signal along the path (e.g., a regressor/classifier for $p(y\mid x_t,t)$ or
-$p_t(y\mid x_t)$). In discrete settings this often requires training a dedicated predictor on noised
-latents across noise levels (or separate conditional/unconditional models for \gls{cfg}), adding extra
-training and coupling the control mechanism to the chosen noising process~\citep{schiff2024discreteguidance,eijkelboom2025controlledvfm}.
-Moreover, property prediction on heavily corrupted graphs is ill-posed because bonds and valences are
-often invalid, so regressor accuracy naturally degrades away from clean samples; we quantify this
-effect in Appendix~\ref{app:regressor-noise}.
+\subsection{Regressor-guided Diffusion}
+Both DeFoG~\citep{qinmadeira2024defog} and Variational Flow Matching (VFM)~\citep{eijkelboom2024vfm,eijkelboom2025controlledvfm} achieve controllable graph diffusion by conditioning transitions on noise-dependent regressors predicting desired properties. Formally, these regressors approximate conditional distributions of graph properties $y$ given intermediate noisy graph states $x_t$, i.e., $\rho(y\mid x_t,t)$ or $\rho_t(y\mid x_t)$. Further details and empirical analyses illustrating how prediction accuracy behaves at different noise levels are provided in Appendix~\ref{app:regressor-noise}. {\color{red}\textbf{TODO: move to appendix/baselines.}}

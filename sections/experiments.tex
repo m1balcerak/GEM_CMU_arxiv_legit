@@ -1,13 +1,10 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We report unconditional generation on MOSES and QM9 in the main text, property optimization under
-thresholded targets (logP, logS, \gls{qed}, \gls{tpsa}), and geodesic comparisons in the learned space. We report
-\gls{vun} and \gls{fcd} (lower is better), and we consider two initialization regimes: noise initialization
+We report unconditional generation on MOSES and QM9, conditional generation/property optimization on MOSES as well as geodesic comparisons based on the learned potential. MOSES provides a large-scale benchmark (about 1.5M molecules), while QM9 is smaller; we use MOSES to show both the efficacy and scalability of GEM and QM9 as an additional compact controlled comparison. For all experiments, we report
+\gls{vun} and \gls{fcd} (lower is better), and in general consider two initialization regimes: noise initialization
 starts from easy-to-sample noise and must reach chemically valid molecules, while data initialization
 starts from training molecules and must make novel yet valid edits (diffusion/\gls{ctmc} or \gls{mcmc}).
-MOSES is a larger scale dataset (about 1.5M molecules), while QM9 is smaller; we use MOSES for scale and
-QM9 as a compact comparison.
 %
 A concise conceptual summary of the baselines used in our experiments is provided in
 Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix~\ref{app:exp-setup}.
@@ -97,38 +94,32 @@ generations, 1000 inference steps. QM9: 10k generations, 750 inference steps.}
 \paragraph{QM9.} Table~\ref{tab:uncond-main} (bottom) shows QM9 results. \gls{gem} is competitive with diffusion-based
 baselines under noise initialization and is strongest under data initialization.
 
-\paragraph{Property Optimization.}
-We evaluate property optimization under molecular threshold constraints (above/below a target),
-following~\citep{ninniri2025graph}: we train a GraphTransformer regressor \(f_\phi\) for
+\subsection*{Conditional generation}
+%\paragraph{Property Optimization.}
+We conduct property optimization with regards to a diverse set of properties including the logarithm of lipophilicity (logP), the logarithm of aqueous solubility (logS), \gls{qed}, \gls{tpsa}. For comparability, we closely follow  ~\citep{ninniri2025graph}: we train a GraphTransformer regressor \(f_\phi\) for
 differentiable guidance and define \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
 then run the same proposal kernel $q_\theta(x\!\to\!y)$ using \(-\nabla_x V_\theta^{\mathrm{cond}}(x)\),
-with the \gls{mh} acceptance ratio modified accordingly; for fairness, all methods use
-noise-conditioned regressors (\gls{gem} clean-regressor ablation in Appendix~\ref{app:regressor-noise},
+with the \gls{mh} acceptance ratio modified accordingly. For fairness, all methods use
+noise-conditioned regressors (\gls{gem} clean-regressor ablation are in Appendix~\ref{app:regressor-noise},
 Figure~\ref{fig:regressor-noise}, Table~\ref{tab:regressor-ablations}) and we feed regressor time via
 an energy-based proxy that increases linearly until the chain reaches the data distribution, then
 clamps to $t=1$ (Appendix~\ref{app:regressor-noise}). Noise-conditioned regressors are more reliable
-on noisy or invalid graphs, and targets (logS $\ge$ -2.25, logP $\le$ 1.5, \gls{qed} $\ge$ 0.9,
-\gls{tpsa} $\le$ 50) are chosen so unconditional MOSES samples satisfy the constraint at roughly a 20\%
+on noisy or invalid graphs, and targets (molecular threshold constraints: logS $\ge$ -2.25, logP $\le$ 1.5, \gls{qed} $\ge$ 0.9,
+\gls{tpsa} $\le$ 50) are chosen such that unconditional MOSES samples satisfy the constraint at roughly a 20\%
 rate, yielding comparable difficulty across properties.
-Table~\ref{tab:moses-conditional} reports single-property conditioning results, and
-Appendix~\ref{app:baselines} summarizes joint constraints.
-\gls{gem} maintains strong validity, uniqueness, and novelty while improving constraint satisfaction
-relative to baselines.
-\gls{gem} draws a candidate pool of size $N_{\mathrm{select}}$ from the training set, ranks by the
-precomputed property values, and initializes the $B$ inference chains with the top-$B$ molecules
-that satisfy the condition; this takes virtually no time because the training-set properties are
-cached.
-
+Table~\ref{tab:moses-conditional} reports the results:
+\gls{gem} maintains strong validity, uniqueness, and novelty while improving constraint satisfaction relative to baselines.
+%\gls{gem} draws a candidate pool of size $N_{\mathrm{select}}$ from the training set, ranks by the
+%precomputed property values, and initializes the $B$ inference chains with the top-$B$ molecules
+%that satisfy the condition; this takes virtually no time because the training-set properties are
+%cached.
 \input{tables/tex/tab_moses_conditional}
-
+\input{figures/tex/fig_mol_trajectories}
 
 \paragraph{Geodesic Analysis}
-We compute geodesics between molecules and compare against a linear interpolation baseline.
-Shortest paths in high-dimensional spaces have been studied in particular through energy-based
-models; see, e.g., \citet{bethune2025follow}.
+Energy-based models have been used to study shortest paths in high-dimensional spaces \cite{bethune2025follow}. Here, we compute geodesics, minimum-energy paths through graph edits aligned with the learned data geometry, between molecules and compare against a linear interpolation baseline (cost-only). 
 We plot average validity versus the endpoint distance induced by the \gls{fgw} matching cost
-$c_{\mathrm{FGW}}$ (Appendix~\ref{app:matching}), comparing energy-weighted geodesics to cost-only
-baselines; see Figure~\ref{fig:geodesic-validity}. Qualitative paths are shown in
+$c_{\mathrm{FGW}}$ (Appendix~\ref{app:matching}), see Figure~\ref{fig:geodesic-validity}. Qualitative paths are shown in
 Figure~\ref{fig:mol-trajectories}.
 Energy-weighted geodesics consistently preserve validity relative to cost-only geodesics, confirming
 that the learned energy captures chemically meaningful geometry. Full protocol, pairing,
@@ -158,4 +149,4 @@ optimization, and discretization details are in Appendix~\ref{app:geodesic-detai
 \label{fig:geodesic-validity}
 \end{figure}
 
-\input{figures/tex/fig_mol_trajectories}
+
