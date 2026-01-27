@@ -1,10 +1,14 @@
 \section{Permutation-invariant energy parameterization}\label{app:perm-invariance}
-We implement the potential with a graph transformer backbone [CITE]. Each layer is permutation equivariant:
-for any relabeling $\sigma$, hidden node and edge features transform as
-% $(X,E)\mapsto (\sigma\!\cdot\!X,\sigma\!\cdot\!E)$.
+We implement the potential with a graph transformer backbone directly from DeFoG~\cite{qinmadeira2024defog}. Each layer of this backbone is permutation equivariant, meaning that for any permutation (relabeling) $\sigma$, the layer satisfies:
+\[
+h^{(l)}(\sigma \cdot x_{\mathcal{V}}^{(l)}, \sigma \cdot x_{\mathcal{E}}^{(l)}, f^{(l)}) = (\sigma \cdot x_{\mathcal{V}}^{(l+1)}, \sigma \cdot x_{\mathcal{E}}^{(l+1)}, f^{(l+1)}),
+\]
+where $x_{\mathcal{V}}^{(l)}$ and $x_{\mathcal{E}}^{(l)}$ denote node and edge features at layer $l$, respectively, and $f^{(l)}$ denotes the global graph-level feature.
+
 Following~\citep{vignac2022digress,qinmadeira2024defog}, we pad and mask all smaller graphs to the maximum number of nodes observed in the training dataset, denoted as $n$. This results in fixed-size inputs to the model, denoted $x_\mathcal{V}$ and $x_\mathcal{E}$ for node and edge features, respectively. We denote node and edge features at layer $l$ as $x^{(l)}_\mathcal{V}$ and $x^{(l)}_\mathcal{E}$, respectively.
 The global feature $f^{(l)}$ collects graph-level features at layer $l$ and is updated through a permutation-invariant operation.
 Figure~\ref{fig:energy-arch} summarizes the backbone and invariant readout.
+
 
 \begin{figure}[h]
 \centering
