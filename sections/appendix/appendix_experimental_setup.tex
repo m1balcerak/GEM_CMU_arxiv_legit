@@ -1,6 +1,75 @@
-\section{Experimental setup}
+\section{Experimental setup and hyperparameters}
 \label{app:exp-setup}
-We summarize datasets, preprocessing, training, and sampling settings here. \textcolor{red}{[WiP]}
-\noindent\textit{Property optimization regressors.} Baselines use their standard marginal-noise
-conditioning, while \gls{gem} uses uniform-noise conditioning (our training noise), with other settings
-matched.
+We summarize datasets, preprocessing, training, sampling settings, and hyperparameters here.
+We also report the diffusion-editing noise level $\tau$ selected for each baseline here.
+
+\paragraph{GEM training (shared across experiments).}
+Training proceeds in two stages. We first run flow-matching (FM) only with
+$\lambda_{\mathrm{CL}}=0.0$ for 330k iterations ($\text{lr}=10^{-4}$, batch size 128, gradient clip 10)
+to establish the transport field. We then add contrastive divergence (CD) with
+$\lambda_{\mathrm{CL}}=0.1$ for 500 iterations using chain length 500 at
+$\text{lr}=5\times 10^{-5}$, batch size 128. CD sampling uses greedy transport proposals followed by
+dLangevin mixing with $\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$,
+and $\beta_{\mathrm{mh}}=\beta^L$. We apply RRWP features~\citep{ma2023graph} to GEM and to all
+reproduced baselines for fair comparison. For DeFoG baselines we use the authors' checkpoint
+\citep{qinmadeira2024defog}.
+
+\subsection{Unconditional generation}
+We report 25k MOSES samples and 10k QM9 samples. For noise initialization we use greedy transport
+followed by the dLangevin mixing parameters from the training setup above. For data initialization we
+use an annealed schedule with $\beta_{\mathrm{prop}}=8.12$, $\beta_{\mathrm{mh}}^{\mathrm{init}}=0.18$,
+$\beta_{\mathrm{mh}}^{\mathrm{final}}=13.56$, $S_{\mathrm{anneal}}=200$, $\lambda_{\mathcal{V}}^L=0.07$,
+and $\lambda_{\mathcal{E}}^L=2.23$.
+
+\subsection{Conditional generation and property optimization}
+\paragraph{Noisy property regressors.}
+We train time-conditioned regressors on MOSES with shared hyper-parameters for both
+marginal- and uniform-noise variants; only the diffusion transition differs
+(\texttt{noise\_transition} $\in \{\texttt{marginal}, \texttt{uniform}\}$).
+Training uses batch size 1024, 60 epochs, Adam ($\text{lr}=10^{-4}$, weight decay $10^{-6}$),
+4 layers with hidden dims $(d_x=256, d_e=128, d_y=128)$, $n_\text{head}=8$,
+FF dims $(256,128,192)$, polydec time distortion, and a timestep embedding
+(\texttt{time\_conditioned=true}). We report test MAE on 10k molecules at
+$t\in\{0,0.2,\dots,1\}$; noise-sensitivity details are in Appendix~\ref{app:regressor-noise}.
+
+\paragraph{Conditional generation (GEM \& DeFoG).}
+GEM uses guided warmup (225 steps, linear $t$ schedule) and dLangevin proposals
+($\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$) with uniform transitions.
+DeFoG uses marginal-noise regressors. For each task we sweep $\lambda_{\text{prop}}$
+and report the best CVUN; margins and selected $\lambda_{\text{prop}}$ are below.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccc}
+\toprule
+Task & margin & GEM $\lambda_{\text{prop}}$ & DeFoG $\lambda_{\text{prop}}$ \\
+\midrule
+logP $\le 1.5$ & 0.2 & 10 & 140 \\
+logS $\ge -2.25$ & 0.2 & 16 & 130 \\
+QED $\ge 0.9$ & 0.05 & 193 & 360 \\
+TPSA $\le 50$ & 5 & 0.03 & 0.5 \\
+\bottomrule
+\end{tabular}
+\caption{\footnotesize Hyper-parameters for noisy-regressor conditioning on MOSES.
+GEM uses uniform-noise regressors; DeFoG uses marginal-noise regressors. All results use 4k samples.}
+\label{tab:cond-hparams}
+\end{table}
+
+\subsection{Geodesic analysis: validity along geodesics}
+We compare GEM's energy-weighted geodesic to a cost-only baseline along interpolated paths between
+matched MOSES molecules. We align permutations using the node-matching $c_{\mathrm{FGW}}$ cost
+(Section~\ref{sec:gem}, Eq.~\ref{eq:fgw-cost}; node-matching details in Appendix~\ref{app:matching}),
+and then use the aligned local cost $c_{\mathrm{loc}}$ (Eq.~\ref{eq:loc-cost}) to evaluate distances,
+which is equivalent under a fixed alignment. Paths are parameterized as cubic B-splines in the
+node/edge probability simplex with fixed endpoints and learned interior control points (8 control
+points, degree 3). Optimization minimizes the energy-weighted path length $L_\theta$ from
+Appendix~\ref{app:geodesic-details} (with the $\exp(\beta V_\theta)$ weighting) plus an average-energy
+regularizer. We use $\beta=0.1$, length weight $\lambda_L=0.1$, energy weight $\lambda_{ME}=1.0$,
+2000 Adam iterations, and a learning rate of $10^{-3}$ \citep{kingma2014adam}.
+
+Validity is estimated by sampling 16 arc-length--uniform $s$ locations per path and drawing 16
+discrete graphs per $s$. Validity is the fraction of RDKit-valid and connected samples, averaged
+along each path and then across pairs within each distance bin. We use three distance bins:
+$[5,10)$, $[10,15)$, and $[15,20)$, with 50 molecules per bin.
