@@ -2,8 +2,9 @@
 \label{app:matching}
 
 Exact computation of the \gls{fgw} cost $c_{\mathrm{FGW}}$ requires a combinatorial search over
-permutations. We therefore use fast, permutation-invariant approximations tailored to the source
-distribution and the downstream use (pairing vs.\ local edits).
+permutations. We therefore use fast, permutation-invariant \emph{hard-assignment} approximations
+tailored to the source distribution and the downstream use (pairing vs.\ local edits), and use
+$c_{\mathrm{FGW}}$ as shorthand for these proxies.
 
 \paragraph{Histogram matching for a uniform source.}
 When the source $p_0$ is a uniform distribution over node and edge classes, we use a cheap signature

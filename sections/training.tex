@@ -5,14 +5,14 @@
 Given minibatches $x^0 \sim \pi_0$ and $x^\mathrm{data} \sim \pi_\mathrm{data}$, we match samples using a
 permutation-invariant approximation to the \gls{fgw}-type graph cost $c(x^0,x^\mathrm{data})$
 (Section~\ref{sec:gem} and Appendix~\ref{app:matching}), obtaining a pairing map $T$ induced by the
-minibatch coupling. Each data graph $x^\mathrm{data}$ is paired with a source graph $y^0=T(x^\mathrm{data})$;
-denote their embeddings by $\hat{y}^0$ and $\hat{x}^\mathrm{data}$. Define the
-displacement in the embedding space as $v=\hat{x}^\mathrm{data}-\hat{y}^0$.
+minibatch coupling. Each source graph $x^0$ is paired with a data graph $x^\mathrm{data}=T(x^0)$;
+denote their embeddings by $\hat{x}^0$ and $\hat{x}^\mathrm{data}$. Define the
+displacement in the embedding space as $v=\hat{x}^\mathrm{data}-\hat{x}^0$.
 We sample a \emph{discrete} interpolant $x^t:=(x^t_\mathcal{V},x^t_\mathcal{E})$, where $x_\mathcal{V}^t:= [x_i^t]_{i=1}^n$ and $x_\mathcal{E}^t := [x_{ij}^t]_{i<j}$ by independently sampling each node and edge from the endpoint graphs.
 
 \begin{eqnarray}
-x_i^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{V}\big(y_i^0\big) + t\,\phi_\mathcal{V}\big(x_i^{\mathrm{data}}\big)\Big)\\
-x_{ij}^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{E}\big(y_{ij}^0\big) + t\,\phi_\mathcal{E}\big(x_{ij}^{\mathrm{data}}\big)\Big)
+x_i^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{V}\big(x_i^0\big) + t\,\phi_\mathcal{V}\big(x_i^{\mathrm{data}}\big)\Big)\\
+x_{ij}^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{E}\big(x_{ij}^0\big) + t\,\phi_\mathcal{E}\big(x_{ij}^{\mathrm{data}}\big)\Big)
 \end{eqnarray}
 % \end{equation}
 Let $\hat{x}^t$ be the real valued embedding of $x^t$ via $\phi_\mathcal{V},\phi_\mathcal{E}$ (Section~\ref{sec:gem}); we use it only
@@ -23,7 +23,7 @@ We use a flow-matching loss and an energy refinement term:
 \begin{align}
 \mathcal{L}_{\text{Flow}}(\theta)
 &=
-\mathbb{E}_{(y^0,x^\mathrm{data})\sim\tilde{\gamma},\,t\sim\Unif([0,1])}\left[
+\mathbb{E}_{(x^0,x^\mathrm{data})\sim\tilde{\gamma},\,t\sim\Unif([0,1])}\left[
 \|-\nabla_{\hat{x}} V_\theta(\hat{x}^t)-v\|_2^2
 \right],\\
 \mathcal{L}_{\text{CL}}(\theta)
