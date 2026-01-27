@@ -59,5 +59,4 @@ $\epsilon(t)$. In continuous time, this corresponds to the time-inhomogeneous \g
 which reduces to an \gls{ode} when $\epsilon(t)=0$ and becomes stochastic as $\epsilon(t)\to 1$.
 In practice, sampling corresponds to explicitly integrating \cref{em_sde} over a fixed time interval.
 
-\subsection{Regressor-guided Diffusion}
-Both DeFoG~\citep{qinmadeira2024defog} and Variational Flow Matching (VFM)~\citep{eijkelboom2024vfm,eijkelboom2025controlledvfm} achieve controllable graph diffusion by conditioning transitions on noise-dependent regressors predicting desired properties. Formally, these regressors approximate conditional distributions of graph properties $y$ given intermediate noisy graph states $x_t$, i.e., $\rho(y\mid x_t,t)$ or $\rho_t(y\mid x_t)$. Further details and empirical analyses illustrating how prediction accuracy behaves at different noise levels are provided in Appendix~\ref{app:regressor-noise}. {\color{red}\textbf{TODO: move to appendix/baselines.}}
+

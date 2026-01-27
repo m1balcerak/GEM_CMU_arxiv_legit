@@ -14,7 +14,9 @@ Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix
 Table~\ref{tab:uncond-main} (top) reports MOSES results. Across both noise and data initialization,
 \gls{gem} improves \gls{vun} and \gls{fcd} over the baselines.
 Figure~\ref{fig:moses-vun-steps} reports performance versus inference steps, and
-Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.\ Data Initialization.
+Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.\ Data Initialization. At very small inference budgets, diffusion-based baselines can reach strong performance with fewer steps;
+Figure~\ref{fig:moses-vun-steps} shows that in the few-step regime our current \gls{gem} sampler trails the
+diffusion baseline. 
 \begin{table}[t]
 \centering
 \small
