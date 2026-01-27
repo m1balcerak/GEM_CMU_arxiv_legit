@@ -1,13 +1,15 @@
 \section{Conceptualizing baselines todo}
 \label{app:baselines}
 
-We briefly summarize the baseline methods referenced in the experiments to clarify the modeling
-assumptions behind each comparison.
+We summarize the baseline methods used in our experiments with an emphasis on the generation/samplign mechanismn for each method. 
 
 \paragraph{GraphEBM.}
-GraphEBM~\citep{liu2021graphebm} learns a scalar energy over molecular graphs with a \gls{gnn} and relies on
-\gls{mcmc} (e.g., \gls{mh} over local graph edits) for sampling, without an explicit transport
-or flow-matching objective.
+GraphEBM~\citep{liu2021graphebm} models molecular graphs using an energy-based model that assigns a scalar energy $E_\theta(G)$ to each graph $G$ via a graph neural network.
+Unlike transport- or flow-based approaches, GraphEBM does not learn an explicit transformation from a source distribution to the data distribution. Instead, generation relies on approximate sampling from the unnormalized energy landscape using MCMC, typically via local graph-edit proposals
+combined with Metropolis--Hastings accept/reject steps.
+%GraphEBM~\citep{liu2021graphebm} learns a scalar energy over molecular graphs with a \gls{gnn} and relies on
+%\gls{mcmc} (e.g., \gls{mh} over local graph edits) for sampling, without an explicit transport
+%or flow-matching objective.
 
 \paragraph{DeFoG.}
 DeFoG~\citep{qinmadeira2024defog} formulates graph generation as discrete flow matching, learning
