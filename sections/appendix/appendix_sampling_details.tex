@@ -10,15 +10,16 @@ the gradients with respect to real-valued one-hot node and edge features as foll
 g^\mathcal{V} & := \operatorname{reshape}_{n,l_{\mathrm{node}}}\big(\nabla_{\hat{x}_\mathcal{V}} V_\theta(\hat{x})\big) \in \mathbb{R}^{n\times l_{\mathrm{node}}}\nonumber\\
 g^\mathcal{E} & := \operatorname{reshape}_{\binom{n}{2},l_{\mathrm{edge}}}\big(\nabla_{\hat{x}_\mathcal{E}} V_\theta(\hat{x})\big) \in \mathbb{R}^{\binom{n}{2}\times l_{\mathrm{edge}}}\nonumber
 \end{align}
-Since we are working with undirected graphs, we use symmetrized edge gradients
-\(g_{ij}=g_{ji}=\tfrac{1}{2}(g_{ij}+g_{ji})\) from the graph transformer.
+where $\operatorname{reshape}_{m,n}(x)$ is a row-major resizing operation converting the vector $x\in \mathbb{R}^{mn}$ to a shape of $\mathbb{R}^{m\times n}$.
+Inside the transformer 
+Since we are working with undirected graphs, we use symmetrized edge gradients from the graph transformer.
 
 \paragraph{Factorized proposal (multi-site).}
 We sample all nodes and undirected edges independently from categorical logits
 \begin{align}
-\ell^\mathcal{V}_{i,c_i} & = \beta_{\mathrm{prop}}\big(g^\mathcal{V}_{i,x_i}-g^\mathcal{V}_{i,c_i}\big)-\lambda_\mathcal{V}\,\mathbb{I}_{\{c_i \neq x_i\}};~\forall~c_i \in \mathcal{X}_\mathrm{node}, \nonumber \\
-\ell^\mathcal{E}_{{ij},c_{ij}} &= \beta_{\mathrm{prop}}\big(g^\mathcal{E}_{ij,x_{ij}}-g^\mathcal{E}_{ij,c_{ij}}\big)
--\lambda_\mathcal{E}\,\mathbb{I}_{\{c_{ij}\ne x_{ij}\}};~\forall~c_{ij} \in \mathcal{X}_\mathrm{edge} \nonumber
+\ell^\mathcal{V}_{i,c_i} & = \beta_{\mathrm{prop}}\big(g^\mathcal{V}_{i,x_i}-g^\mathcal{V}_{i,c_i}\big)-\lambda_\mathcal{V}\,\mathbb{I}_{\{c_i \neq x_i\}};~\forall~c_i \in \mathcal{X}_\mathrm{node} \\
+\ell^\mathcal{E}_{{ij},c_{ij}} &= \beta_{\mathrm{prop}}\big(g^\mathcal{E}_{ij,x_{ij}}-g^\mathcal{E}_{ij,c_{ij}}\big) \nonumber\\
+&-\lambda_\mathcal{E}\,\mathbb{I}_{\{c_{ij}\ne x_{ij}\}};~\forall~c_{ij} \in \mathcal{X}_\mathrm{edge}
 \end{align}
 so the full proposal factorizes as
 \begin{equation}
@@ -29,7 +30,7 @@ q_{\beta_{\mathrm{prop}}}(x\to y)
 &\quad\times\prod_{i<j}\mathrm{Cat}\left(y_{ij};\mathrm{softmax}(\ell_{ij}^\mathcal{E})\right).
 \end{aligned}
 \end{equation}
-The current class has logit \(0\) (the \textit{stay} option), while \(\lambda_\mathcal{V},\lambda_\mathcal{E}\)
+The current class has logit value of \(0\) (the \textit{stay} option), while \(\lambda_\mathcal{V},\lambda_\mathcal{E}\)
 penalize changes.
 
 \paragraph{\gls{mh} refinement (single beta).}

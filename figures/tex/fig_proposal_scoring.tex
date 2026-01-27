@@ -16,26 +16,26 @@
 \pgfmathsetmacro{\rTwo}{1.35}
 \pgfmathsetmacro{\rThr}{1.85}
 
-\draw[gray!75, dashed, line width=0.7pt] (xhat) circle[radius=\rOne];
-\draw[gray!60, dashed, line width=0.7pt] (xhat) circle[radius=\rTwo];
-\draw[gray!50, dashed, line width=0.7pt] (xhat) circle[radius=\rThr];
+\draw[cb_lightgray, dashed, line width=0.7pt] (xhat) circle[radius=\rOne];
+\draw[cb_lightgray, dashed, line width=0.7pt] (xhat) circle[radius=\rTwo];
+\draw[cb_lightgray, dashed, line width=0.7pt] (xhat) circle[radius=\rThr];
 
-\node[gray!60, font=\scriptsize, align=center] at ($(xhat)+(-2.3,1.2)$)
+\node[cb_lightgray, font=\scriptsize, align=center] at ($(xhat)+(-2.3,1.2)$)
 {distance penalty\\isolines};
 
-\node[gray!80, font=\scriptsize\bfseries] at ($(xhat)+(115:\rOne)+(0.06,-0.24)$) {1 edit};
-\node[gray!75, font=\scriptsize\bfseries] at ($(xhat)+(115:\rTwo)+(0.06,-0.26)$) {2 edits};
-\node[gray!70, font=\scriptsize\bfseries] at ($(xhat)+(115:\rThr)+(0.06,-0.28)$) {3 edits};
+\node[cb_lightgray, font=\scriptsize\bfseries] at ($(xhat)+(115:\rOne)+(0.06,-0.24)$) {1 edit};
+\node[cb_lightgray, font=\scriptsize\bfseries] at ($(xhat)+(115:\rTwo)+(0.06,-0.26)$) {2 edits};
+\node[cb_lightgray, font=\scriptsize\bfseries] at ($(xhat)+(115:\rThr)+(0.06,-0.28)$) {3 edits};
 
-\filldraw[black, fill=orange!85] (xhat) circle (2.2pt);
+\filldraw[black, fill=cb_red] (xhat) circle (2.2pt);
 \node[font=\scriptsize, anchor=north east] at ($(xhat)+(-0.06,-0.12)$) {$\hat{x}$};
-\node[gray!75, font=\scriptsize\bfseries, anchor=west] at ($(xhat)+(0.12,-0.02)$) {stay};
+\node[cb_lightgray, font=\scriptsize\bfseries, anchor=west] at ($(xhat)+(0.12,-0.02)$) {stay};
 
 % ---------------- Gradient direction ----------------
 \pgfmathsetmacro{\gdeg}{30} % degrees
 \coordinate (gend) at ($(xhat)+(\gdeg:3.05)$);
-\draw[->, ultra thick, green!60!black] (xhat) -- (gend);
-\node[font=\small\bfseries, anchor=west, green!40!black]
+\draw[->, ultra thick, cb_green] (xhat) -- (gend);
+\node[font=\small\bfseries, anchor=west, cb_green]
   at ($(xhat)+(1.8,1.0)$)
   {$-\nabla_{\hat{x}} V_\theta(\hat{x})$};
 
@@ -60,9 +60,9 @@
   }%
 }
 
-\DrawRing{\rOne}{0,30,60,90,120,150,180,210,240,270,300,330}{blue!70}
-\DrawRing{\rTwo}{15,45,75,105,135,165,195,225,255,285,315,345}{blue!70}
-\DrawRing{\rThr}{0,45,90,135,180,225,270,315}{blue!70}
+\DrawRing{\rOne}{0,30,60,90,120,150,180,210,240,270,300,330}{cb_blue}
+\DrawRing{\rTwo}{15,45,75,105,135,165,195,225,255,285,315,345}{cb_blue}
+\DrawRing{\rThr}{0,45,90,135,180,225,270,315}{cb_blue}
 
 % ---------------- Legend + equation (spaced higher) ----------------
 \node[draw, rounded corners, fill=white, inner sep=6pt,

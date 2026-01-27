@@ -4,17 +4,19 @@
 We specialize the continuous JKO functional (\Cref{jko_em}) to discrete distributions in the
 transport regime ($\epsilon=0$) and replace the time step $\Delta t$ with the jump size $\eta$.
 Given $\pi_k$ and a candidate $\pi$, the variational objective reads
-\begin{equation}
-    \pi_{k+1} = \arg\min_{\pi}\;
-    \frac{1}{2\eta}\inf_{\gamma\in\Gamma(\pi_k,\pi)}\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]
-    + \mathbb{E}_{y\sim\pi}[\,V_\theta(y)\,].
-\end{equation}
+\begin{align}
+    \pi_{k+1} = \arg\min_{\pi}
+    \frac{1}{2\eta}\inf_{\gamma\in\Gamma(\pi_k,\pi)}&\mathbb{E}_{(x,y)\sim\gamma}[c(x,y)]
+    \nonumber\\
+    + &\mathbb{E}_{y\sim\pi}[V_\theta(y)].
+\end{align}
 Assuming the optimal coupling admits a deterministic transport map $T$ (i.e., a Monge-type
 solution) so that $\pi = T_{\#}\pi_k$, the objective reduces to an optimization over maps:
 \begin{align}
-    T &\in \arg\min_{T:\pi=T_{\#}\pi_k}
-    \frac{1}{2\eta}\mathbb{E}_{x\sim\pi_k}[\,c(x,T(x))\,] + \mathbb{E}_{x\sim\pi_k}[\,V_\theta(T(x))\,]\nonumber\\[5pt]
-    &= \arg\min_{T}\mathbb{E}_{x\sim\pi_k}\left[\frac{1}{2\eta}c(x,T(x))+V_\theta(T(x))\right].
+    T \in \arg&\min_{T^\prime:\pi=T^\prime_{\#}\pi_k}
+    \frac{1}{2\eta}\mathbb{E}_{x\sim\pi_k}[\,c(x,T^\prime(x))\,] \nonumber\\
+    & + \mathbb{E}_{x\sim\pi_k}[\,V_\theta(T^\prime(x))\,].\\[5pt]
+    T \in \arg&\min_{T^\prime}\mathbb{E}_{x\sim\pi_k}\left[\frac{1}{2\eta}c(x,T^\prime(x))+V_\theta(T^\prime(x))\right].
 \end{align}
 Since the expectation is over $x\sim\pi_k$, the minimization decouples pointwise, yielding
 \begin{equation}

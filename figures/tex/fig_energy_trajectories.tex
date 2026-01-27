@@ -1,5 +1,6 @@
 \begin{figure}[h]
 \centering
+
 \begin{tikzpicture}[scale=1.15]
   \draw[->, thick] (0,-0.36) -- (6.2,-0.36);
   \draw[->, thick] (0,-0.36) -- (0,2.6);
@@ -16,59 +17,79 @@
     \node[left, font=\scriptsize] at (-0.1,\y) {\lab};
   }
 
-  % Annealing window (S)
-  \draw[decorate, decoration={brace, amplitude=4pt, mirror}, draw=green!70!black] (0.06,0.2) -- (2.10,0.2);
-  \node[font=\scriptsize, text=green!70!black] at (1.26,-0.16) {annealed proposal, $S_{\mathrm{anneal}}$};
-  % Fixed-temperature window
-  \draw[decorate, decoration={brace, amplitude=4pt, mirror}, draw=blue!70!black] (2.28,0.2) -- (5.94,0.2);
-  \node[font=\scriptsize, text=blue!70!black] at (4.20,-0.16) {fixed-temperature proposal};
+  % Annealing window (S) - Using TEAL (was Green)
+  \draw[decorate, decoration={brace, amplitude=4pt, mirror}, draw=cb_teal] (0.06,0.2) -- (2.10,0.2);
+  \node[font=\scriptsize, text=cb_teal] at (1.26,-0.16) {annealed proposal, $S_{\mathrm{anneal}}$};
+  
+  % Fixed-temperature window - Using BLUE (was Blue)
+  \draw[decorate, decoration={brace, amplitude=4pt, mirror}, draw=cb_blue] (2.28,0.2) -- (5.94,0.2);
+  \node[font=\scriptsize, text=cb_blue] at (4.20,-0.16) {fixed-temperature proposal};
 
   % Bands (range)
-  \fill[orange!15] (0,1.78) rectangle (6.0,2.28);
-  \fill[blue!22, opacity=0.35] (0,0.18) rectangle (6.0,0.68);
-  \draw[orange!80!black, densely dotted, line width=0.7pt] (0,2.03) -- (6.0,2.03);
-  \draw[blue!70!black, densely dotted, line width=0.7pt] (0,0.43) -- (6.0,0.43);
+    % Noise band (Orange)
+    \fill[cb_orange!20] (0,1.78) rectangle (6.0,2.28);
+    \draw[cb_orange, line width=0.6pt] (0,2.03) -- (6.0,2.03);
+    
+    % Data band (Blue)
+    \fill[cb_blue!20, opacity=0.5] (0,0.18) rectangle (6.0,0.68);
+    \draw[cb_blue, line width=0.6pt] (0,0.43) -- (6.0,0.43);
 
-  % Greedy proposal window
-  \draw[decorate, decoration={brace, amplitude=4pt}, draw=red!75!black] (0.06,2.34) -- (2.22,2.34);
-  \node[font=\scriptsize, text=red!75!black] at (1.14,2.65) {greedy proposals};
+
+  % Greedy proposal window - Using RED (was Red)
+  \draw[decorate, decoration={brace, amplitude=4pt}, draw=cb_red] (0.06,2.34) -- (2.22,2.34);
+  \node[font=\scriptsize, text=cb_red] at (1.14,2.65) {greedy proposals};
 
   % Trajectories (means + std)
-  \fill[red!15, opacity=0.35] plot[smooth] coordinates {
+  
+  % Noise Initialized (RED)
+  \fill[cb_red!20, opacity=0.6] plot[smooth] coordinates {
     (0.0,2.392) (0.7,1.992) (1.3,1.492) (2.1,0.742)
     (2.7,0.732) (3.3,0.732) (4.2,0.732) (5.1,0.732) (6.0,0.732)
   } -- plot[smooth] coordinates {
     (6.0,0.172) (5.1,0.172) (4.2,0.172) (3.3,0.172)
     (2.7,0.172) (2.1,0.182) (1.3,0.932) (0.7,1.432) (0.0,1.832)
   } -- cycle;
-  \draw[red!80, densely dotted, line width=1.1pt] plot[smooth] coordinates {
+  \draw[cb_red, densely dotted, line width=1.1pt] plot[smooth] coordinates {
     (0.0,2.112) (0.7,1.712) (1.3,1.212) (2.1,0.462)
     (2.7,0.452) (3.3,0.452) (4.2,0.452) (5.1,0.452) (6.0,0.452)
   };
 
-  \fill[green!30, opacity=0.35] plot[smooth] coordinates {
+  % Data Initialized (TEAL - was Green)
+  \fill[cb_teal!30, opacity=0.5] plot[smooth] coordinates {
     (0.0,0.74) (0.4,0.91) (0.9,0.82) (1.4,0.74)
     (2.2,0.72) (3.1,0.71) (4.2,0.71) (5.1,0.71) (6.0,0.71)
   } -- plot[smooth] coordinates {
     (6.0,0.18) (5.1,0.18) (4.2,0.18) (3.1,0.18)
     (2.2,0.18) (1.4,0.18) (0.9,0.26) (0.4,0.35) (0.0,0.18)
   } -- cycle;
-  \draw[green!75!black, densely dotted, line width=1.1pt] plot[smooth] coordinates {
+  \draw[cb_teal, densely dotted, line width=1.1pt] plot[smooth] coordinates {
     (0.0,0.46) (0.4,0.63) (0.9,0.54) (1.4,0.46)
     (2.2,0.44) (3.1,0.43) (4.2,0.43) (5.1,0.43) (6.0,0.43)
   };
 
   % Legend
-  \begin{scope}[shift={(3.3,1.7)}]
-    \draw[fill=orange!15, draw=orange!45] (0,0) rectangle (0.35,0.18);
-    \node[anchor=west, font=\scriptsize] at (0.45,0.09) {noise band};
-    \draw[fill=blue!22, draw=blue!45, fill opacity=0.35] (0,-0.28) rectangle (0.35,-0.10);
-    \node[anchor=west, font=\scriptsize] at (0.45,-0.19) {data band};
-    \draw[fill=red!15, draw=red!30] (0,-0.56) rectangle (0.35,-0.38);
-    \node[anchor=west, font=\scriptsize] at (0.45,-0.47) {samples: noise initialized};
-    \draw[fill=green!30, draw=green!55] (0,-0.84) rectangle (0.35,-0.66);
-    \node[anchor=west, font=\scriptsize] at (0.45,-0.75) {samples: data initialized};
-  \end{scope}
+\begin{scope}[shift={(3.3,1.7)}]
+  % Noise band (orange): band + constant (solid) reference line
+  \draw[fill=cb_orange!20, draw=cb_orange] (0,0) rectangle (0.35,0.18);
+  \draw[cb_orange, line width=0.6pt] (0.04,0.09) -- (0.31,0.09);
+  \node[anchor=west, font=\scriptsize] at (0.45,0.09) {noise band};
+
+  % Data band (blue): band + constant (solid) reference line
+  \draw[fill=cb_blue!20, draw=cb_blue, fill opacity=0.5] (0,-0.28) rectangle (0.35,-0.10);
+  \draw[cb_blue, line width=0.6pt] (0.04,-0.19) -- (0.31,-0.19);
+  \node[anchor=west, font=\scriptsize] at (0.45,-0.19) {data band};
+
+  % Noise initialized samples (red): band + dotted mean line
+  \draw[fill=cb_red!20, draw=cb_red] (0,-0.56) rectangle (0.35,-0.38);
+  \draw[cb_red, densely dotted, line width=1.1pt] (0.04,-0.47) -- (0.31,-0.47);
+  \node[anchor=west, font=\scriptsize] at (0.45,-0.47) {samples: noise initialized};
+
+  % Data initialized samples (teal): band + dotted mean line
+  \draw[fill=cb_teal!30, draw=cb_teal] (0,-0.84) rectangle (0.35,-0.66);
+  \draw[cb_teal, densely dotted, line width=1.1pt] (0.04,-0.75) -- (0.31,-0.75);
+  \node[anchor=west, font=\scriptsize] at (0.45,-0.75) {samples: data initialized};
+\end{scope}
+
 \end{tikzpicture}
 
 \vspace{0.25cm}
@@ -91,44 +112,49 @@
     \node[left, font=\scriptsize] at (-0.1,\y) {\lab};
   }
 
-  % Validity (green)
-  \draw[green!70!black, thick] plot[smooth] coordinates {
+  % Validity (Data Init) - Using TEAL
+  \draw[cb_teal, thick] plot[smooth] coordinates {
     (0.0,3.20) (0.1,1.40) (0.2,0.55) (0.3,0.26) (0.6,0.22)
     (1.0,0.30) (1.4,0.42) (1.8,0.70) (2.2,1.05) (2.6,1.40)
     (3.0,1.70) (3.4,2.00) (3.8,2.25) (4.2,2.45) (4.6,2.60)
     (5.0,2.72) (5.6,2.86) (6.2,3.06) (6.8,3.075) (7.0,3.088)
   };
 
-  % Novelty (green, dashed)
-  \draw[green!45!black, thick, dashed] plot[smooth] coordinates {
+  % Novelty (Data Init) - Using TEAL (Dashed)
+  \draw[cb_teal, thick, dashed] plot[smooth] coordinates {
     (0.0,0.00) (0.1,0.05) (0.2,0.25) (0.3,0.80) (0.4,1.60)
     (0.5,2.72) (1.0,2.45) (1.5,1.70) (2.0,2.05) (2.5,2.30)
     (3.0,2.45) (3.5,2.60) (4.0,2.70) (4.5,2.78) (5.0,2.85)
     (5.5,2.90) (6.0,2.95) (6.5,2.98) (7.0,3.00)
   };
 
-  % Greedy proposal (red)
-  \draw[red!75!black, thick] plot[smooth] coordinates {
+  % Validity (Noise Init) - Using RED
+  \draw[cb_red, thick] plot[smooth] coordinates {
     (0.0,0.00) (0.6,0.08) (1.0,0.32) (1.4,1.12) (1.8,2.24)
     (2.2,2.60) (2.6,2.72) (3.0,2.80) (4.2,2.88) (5.6,2.92) (7.0,2.944)
   };
-  \draw[red!75!black, thick, dashed] plot[smooth] coordinates {
+  % Novelty (Noise Init) - Using RED (Dashed)
+  \draw[cb_red, thick, dashed] plot[smooth] coordinates {
     (0.0,3.20) (1.4,3.187) (2.8,3.174) (4.2,3.162) (5.6,3.149) (7.0,3.136)
   };
 
   % Legend
   \begin{scope}[shift={(3.3,0.15)}]
-    \draw[fill=white, draw=gray!35] (0,0) rectangle (3.6,1.4);
-    \draw[red!75!black, thick] (0.15,1.15) -- (0.6,1.15);
+    \draw[fill=white, draw=cb_gray] (0,0) rectangle (3.6,1.4);
+    
+    % Noise Init (Red)
+    \draw[cb_red, thick] (0.15,1.15) -- (0.6,1.15);
     \node[anchor=west, font=\scriptsize] at (0.7,1.15) {Validity (noise initialized)};
-    \draw[red!75!black, thick, dashed] (0.15,0.85) -- (0.6,0.85);
+    \draw[cb_red, thick, dashed] (0.15,0.85) -- (0.6,0.85);
     \node[anchor=west, font=\scriptsize] at (0.7,0.85) {Novelty (noise initialized)};
-    \draw[green!70!black, thick] (0.15,0.45) -- (0.6,0.45);
+    
+    % Data Init (Teal)
+    \draw[cb_teal, thick] (0.15,0.45) -- (0.6,0.45);
     \node[anchor=west, font=\scriptsize] at (0.7,0.45) {Validity (data initialized)};
-    \draw[green!45!black, thick, dashed] (0.15,0.15) -- (0.6,0.15);
+    \draw[cb_teal, thick, dashed] (0.15,0.15) -- (0.6,0.15);
     \node[anchor=west, font=\scriptsize] at (0.7,0.15) {Novelty (data initialized)};
   \end{scope}
 \end{tikzpicture}
-\caption{\footnotesize \textbf{Energy and Sampling Trajectories.} Top: energy evolution for noise- vs.\ data-initialized chains, with mean $\pm$ 1 std bands and reference levels at $\mathbb{E}_{x\sim \pi_\mathrm{data}}[V_\theta(x)]$ and $\mathbb{E}_{x\sim \pi_0}[V_\theta(x)]$. Noise-initialized chains use greedy proposals to reach the data manifold; data-initialized chains use annealing to recover novelty. Bottom: validity and novelty trajectories for data-initialized (green) and noise-initialized (red) chains over inference \gls{mcmc} steps. Uniqueness stays around 100\%.}
+\caption{\footnotesize \textbf{Energy and Sampling Trajectories.} Top: energy evolution for noise- vs.\ data-initialized chains, with mean $\pm$ 1 std bands and reference levels at $\mathbb{E}_{x\sim \pi_\mathrm{data}}[V_\theta(x)]$ and $\mathbb{E}_{x\sim \pi_0}[V_\theta(x)]$. Noise-initialized chains use greedy proposals to reach the data manifold; data-initialized chains use annealing to recover novelty. Bottom: validity and novelty trajectories for data-initialized (teal) and noise-initialized (red) chains over inference \gls{mcmc} steps. Uniqueness stays around 100\%.}
 \label{fig:moses-energy-and-metrics}
 \end{figure}

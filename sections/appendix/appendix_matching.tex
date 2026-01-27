@@ -7,12 +7,12 @@ tailored to the source distribution and the downstream use (pairing vs.\ local e
 $c_{\mathrm{FGW}}$ as shorthand for these proxies.
 
 \paragraph{Histogram matching for a uniform source.}
-When the source $p_0$ is a uniform distribution over node and edge classes, we use a cheap signature
-for each graph. Let $h_X$ be the normalized node-type histogram, $h_E$ the normalized edge-type
-histogram (over $i<j$), and $h_{XE}$ the histogram over unordered node-type pairs with edge types. We
-form a weighted signature $h(x)=[\alpha h_X,\;\beta h_E,\;\gamma h_{XE}]$ and solve a linear assignment
+When the source $\pi_0$ is a uniform distribution over node and edge classes, we use a cheap signature
+for each graph. Let $h_\mathcal{V}$ be the normalized node-type histogram, $h_\mathcal{E}$ the normalized edge-type
+histogram (over $i<j$), and $h_{\mathcal{V}\mathcal{E}}$ the histogram over unordered node-type pairs with edge types. We
+form a weighted signature $h(x)=[\alpha_1 h_\mathcal{V},\;\alpha_2 h_\mathcal{E},\;\alpha_3 h_{\mathcal{V}\mathcal{E}}]$ and solve a linear assignment
 between graphs of equal size using $\|h(x)-h(y)\|_1$. This produces permutation-invariant couplings and
-is sufficient when $p_0$ is far from $p_{\mathrm{data}}$, so we do not require fine-grained alignment.
+is sufficient when $\pi_0$ is far from $\pi_{\mathrm{data}}$, so we do not require fine-grained alignment.
 
 \paragraph{Node matching for molecule-like sources.}
 If the source distribution already produces valid molecules, we recommend a node-matching alignment

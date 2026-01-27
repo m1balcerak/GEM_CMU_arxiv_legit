@@ -1,10 +1,10 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We report unconditional generation on MOSES and QM9, conditional generation/property optimization on MOSES as well as geodesic comparisons based on the learned potential. MOSES provides a large-scale benchmark (about 1.5M molecules), while QM9 is smaller; we use MOSES to show both the efficacy and scalability of GEM and QM9 as an additional compact controlled comparison. For all experiments, we report
-\gls{vun} and \gls{fcd} (lower is better), and in general consider two initialization regimes: noise initialization
-starts from easy-to-sample noise and must reach chemically valid molecules, while data initialization
-starts from training molecules and must make novel yet valid edits (diffusion/\gls{ctmc} or \gls{mcmc}).
+We report unconditional generation on MOSES and QM9, conditional generation/property optimization on MOSES, and geodesic comparisons based on the learned potential. MOSES provides a larger-scale benchmark ($\sim$1.5M molecules), demonstrating the scalability of GEM. QM9 is a smaller, widely used benchmark where results are largely saturated and differences often stem from engineering choices rather than substantive distinctions between frameworks, with limited novelty due to memorization effects.
+
+For all experiments, we report \gls{vun} (higher is better) and \gls{fcd} (lower is better), considering two initialization regimes: noise initialization, where generation starts from easy-to-sample noise and must reach chemically valid molecules; and data initialization, applicable only to EBMs, which starts from training molecules and must produce novel molecules through edits.
+
 %
 A concise conceptual summary of the baselines used in our experiments is provided in
 Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix~\ref{app:exp-setup}.
@@ -12,11 +12,13 @@ Appendix~\ref{app:baselines}, and the experimental setup is detailed in Appendix
 \subsection*{Unconditional generation}
 \paragraph{MOSES.}
 Table~\ref{tab:uncond-main} (top) reports MOSES results. Across both noise and data initialization,
-\gls{gem} improves \gls{vun} and \gls{fcd} over the baselines.
-Figure~\ref{fig:moses-vun-steps} reports performance versus inference steps, and
-Figure~\ref{fig:moses-energy-and-metrics} contrasts trajectories under Noise vs.\ Data Initialization. At very small inference budgets, diffusion-based baselines can reach strong performance with fewer steps;
-Figure~\ref{fig:moses-vun-steps} shows that in the few-step regime our current \gls{gem} sampler trails the
-diffusion baseline. 
+\gls{gem} outperforms baselines in terms of \gls{vun} and \gls{fcd}.
+Figures~\ref{fig:moses-vun-steps} and \ref{fig:moses-energy-and-metrics} contrast performance versus inference steps and initialization strategies, respectively.
+At larger inference budgets, \gls{gem} substantially surpasses diffusion, yielding notably higher \gls{vun} and improved distributional fidelity (lower \gls{fcd}); see Figure~\ref{fig:moses-vun-steps}.
+Thus, \gls{gem} demonstrates a clear advantage under extended computation, consistently providing superior sample quality.
+
+
+
 \begin{table}[t]
 \centering
 \small
@@ -35,8 +37,8 @@ Training samples (MOSES) & 0.0 & 0.25 \\
 \midrule
 GraphEBM$^*$~\citep{liu2021graphebm} & 8.12 & 9.83 \\
 \gls{vfm}$^*$~\citep{eijkelboom2024vfm} & 81.39 & 2.71 \\
-DeFoG$^*$~\citep{qinmadeira2024defog} & 82.21 & 1.95 \\
-\textbf{\gls{gem} (Ours)} & \textbf{85.61} & \textbf{1.50} \\
+DeFoG$^*$~\citep{qinmadeira2024defog} & 82.21 & 1.93 \\
+\textbf{\gls{gem} (Ours)} & \textbf{85.61} & \textbf{1.55} \\
 \midrule
 \multicolumn{3}{l}{\textit{Data Initialization}} \\
 \midrule
@@ -58,9 +60,9 @@ Training samples (QM9) & 100 & 0 & 0.04 \\
 \midrule
 \multicolumn{4}{l}{\textit{Noise Initialization}} \\
 \midrule
-GraphEBM~\citep{liu2021graphebm} & 8.07 & 0.62 & 7.16 \\
+GraphEBM*~\citep{liu2021graphebm} & 12.11 & 0.65 & 7.16 \\
 \gls{vfm}~\citep{eijkelboom2024vfm} & \textbf{99.81} & 0.49 & \textbf{0.44} \\
-DeFoG$^*$~\citep{qinmadeira2024defog} & 96.81 & 0.36 & 0.81 \\
+DeFoG~\citep{qinmadeira2024defog} & 96.81 & 0.36 & 0.81 \\
 \textbf{\gls{gem} (Ours)} & 97.11 & \textbf{0.63} & 0.92 \\
 \midrule
 \multicolumn{4}{l}{\textit{Data Initialization}} \\
@@ -74,81 +76,35 @@ GraphEBM$^*$~\citep{liu2021graphebm} & 21.53 & 0.48 & 5.15 \\
 reports \acrshort{vun} and \acrshort{fcd} (lower is better); QM9 reports \gls{vu}, novelty,
 and \acrshort{fcd}. $^*$ reproduced with the same backbone as DeFoG~\citep{qinmadeira2024defog}; \glspl{ebm} use
 a small energy head. Architecture details are in Appendix~\ref{app:perm-invariance}. MOSES: 25k
-generations, 1000 inference steps. QM9: 10k generations, 750 inference steps.}
+generations, 1000 inference steps. QM9: 10k generations, 500 inference steps.}
 \label{tab:uncond-main}
 \vspace{-10pt}
 \end{table}
 
-%A schematic of MCMC evolution for GEM on QM9 and MOSES is shown in Appendix~\ref{app:sampling}
-%(Figure~\ref{fig:appendix-mcmc-traj}).
-
 \input{figures/tex/fig_moses_vun_steps}
 
+\paragraph{QM9.} Table~\ref{tab:uncond-main} (bottom) shows QM9 results. \gls{gem} is comparable to state-of-the-art diffusion methods under noise initialization and vastly outperforms the previous graph-EBM approach, despite reproducing it using an identical architecture (Appendix~\ref{app:perm-invariance}). Under data initialization, \gls{gem} achieves the strongest overall performance.
 
-
-
-
-
-
-
-
-
-\paragraph{QM9.} Table~\ref{tab:uncond-main} (bottom) shows QM9 results. \gls{gem} is competitive with diffusion-based
-baselines under noise initialization and is strongest under data initialization.
-
-\subsection*{Conditional generation}
-%\paragraph{Property Optimization.}
-We conduct property optimization with regards to a diverse set of properties including the logarithm of lipophilicity (logP), the logarithm of aqueous solubility (logS), \gls{qed}, \gls{tpsa}. For comparability, we closely follow  ~\citep{ninniri2025graph}: we train a GraphTransformer regressor \(f_\phi\) for
-differentiable guidance and define \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
-then run the same proposal kernel $q_\theta(x\!\to\!y)$ using \(-\nabla_x V_\theta^{\mathrm{cond}}(x)\),
-with the \gls{mh} acceptance ratio modified accordingly. For fairness, all methods use
-noise-conditioned regressors (\gls{gem} clean-regressor ablation are in Appendix~\ref{app:regressor-noise},
-Figure~\ref{fig:regressor-noise}, Table~\ref{tab:regressor-ablations}) and we feed regressor time via
-an energy-based proxy that increases linearly until the chain reaches the data distribution, then
-clamps to $t=1$ (Appendix~\ref{app:regressor-noise}). Noise-conditioned regressors are more reliable
-on noisy or invalid graphs, and targets (molecular threshold constraints: logS $\ge$ -2.25, logP $\le$ 1.5, \gls{qed} $\ge$ 0.9,
-\gls{tpsa} $\le$ 50) are chosen such that unconditional MOSES samples satisfy the constraint at roughly a 20\%
-rate, yielding comparable difficulty across properties.
-Table~\ref{tab:moses-conditional} reports the results:
-\gls{gem} maintains strong validity, uniqueness, and novelty while improving constraint satisfaction relative to baselines.
-%\gls{gem} draws a candidate pool of size $N_{\mathrm{select}}$ from the training set, ranks by the
-%precomputed property values, and initializes the $B$ inference chains with the top-$B$ molecules
-%that satisfy the condition; this takes virtually no time because the training-set properties are
-%cached.
 \input{tables/tex/tab_moses_conditional}
 \input{figures/tex/fig_mol_trajectories}
 
+\subsection*{Conditional generation}
+%\paragraph{Property Optimization.}
+We conduct property optimization with regards to a diverse set of properties including the logarithm of lipophilicity (logP), the logarithm of aqueous solubility (logS), \gls{qed}, \gls{tpsa}. For comparability, we follow  ~\citep{vignac2022digress, ninniri2025graph}: we train a GraphTransformer regressor \(f_\phi\) for
+differentiable guidance and define \(V_\theta^{\mathrm{cond}}(x)=V_\theta(x)+\lambda_{\mathrm{prop}}\|f_\phi(x)-y^\star\|^2\),
+then run the same proposal kernel $q_\theta(x\!\to\!y)$ using \(-\nabla_x V_\theta^{\mathrm{cond}}(x)\),
+with the \gls{mh} acceptance ratio modified accordingly. The above scheme can also be modified to accommodate a time- or noise-conditioned property regressor. For fairness, all methods reported in \Cref{tab:moses-conditional} use noise-conditioned regressors (the \gls{gem} clean-regressor ablations are provided in ~\Cref{app:regressor-noise}, ~\Cref{fig:regressor-noise}, and ~\Cref{tab:regressor-ablations}). We feed regressor time using an energy-based proxy that increases linearly until the chain reaches the data distribution, after which it is clamped to $t=1$ (~\Cref{app:regressor-noise}). Noise-conditioned regressors provide more reliable predictions on noisy or invalid graphs. The target molecular property constraints (logS $\ge$ -2.25, logP $\le$ 1.5, \gls{qed} $\ge$ 0.9, \gls{tpsa} $\le$ 50) are selected such that unconditional MOSES samples satisfy each constraint approximately 20\% of the time, ensuring comparable difficulty across properties.
+ \Cref{tab:moses-conditional} reports the results:
+\gls{gem} maintains strong validity, uniqueness, and novelty while improving constraint satisfaction relative to baselines.
+\input{figures/tex/fig_val_geodesics}
+
 \paragraph{Geodesic Analysis}
 Energy-based models have been used to study shortest paths in high-dimensional spaces \cite{bethune2025follow}. Here, we compute geodesics, minimum-energy paths through graph edits aligned with the learned data geometry, between molecules and compare against a linear interpolation baseline (cost-only). 
-We plot average validity versus the endpoint distance induced by the \gls{fgw} matching cost
-$c_{\mathrm{FGW}}$ (Appendix~\ref{app:matching}), see Figure~\ref{fig:geodesic-validity}. Qualitative paths are shown in
-Figure~\ref{fig:mol-trajectories}.
-Energy-weighted geodesics consistently preserve validity relative to cost-only geodesics, confirming
-that the learned energy captures chemically meaningful geometry. Full protocol, pairing,
-optimization, and discretization details are in Appendix~\ref{app:geodesic-details}.
+We plot average validity versus the endpoint distance induced by the node-matching approximation to the cost
+$c_{\mathrm{FGW}}$ (~\Cref{app:matching}), see ~\Cref{fig:geodesic-validity}. Qualitative paths are shown in
+~\Cref{fig:mol-trajectories}.
+Energy-weighted geodesics consistently preserve validity compared to cost-only geodesics, confirming that the learned energy encodes chemically meaningful geometry. Experimental details, including pairing, optimization, and discretization, are provided in ~\Cref{app:geodesic-details}.
 
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[scale=0.95]
-  \draw[->, thick] (0,0) -- (5.2,0) node[below, xshift=-1.5cm] {endpoint distance (cost-induced)};
-  \draw[->, thick] (0,0) -- (0,3.2);
-  \node[rotate=90] at (-0.6,1.6) {avg.\ validity (\%)};
 
-  \draw (0,0) -- (-0.08,0);
-  \node[left, font=\scriptsize] at (-0.1,0) {0};
-  \draw (0,3.2) -- (-0.08,3.2);
-  \node[left, font=\scriptsize] at (-0.1,3.2) {100};
-
-  \draw[gray!60, dashed] (0,0) -- (5.2,0);
-
-  \draw[thick, blue] plot[smooth] coordinates {(0.0,2.8) (1.2,2.5) (2.2,2.0) (3.2,1.6) (4.2,1.3)};
-  \draw[thick, gray] plot[smooth] coordinates {(0.0,1.1) (1.2,0.9) (2.2,0.7) (3.2,0.6) (4.2,0.5)};
-
-  \node[blue, anchor=west] at (1.9,2.8) {\gls{gem} energy-weighted geodesic};
-  \node[gray, anchor=west] at (1.9,2.3) {cost-only geodesic};
-\end{tikzpicture}
-\caption{\footnotesize \textbf{Validity Along Geodesics.} Expected average validity vs.\ endpoint distance (cost-induced) for \gls{gem} energy-weighted versus cost-only geodesics. \textcolor{red}{[WiP]}}
-\label{fig:geodesic-validity}
-\end{figure}
 
 

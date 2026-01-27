@@ -1,14 +1,10 @@
 \section{Permutation-invariant energy parameterization}\label{app:perm-invariance}
-FIME: Check notation and masking/padding
-We implement the potential with a node/edge/global graph transformer backbone
-(the GraphTransformer used in our codebase). Each layer is permutation equivariant:
+We implement the potential with a graph transformer backbone [CITE]. Each layer is permutation equivariant:
 for any relabeling $\sigma$, hidden node and edge features transform as
-$(X,E)\mapsto (\sigma\!\cdot\!X,\sigma\!\cdot\!E)$. The global feature $h$ collects
-extra graph-level features and is updated through permutation-invariant summaries,
-so $h$ is invariant.
+% $(X,E)\mapsto (\sigma\!\cdot\!X,\sigma\!\cdot\!E)$.
+Following~\citep{vignac2022digress,qinmadeira2024defog}, we pad and mask all smaller graphs to the maximum number of nodes observed in the training dataset, denoted as $n$. This results in fixed-size inputs to the model, denoted $x_\mathcal{V}$ and $x_\mathcal{E}$ for node and edge features, respectively. We denote node and edge features at layer $l$ as $x^{(l)}_\mathcal{V}$ and $x^{(l)}_\mathcal{E}$, respectively.
+The global feature $f^{(l)}$ collects graph-level features at layer $l$ and is updated through a permutation-invariant operation.
 Figure~\ref{fig:energy-arch} summarizes the backbone and invariant readout.
-
-Here, $n$ denotes the maximum number of nodes observed in the training dataset; smaller graphs are padded and masked following standard conventions for graph diffusion models~\citep{vignac2022digress,qinmadeira2024defog}.
 
 \begin{figure}[h]
 \centering
@@ -28,9 +24,9 @@ Here, $n$ denotes the maximum number of nodes observed in the training dataset; 
   },
   arrow/.style={-Latex, line width=1.1pt, draw=black!60}
 ]
-  \node[module] (graph) {Graph input $x$\\(node + edge features)};
-  \node[module, right=of graph] (gt) {Graph Transformer\\(equivariant)};
-  \node[module, right=of gt] (pool) {Invariant readout\\$\sum_i X_i,\;\sum_{i\ne j} E_{ij}$ + \glsentryshort{mlp}};
+  \node[module] (graph) {Input Graph \\\\ $x:=(x^{(l)}_\mathcal{V},x^{(l)}_\mathcal{E})$};
+  \node[module, right=of graph] (gt) {Graph Transformer\\(Permutation Equivariant)};
+  \node[module, right=of gt] (pool) {Invariant Readout\\\\$\sum_i x^{(L)}_i,\;\sum_{i\ne j} x^{(L)}_{ij},f^{(L)}$ };
   \node[module, right=of pool] (energy) {$V_\theta(x)\in\mathbb{R}$};
 
   \draw[arrow] (graph) -- (gt);
@@ -45,12 +41,11 @@ The scalar energy is obtained by an invariant readout that first pools the
 equivariant features and then applies an \gls{mlp}:
 \begin{equation}
 \begin{aligned}
-\bar{X} &= \sum_{i\in\mathcal{V}} X^{(L)}_i,\qquad
-\bar{E} = \sum_{i\ne j} E^{(L)}_{ij},\\
-V_\theta(x,h) &= \mathrm{MLP}\big([\bar{X},\bar{E},h^{(L)}]\big).
+\bar{x} &= \sum_{i\in\mathcal{V}} x^{(L)}_i,\qquad
+\bar{e} = \sum_{i< j} x^{(L)}_{ij},\\
+V_\theta(x) &= \mathrm{MLP}\big([\bar{x},\bar{e},f^{(L)}]\big).
 \end{aligned}
 \end{equation}
-The sums are invariant to permutations, so the concatenated vector
-$(\bar{X},\bar{E},h^{(L)})$ is invariant. Therefore any \gls{mlp} applied to it is
-also invariant. This matches the sum-pooled energy head in the implementation
-(with a masked off-diagonal sum).
+Since the sum operation is permutation invariant, the concatenated vector
+$(\bar{x},\bar{e},f^{(L)})$ is invariant. Therefore, an \gls{mlp} applied to it is
+also invariant.

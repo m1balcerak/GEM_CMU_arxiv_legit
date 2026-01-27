@@ -81,7 +81,7 @@ Transport-Aligned Energy-Based Modeling for Graph Generation}
 \printAffiliationsAndNotice{}  % no special notice (required even if empty)
 
 \begin{abstract}
-Energy-based models for discrete domains, such as graphs, explicitly capture relative likelihoods, naturally enabling composable probabilistic inference tasks like conditional generation or enforcing constraints at test-time. However, discrete energy-based models typically struggle as generative samplers, as off-support regions often have high-curvature energy landscapes and spurious local minima, trapping samplers and causing training instabilities. This results in a sizable fidelity gap relative to discrete diffusion models, restricting discrete energy-based models predominantly to scoring and uncertainty estimation rather than high-quality sample generation. We introduce \emph{Graph Energy Matching (GEM)}, a generative framework for graphs that closes this fidelity gap. Motivated by the Jordan–Kinderlehrer–Otto formulation on discrete spaces, GEM learns a permutation-invariant potential that simultaneously provides transport-aligned guidance from noise toward data and refines samples within regions of high data likelihood. The sampler uses an energy-based switch between a transport phase with gradient-informed edits toward high-likelihood data regions and a Metropolis–Hastings mixing phase with local proposals informed by the geometry induced by the data distribution. On molecular graph benchmarks, GEM matches or exceeds strong discrete diffusion baselines. Beyond sample quality alone, the learned potential naturally enables property-constrained generation at test-time, and its explicit relative-likelihood structure further supports analyses such as computing geodesics—minimum-energy paths through graph edits aligned with the learned data geometry.
+Energy-based models for discrete domains, such as graphs, explicitly capture relative likelihoods, naturally enabling composable probabilistic inference tasks like conditional generation or enforcing constraints at test-time. However, discrete energy-based models typically struggle as generative samplers, as off-support regions often have high-curvature energy landscapes and spurious local minima, trapping samplers and causing training instabilities. This results in a sizable fidelity gap relative to discrete diffusion models, restricting discrete energy-based models predominantly to scoring and uncertainty estimation rather than high-quality sample generation. We introduce \emph{Graph Energy Matching (GEM)}, a generative framework for graphs that closes this fidelity gap. Motivated by the map optimization perspective of the Jordan–Kinderlehrer–Otto formulation, GEM learns a permutation-invariant potential that simultaneously provides transport-aligned guidance from noise toward data and refines samples within regions of high data likelihood. We devised a sampling protocol that leverages an energy-based switch to bridge regimes, seamlessly transitioning from rapid, gradient-guided transport toward high-density regions to rigorous Metropolis–Hastings mixing tailored to the discrete geometry. On molecular graph benchmarks, GEM matches or exceeds strong discrete diffusion baselines. Beyond sample quality alone, the learned potential naturally enables property-constrained generation at test-time, and its explicit relative-likelihood structure  supports further analyses.
 \end{abstract}
 
 %MAIN TEXT
@@ -101,7 +101,6 @@ Energy-based models for discrete domains, such as graphs, explicitly capture rel
 \clearpage
 %APPENDIX
 \appendix
-\input{sections/appendix/appendix_property_regressor_noise}
 \input{sections/appendix/appendix_invariance}
 \input{sections/appendix/appendix_jko_transport}
 \input{sections/appendix/appendix_matching}
@@ -111,6 +110,7 @@ Energy-based models for discrete domains, such as graphs, explicitly capture rel
 \input{sections/appendix/appendix_qm9_unconditional}
 \input{sections/appendix/appendix_baselines}
 \input{sections/appendix/appendix_experimental_setup}
+\input{sections/appendix/appendix_property_regressor_noise}
 \input{sections/appendix/appendix_geodesic_details}
 % Unreferenced appendices
 \input{sections/appendix/appendix_manifold_refinement}
