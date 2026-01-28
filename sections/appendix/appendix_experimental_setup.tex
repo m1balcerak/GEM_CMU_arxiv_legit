@@ -1,10 +1,9 @@
 \section{Experimental setup and hyperparameters}
 \label{app:exp-setup}
 \paragraph{MOSES GEM training (shared across experiments).}
-Training is conducted in two stages. We first train with $\lambda_{\mathrm{CL}}=0.0$ for $330\,\text{k}$ iterations ($\text{lr}=10^{-4}$, batch size $=128$) to pretrain the potential field, enabling efficient burn-in of samples initialized from noise. We then follow with with
+Training is conducted in two stages. We first train with $\lambda_{\mathrm{CL}}=0.0$ for $330\,\text{k}$ iterations ($\text{lr}=10^{-4}$, batch size $=128$) to pretrain the potential field, enabling efficient burn-in of samples initialized from noise. We then follow with
 $\lambda_{\mathrm{CL}}=0.1$ for 25 iterations using chain length 500 at
-$\text{lr}=1\times 10^{-5}$, batch size 128. L sampling uses greedy transport proposals followed by
-dLangevin mixing with $\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$,
+$\text{lr}=1\times 10^{-5}$, batch size 128. Greedy transport proposals followed by mixing with $\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$,
 and $\beta_{\mathrm{mh}}=\beta^L$. We incorporate RRWP features~\citep{ma2023graph} into GEM and all reproduced baselines to ensure a fair comparison with DeFoG, which originally employs these features. For the DeFoG baselines, we directly use the authors' provided checkpoint~\citep{qinmadeira2024defog}. During training, we consider two distinct setups for initializing the contrastive loss (CL) samples: either from noise or directly from data. We evenly split these initializations (50\% noise / 50\% data), except in the unconditional generation scenario (``Data Initialization'' category), where we exclusively (100\%) initialize CL samples from data.
 
 

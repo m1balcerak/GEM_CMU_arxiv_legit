@@ -6,8 +6,8 @@ We use gradient-informed proposals on the discrete graph space with target densi
 \(\pi_\theta(x)\propto \exp\left(-\beta_{\mathrm{mh}}V_\theta(x)\right)\). To compute the gradients of the potential, we first embed \( x \) into a continuous, real-valued one-hot representation \( \hat{x} \), and then evaluate the gradient with respect to this embedding as \( g := \nabla_{\hat{x}} V_{\theta}(\hat{x}) \).
 We reshape node and edge gradients as
 \begin{align}
-g^\mathcal{V} & := \operatorname{reshape}_{n,l_{\mathrm{node}}}\big(\nabla_{\hat{x}_\mathcal{V}} V_\theta(\hat{x})\big),\qquad
-g^\mathcal{E} := \operatorname{reshape}_{\binom{n}{2},l_{\mathrm{edge}}}\big(\nabla_{\hat{x}_\mathcal{E}} V_\theta(\hat{x})\big),
+g^\mathcal{V} & := \operatorname{reshape}_{n,l_{\mathrm{node}}}\big(\nabla_{\hat{x}_\mathcal{V}} V_\theta(\hat{x})\big),\\
+g^\mathcal{E} & := \operatorname{reshape}_{\binom{n}{2},l_{\mathrm{edge}}}\big(\nabla_{\hat{x}_\mathcal{E}} V_\theta(\hat{x})\big),
 \end{align}
 where $\operatorname{reshape}_{m,n}(\cdot)$ is a row-major reshape into $\mathbb{R}^{m\times n}$.
 
