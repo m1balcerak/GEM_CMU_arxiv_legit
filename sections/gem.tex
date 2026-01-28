@@ -23,7 +23,7 @@ $\hat{x}\in\mathbb{R}^d$, where $d=n l_{\mathrm{node}}+\binom{n}{2}l_{\mathrm{ed
 \end{equation}
 where $\oplus$ denotes the column-wise concatenation operation.
 
-\paragraph{Local and Permutation-Invariant Cost.} We measure local discrepancies using the embedding-space cost $
+\paragraph{Local and Permutation-Invariant Cost.} We measure local discrepancies between two graphs x and y using the embedding-space cost $
     c(x,y) := \tilde c(\hat{x},\hat{y})$,
 which is differentiable in both arguments. The potential $V_\theta$ is permutation-invariant by construction (\Cref{app:perm-invariance}), so the learned energy landscape used for pairing should also respect node relabelings. Here, $\sigma\in S_n$ acts on node indices and induces a relabeling of the graph: $(\sigma\cdot x)_i=x_{\sigma(i)}$ and $(\sigma\cdot x)_{ij}=x_{\sigma(i)\sigma(j)}$. To obtain a permutation-invariant matching, we first define a local cost ($c_{\mathrm{loc}}$) as:
 \begin{equation}\label{eq:loc-cost}
