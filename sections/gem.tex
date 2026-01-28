@@ -57,7 +57,7 @@ The primary learnable component of our framework is the scalar energy potential 
 \subsection{Discrete Transport-Aligned Proposal ($\epsilon\to 0$)}
 \label{proposals}Let $(\pi_k)_{k=0}^{K}$ denote intermediate distributions along a discrete transport path from an initial noise distribution to the data distribution.
 Given an optimal coupling $\gamma_k$ (approximated in practice by tractable methods, e.g.,~\cite{albergo2024stochastic,tong2024improving}) and its induced transport map $T_k$, we assume a consistent embedding-based representation $y = T_k(x) \iff \hat{y} = \tilde{T_k}(\hat{x})$, with $x \sim \pi_k$ and $y = T_k(x) \sim \pi_{k+1}$ denoting consecutive graph states along the transport, and $\tilde{T_k}$ a continuous map realizing $T_k$ in the embedded space.
- Expressing the JKO variational objective from \Cref{jko_em} as an optimization over transport maps (see \Cref{app:jko} for derivation) and substituting the time-step parameter $\Delta t$ with the jump step-size $\eta$ yields:
+Expressing the JKO variational objective from \eqref{jko_em} as an optimization over transport maps (see \Cref{app:jko} for derivation) and substituting the time-step parameter $\Delta t$ with the jump step-size $\eta$ yields:
 \begin{equation}
 \label{eq:new_T}
     T_k(x)\in\arg\min_{y\in\mathcal{X}}\left\{\frac{1}{2\eta}c(x,y)+V_\theta(y)\right\},
@@ -79,7 +79,7 @@ which implies
 This optimality condition directly characterizes the solution and serves as the training objective (\Cref{sec:training}).
 
 
-During sampling, given a trained potential $\tilde V_\theta$ that satisfies the optimality objective \eqref{eq:optimality}, our goal is to approximately solve \eqref{eq:new_T} using a local proposal mechanism. Instead of performing one-shot global moves, we iteratively descend the potential by making local edits, enabling a Taylor expansion of $\tilde V_\theta(\hat y)$ around the current state $\hat x$. Rather than controlling the step-size parameter $\eta$, we simplify the (local) greedy proposal by restricting the kernel to exactly $N$ edits per jump. Since our proposal is local, we use the local cost \( c_{\mathrm{loc}}(\hat x,\hat y) \) with distinct weights \(\lambda_\mathcal{V}\) and \(\lambda_\mathcal{E}\) (Eq.~\ref{eq:loc-cost}).
+ During sampling, given a trained potential $\tilde V_\theta$ that satisfies the optimality objective \eqref{eq:optimality}, our goal is to approximately solve \eqref{eq:new_T} using a local proposal mechanism. Instead of performing one-shot global moves, we iteratively descend the potential by making local edits, enabling a Taylor expansion of $\tilde V_\theta(\hat y)$ around the current state $\hat x$. Rather than controlling the step-size parameter $\eta$, we simplify the (local) greedy proposal by restricting the kernel to exactly $N$ edits per jump. Since our proposal is local, we use the local cost \( c_{\mathrm{loc}}(\hat x,\hat y) \) with distinct weights \(\lambda_\mathcal{V}\) and \(\lambda_\mathcal{E}\) (\eqref{eq:loc-cost}).
 
 Linearizing around $\hat{x}$, we approximate $\tilde{V}_\theta(\hat{y}) \approx \tilde{V}_\theta(\hat{x}) + (\hat{y} - \hat{x})^\top \nabla_{\hat{x}}\tilde{V}_\theta(\hat{x})$. We deterministically select the candidate $y$ from the candidate set $C_N(x)$, defined as the set of graphs reachable from $x$ via exactly $N$ \emph{discrete} modifications (edge changes/removals or node type alterations), by minimizing the sum of the potential change and the transport cost:
 \begin{align}

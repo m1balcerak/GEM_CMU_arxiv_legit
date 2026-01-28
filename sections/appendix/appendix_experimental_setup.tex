@@ -48,8 +48,8 @@ GEM uses uniform-noise regressors; DeFoG uses marginal-noise regressors. All res
 \subsection{Geodesic analysis: validity along geodesics}
 We compare GEM's energy-weighted geodesic to a cost-only baseline along interpolated paths between
 matched MOSES molecules. We align permutations using the node-matching $c_{\mathrm{FGW}}$ cost
-(Section~\ref{sec:gem}, Eq.~\ref{eq:fgw-cost}; node-matching details in \Cref{app:matching}),
-and then use the aligned local cost $c_{\mathrm{loc}}$ (Eq.~\ref{eq:loc-cost}) to evaluate distances,
+(\Cref{sec:gem}, \eqref{eq:fgw-cost}; node-matching details in \Cref{app:matching}),
+and then use the aligned local cost $c_{\mathrm{loc}}$ (\eqref{eq:loc-cost}) to evaluate distances,
 which is equivalent under a fixed alignment. Paths are parameterized as cubic B-splines in the
 node/edge probability simplex with fixed endpoints and learned interior control points (8 control
 points, degree 3). Optimization minimizes the energy-weighted path length $L_\theta$ from
