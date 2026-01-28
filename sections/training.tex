@@ -20,7 +20,7 @@ Let $\hat{x}^t$ be the continuous embedding of the discrete graph $x^t$ via $\ph
 
 
 \paragraph{Objectives.}
-We use the optimality condition derived in \Cref{proposals} to construct a flow-like loss ($\mathcal{L}_{\text{Flow}}$). We set the JKO step-size parameter $\eta=1$. Consequently, the optimality condition $\nabla_x V(x) = -\nabla_x c(x,y)$ implies that the negative energy gradient should match the displacement vector $v$ pointing toward the data. While the pairing is determined by global signatures, the local training objective minimizes the Euclidean cost ($c_{\text{loc}}$) along the linear interpolation path:
+We use the optimality condition derived in \Cref{proposals} to construct a flow-like loss ($\mathcal{L}_{\text{Flow}}$). We set the JKO step-size parameter $\eta=1$. Consequently, the optimality condition $\nabla_{\hat{x}} \tilde{V_\theta}(\hat{x}) = - \frac{1}{2 \eta}\nabla_{\hat{x}} \tilde{c}(\hat{x},\hat{y})$ from \Cref{eq:optimality} implies that the negative energy gradient should match the displacement vector $v$ pointing toward the data. While the pairing is determined by global signatures, the local training objective minimizes the Euclidean cost ($c_{\text{loc}}$) along the linear interpolation path:
 \begin{align}
 \mathcal{L}_{\text{Flow}}(\theta)
 &=

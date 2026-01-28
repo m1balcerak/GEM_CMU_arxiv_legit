@@ -79,14 +79,15 @@ which implies
 This optimality condition directly characterizes the solution and serves as the training objective (\Cref{sec:training}).
 
 
-During sampling, given a trained potential $V_\theta$ that satisfies the optimality objective \eqref{eq:optimality}, our goal is to approximately solve \eqref{eq:new_T} using a local proposal mechanism. Instead of performing one-shot global moves, we iteratively descend the potential by making local edits, enabling a Taylor expansion of $V_\theta(y)$ around the current state $x$. Rather than controlling the step-size parameter $\eta$, we simplify the (local) greedy proposal by restricting the kernel to exactly $N$ edits per jump. Since our proposal is local, we use the local cost \( c_{\mathrm{loc}}(x,y) \) with distinct weights \(\lambda_\mathcal{V}\) and \(\lambda_\mathcal{E}\) (Eq.~\ref{eq:loc-cost}).
+During sampling, given a trained potential $\tilde V_\theta$ that satisfies the optimality objective \eqref{eq:optimality}, our goal is to approximately solve \eqref{eq:new_T} using a local proposal mechanism. Instead of performing one-shot global moves, we iteratively descend the potential by making local edits, enabling a Taylor expansion of $\tilde V_\theta(\hat y)$ around the current state $\hat x$. Rather than controlling the step-size parameter $\eta$, we simplify the (local) greedy proposal by restricting the kernel to exactly $N$ edits per jump. Since our proposal is local, we use the local cost \( c_{\mathrm{loc}}(\hat x,\hat y) \) with distinct weights \(\lambda_\mathcal{V}\) and \(\lambda_\mathcal{E}\) (Eq.~\ref{eq:loc-cost}).
+
+Linearizing around $\hat{x}$, we approximate $\tilde{V}_\theta(\hat{y}) \approx \tilde{V}_\theta(\hat{x}) + (\hat{y} - \hat{x})^\top \nabla_{\hat{x}}\tilde{V}_\theta(\hat{x})$. We deterministically select the candidate $y$ from the candidate set $C_N(x)$, defined as the set of graphs reachable from $x$ via exactly $N$ \emph{discrete} modifications (edge changes/removals or node type alterations), by minimizing the sum of the potential change and the transport cost:
+\begin{align}
+y^* = \arg &\min_{y \in C_N(x)}\left((\hat{y} - \hat{x})^\top\nabla_{\hat{x}} V_\theta(\hat{x}) + c_{\mathrm{loc}}(x,y)\right),\nonumber\\
+&q_{\text{greedy}}(x \to y) = \mathbb{I}_{\{y=y^*\}}\label{eq:greedy-proposal}
+\end{align}
 
 
-Linearizing $V_\theta(y)\approx V_\theta(x)+\Delta\hat{x}^\top\nabla_{\hat{x}} V_\theta(\hat{x})$ around $\hat{x}$, with $\Delta\hat{x}=\hat{y}-\hat{x}$, we deterministically select the candidate that minimizes the sum of the potential change and the transport cost. Formally, the candidate set $C_N(x)$ is defined as the set of all edits achievable by exactly $N$ discrete modifications (changing/removing edges or changing nodes) starting from state $x$. The greedy proposal is thus given by:
-\begin{gather}
-y^*(x) = x + \operatorname*{arg\,min}_{\Delta x \in C_N(x)} \left( \Delta\hat{x}^\top\nabla_{\hat{x}} V_\theta(\hat{x}) + c_{\mathrm{loc}}(x, x+\Delta x) \right), \\
-q_{\text{greedy}}(x\to y) = \delta_{y^*(x)}(y).
-\end{gather}
 
 In the transport regime, proposed moves are deterministically projected onto directions associated with strictly negative gradients, aiming for a decrease in energy. Edits not meeting this criterion are rejected. If no candidate yields a negative gradient, the greedy sampler stalls, switching to the Langevin-based proposal $q_\mathrm{mixing}$ in \Cref{proposals_lang}.
  For further implementation details, see \Cref{app:sampling-details}.
@@ -94,7 +95,7 @@ In the transport regime, proposed moves are deterministically projected onto dir
 
 \subsection{Discrete Mixing Proposal ($\epsilon>0$)}
 \label{proposals_lang}
-Discretizing the dynamics (\Cref{em_sde}) in the embedding space  with temperature $\epsilon$, step size $\eta$, and graphs $x,y \in \mathcal{X}$ yields:
+Discretizing dynamics \eqref{em_sde} in embedding space with temperature $\epsilon$, step $\eta$, and graphs $x,y \in \mathcal{X}$ yields:
 \begin{equation}
 q_{\mathrm{mixing}}(x\to y)
 \,\propto\,
@@ -103,15 +104,18 @@ q_{\mathrm{mixing}}(x\to y)
 \right).
 \end{equation}
 
-Expanding explicitly and dropping terms independent of $\hat{y}$:
-\begin{align}
+We expand the mixing transition probability explicitly in terms of $\hat{y}$, simplifying by removing terms independent of $\hat{y}$ and substituting the squared-distance term $\|\hat{y}-\hat{x}\|^2$ with the local graph distance $\tilde{c}_{\mathrm{loc}}(\hat{x}, \hat{y})$. This gives:
+\begin{equation}
+\begin{aligned}
 \log q_\mathrm{mixing}(x\to y)
-&=
--\frac{1}{4\epsilon\eta}\|\hat{y}-\hat{x}\|^2
-- \frac{1}{2\epsilon}\nabla V_\theta(\hat{x})^\top(\hat{y}-\hat{x})\notag\\
-&\quad+\text{const.}
-\end{align}
-The proposal is effectively local due to the distance penalty, though, in principle, it can still propose an arbitrary number of edits, allowing mode escape. We define Langevin-specific parameters $(\lambda_{\mathcal{V}}^L, \lambda_{\mathcal{E}}^L, \beta^L)$ by absorbing all constants, including $\epsilon$, $\eta$, scaling terms $\lambda_{\mathcal{V}}, \lambda_{\mathcal{E}}$ from $c_{\mathrm{loc}}$, and numerical factors: 
+&= -\frac{1}{4\epsilon\eta}\tilde{c}_{\mathrm{loc}}(\hat{x}, \hat{y}) 
+- \frac{1}{2\epsilon}\nabla V_\theta(\hat{x})^\top(\hat{y}-\hat{x}) \\
+&\quad + \text{const.}
+\end{aligned}
+\label{eq:mixing-transition}
+\end{equation}
+ 
+The proposal is effectively local due to the distance penalty, though, in principle, it can still propose an arbitrary number of edits, enabling mode escape. We define Langevin-specific parameters $(\lambda_{\mathcal{V}}^L, \lambda_{\mathcal{E}}^L, \beta^L)$ by absorbing all constants, including $\epsilon$, $\eta$, scaling terms $\lambda_{\mathcal{V}}, \lambda_{\mathcal{E}}$ from $c_{\mathrm{loc}}$, and numerical factors: 
 \addtocounter{equation}{1}\begin{align}
 &q_\mathrm{mixing}(x\to y)
 \;\propto\tag{\theequation}\\
