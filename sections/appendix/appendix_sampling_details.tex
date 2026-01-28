@@ -3,51 +3,53 @@
 
 \paragraph{Gradient features.}
 We use gradient-informed proposals on the discrete graph space with target density
-\(\pi_\theta(x)\propto \exp\left(-V_\theta(x)\right)\). We allow an effective inverse temperature
-\(\beta_{\mathrm{mh}}\) in the \gls{mh} ratio below (\(\beta_{\mathrm{mh}}=1\) for the base model). We denote
-the gradients with respect to real-valued one-hot node and edge features as follows.
-\begin{align}
-g^\mathcal{V} & := \operatorname{reshape}_{n,l_{\mathrm{node}}}\big(\nabla_{\hat{x}_\mathcal{V}} V_\theta(\hat{x})\big) \in \mathbb{R}^{n\times l_{\mathrm{node}}}\nonumber\\
-g^\mathcal{E} & := \operatorname{reshape}_{\binom{n}{2},l_{\mathrm{edge}}}\big(\nabla_{\hat{x}_\mathcal{E}} V_\theta(\hat{x})\big) \in \mathbb{R}^{\binom{n}{2}\times l_{\mathrm{edge}}}\nonumber
-\end{align}
-where $\operatorname{reshape}_{m,n}(x)$ is a row-major resizing operation converting the vector $x\in \mathbb{R}^{mn}$ to a shape of $\mathbb{R}^{m\times n}$.
-Inside the transformer 
+\(\pi_\theta(x)\propto \exp\left(-\beta_{\mathrm{mh}}V_\theta(x)\right)\). To compute the gradients of the potential, we first embed \( x \) into a continuous, real-valued one-hot representation \( \hat{x} \), and then evaluate the gradient with respect to this embedding as \( g := \nabla_{\hat{x}} V_{\theta}(\hat{x}) \).
+  
+
+
+%the gradients with respect to real-valued one-hot node and edge features as follows.
+%\begin{align}
+%g^\mathcal{V} & := \operatorname{reshape}_{n,l_{\mathrm{node}}}\big(\nabla_{\hat{x}_\mathcal{V}} V_\theta(\hat{x})\big) \in \mathbb{R}^{n\times l_{\mathrm{node}}}\nonumber\\
+%g^\mathcal{E} & := \operatorname{reshape}_{\binom{n}{2},l_{\mathrm{edge}}}\big(\nabla_{\hat{x}_\mathcal{E}} V_\theta(\hat{x})\big) \in \mathbb{R}^{\binom{n}{2}\times l_{\mathrm{edge}}}\nonumber
+%\end{align}
+%where $\operatorname{reshape}_{m,n}(x)$ is a row-major resizing operation converting the vector $x\in \mathbb{R}^{mn}$ to a shape of $\mathbb{R}^{m\times n}$.
+
 Since we are working with undirected graphs, we use symmetrized edge gradients from the graph transformer.
 
 \paragraph{Factorized proposal (multi-site).}
 We sample all nodes and undirected edges independently from categorical logits
 \begin{align}
-\ell^\mathcal{V}_{i,c_i} & = \beta_{\mathrm{prop}}\big(g^\mathcal{V}_{i,x_i}-g^\mathcal{V}_{i,c_i}\big)-\lambda_\mathcal{V}\,\mathbb{I}_{\{c_i \neq x_i\}};~\forall~c_i \in \mathcal{X}_\mathrm{node} \\
-\ell^\mathcal{E}_{{ij},c_{ij}} &= \beta_{\mathrm{prop}}\big(g^\mathcal{E}_{ij,x_{ij}}-g^\mathcal{E}_{ij,c_{ij}}\big) \nonumber\\
+\ell^\mathcal{V}_{i,c_i} & = \beta\big(g^\mathcal{V}_{i,x_i}-g^\mathcal{V}_{i,c_i}\big)-\lambda_\mathcal{V}\,\mathbb{I}_{\{c_i \neq x_i\}};~\forall~c_i \in \mathcal{X}_\mathrm{node} \\
+\ell^\mathcal{E}_{{ij},c_{ij}} &= \beta\big(g^\mathcal{E}_{ij,x_{ij}}-g^\mathcal{E}_{ij,c_{ij}}\big) \nonumber\\
 &-\lambda_\mathcal{E}\,\mathbb{I}_{\{c_{ij}\ne x_{ij}\}};~\forall~c_{ij} \in \mathcal{X}_\mathrm{edge}
 \end{align}
 so the full proposal factorizes as
 \begin{equation}
 \begin{aligned}
-q_{\beta_{\mathrm{prop}}}(x\to y)
+q_{\beta}(x\to y)
 &=
 \prod_{i\in\mathcal{V}}\mathrm{Cat}\left(y_i;\mathrm{softmax}(\ell_i^\mathcal{V})\right)\\
 &\quad\times\prod_{i<j}\mathrm{Cat}\left(y_{ij};\mathrm{softmax}(\ell_{ij}^\mathcal{E})\right).
 \end{aligned}
 \end{equation}
-The current class has logit value of \(0\) (the \textit{stay} option), while \(\lambda_\mathcal{V},\lambda_\mathcal{E}\)
-penalize changes.
+$\lambda_{\mathcal{V}}$ and $\lambda_{\mathcal{E}}$ penalize modifications to nodes and edges, respectively.
+
 
 \paragraph{\gls{mh} refinement (single beta).}
-For the standard Langevin proposal we set \(\beta_{\mathrm{prop}}=\beta_{\mathrm{mh}}=\beta\) and accept
+For the standard Langevin proposal we set \(\beta^L=\beta_{\mathrm{mh}}=\beta\) and accept
 \begin{equation}
 \begin{aligned}
 \alpha(x,y)
 &=\min\{1,\exp(\Delta(x,y))\},\\
 \Delta(x,y)
 &=-\beta_{\mathrm{mh}}\big(V_\theta(y)-V_\theta(x)\big)
-+\log\frac{q_{\beta_{\mathrm{prop}}}(y\to x)}{q_{\beta_{\mathrm{prop}}}(x\to y)}.
++\log\frac{q_{\beta^L}(y\to x)}{q_{\beta^L}(x\to y)}.
 \end{aligned}
 \end{equation}
 
 \paragraph{Two-betas simulated annealing.}
 We decouple the proposal temperature and target temperature by using
-\(\beta_{\mathrm{prop}}\) in the logits above, while \(\beta_{\mathrm{mh}}\) controls the \gls{mh} ratio.
+\(\beta^L\) in the logits above, while \(\beta_{\mathrm{mh}}\) controls the \gls{mh} ratio.
 Optionally, \(\beta_{\mathrm{mh}}\) is annealed across \gls{mcmc} steps:
 \begin{equation}
 \beta_{\mathrm{mh}}(s)=
@@ -61,7 +63,7 @@ where \(\Delta\beta=\beta_{\mathrm{mh}}^{\mathrm{final}}-\beta_{\mathrm{mh}}^{\m
 \paragraph{Do-nothing resampling and proposal diffusion.}
 If the independently sampled proposal equals the current state (all sites \textit{stay}),
 we resample after softening the logits to increase randomness:
-\(\beta_{\mathrm{prop}}\leftarrow\rho\,\beta_{\mathrm{prop}}\),
+\(\beta^L\leftarrow\rho\,\beta^L\),
 \(\lambda_\mathcal{V}\leftarrow\rho\,\lambda_\mathcal{V}\),
 \(\lambda_\mathcal{E}\leftarrow\rho\,\lambda_\mathcal{E}\) with \(0<\rho<1\).
 We repeat this a bounded number of times; if no change occurs, we keep the current

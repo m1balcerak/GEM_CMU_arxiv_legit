@@ -1,42 +1,31 @@
 \section{Experimental setup and hyperparameters}
 \label{app:exp-setup}
-We summarize datasets, preprocessing, training, sampling settings, and hyperparameters here.
-We also report the diffusion-editing noise level $\tau$ selected for each baseline here.
-
-\paragraph{GEM training (shared across experiments).}
-Training proceeds in two stages. We first run flow-matching (FM) only with
-$\lambda_{\mathrm{CL}}=0.0$ for 330k iterations ($\text{lr}=10^{-4}$, batch size 128, gradient clip 10)
-to establish the transport field. We then add contrastive divergence (CD) with
-$\lambda_{\mathrm{CL}}=0.1$ for 500 iterations using chain length 500 at
-$\text{lr}=5\times 10^{-5}$, batch size 128. CD sampling uses greedy transport proposals followed by
+\paragraph{MOSES GEM training (shared across experiments).}
+Training is conducted in two stages. We first train with $\lambda_{\mathrm{CL}}=0.0$ for $330\,\text{k}$ iterations ($\text{lr}=10^{-4}$, batch size $=128$) to pretrain the potential field, enabling efficient burn-in of samples initialized from noise. We then follow with with
+$\lambda_{\mathrm{CL}}=0.1$ for 250 iterations using chain length 500 at
+$\text{lr}=5\times 10^{-5}$, batch size 128. L sampling uses greedy transport proposals followed by
 dLangevin mixing with $\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$,
-and $\beta_{\mathrm{mh}}=\beta^L$. We apply RRWP features~\citep{ma2023graph} to GEM and to all
-reproduced baselines for fair comparison. For DeFoG baselines we use the authors' checkpoint
-\citep{qinmadeira2024defog}.
+and $\beta_{\mathrm{mh}}=\beta^L$. We incorporate RRWP features~\citep{ma2023graph} into GEM and all reproduced baselines to ensure a fair comparison with DeFoG, which originally employs these features. For the DeFoG baselines, we directly use the authors' provided checkpoint~\citep{qinmadeira2024defog}. During training, we consider two distinct setups for initializing the contrastive loss (CL) samples: either from noise or directly from data. We evenly split these initializations (50\% noise / 50\% data), except in the unconditional generation scenario (``Data Initialization'' category), where we exclusively (100\%) initialize CL samples from data.
+
 
 \subsection{Unconditional generation}
 We report 25k MOSES samples and 10k QM9 samples. For noise initialization we use greedy transport
-followed by the dLangevin mixing parameters from the training setup above. For data initialization we
+followed by the mixing proposal with the parameters from the training setup. For data initialization we
 use an annealed schedule with $\beta_{\mathrm{prop}}=8.12$, $\beta_{\mathrm{mh}}^{\mathrm{init}}=0.18$,
 $\beta_{\mathrm{mh}}^{\mathrm{final}}=13.56$, $S_{\mathrm{anneal}}=200$, $\lambda_{\mathcal{V}}^L=0.07$,
 and $\lambda_{\mathcal{E}}^L=2.23$.
 
 \subsection{Conditional generation and property optimization}
 \paragraph{Noisy property regressors.}
-We train time-conditioned regressors on MOSES with shared hyper-parameters for both
-marginal- and uniform-noise variants; only the diffusion transition differs
-(\texttt{noise\_transition} $\in \{\texttt{marginal}, \texttt{uniform}\}$).
-Training uses batch size 1024, 60 epochs, Adam ($\text{lr}=10^{-4}$, weight decay $10^{-6}$),
-4 layers with hidden dims $(d_x=256, d_e=128, d_y=128)$, $n_\text{head}=8$,
-FF dims $(256,128,192)$, polydec time distortion, and a timestep embedding
-(\texttt{time\_conditioned=true}). We report test MAE on 10k molecules at
-$t\in\{0,0.2,\dots,1\}$; noise-sensitivity details are in Appendix~\ref{app:regressor-noise}.
+We train time-conditioned regressors on MOSES using shared hyper-parameters for both marginal- and uniform-noise variants. Training uses batch size $1024$ for $60$ epochs with Adam ($\text{lr}=10^{-4}$, weight decay=$10^{-6}$). The regressor is a GraphTransformer with $4$ layers, $8$ attention heads, hidden dimensions $(d_x,d_e,d_y)=(256,128,128)$, feedforward dimensions $(256,128,192)$, and MLP dimensions $(X,E,y)=(256,128,256)$, SiLU activations, and a scalar property head. We apply polydec time distortion and report test MAE on $10$k molecules at $t\in\{0,0.2,\dots,1\}$. Additional noise-sensitivity details are provided in Appendix~\ref{app:regressor-noise}.
+
 
 \paragraph{Conditional generation (GEM \& DeFoG).}
-GEM uses guided warmup (225 steps, linear $t$ schedule) and dLangevin proposals
-($\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$) with uniform transitions.
-DeFoG uses marginal-noise regressors. For each task we sweep $\lambda_{\text{prop}}$
-and report the best CVUN; margins and selected $\lambda_{\text{prop}}$ are below.
+GEM mixing proposal parameters:
+($\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$) with uniform noise initialization/regressors.
+DeFoG uses marginal-noise initialization/ regressors. For each task we sweep $\lambda_{\text{prop}}$
+and report the best CVUN; margins and selected $\lambda_{\text{prop}}$ are below. The reported results are computed directly using RDKit library tools—not from the regressors, which serve solely for guidance purposes.
+
 
 \begin{table}[t]
 \centering

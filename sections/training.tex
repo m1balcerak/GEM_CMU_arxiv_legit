@@ -2,11 +2,9 @@
 \label{sec:training}
 
 \paragraph{Interpolation and Minibatch coupling.}
-Given minibatches $x^0 \sim \pi_0$ and $x^\mathrm{data} \sim \pi_\mathrm{data}$, we match samples using a
-permutation-invariant approximation to the \gls{fgw}-type graph cost $c(x^0,x^\mathrm{data})$
-(Section~\ref{sec:gem} and Appendix~\ref{app:matching}), obtaining a pairing map $T$ induced by the
-minibatch coupling. Each source graph $x^0$ is paired with a data graph $x^\mathrm{data}=T(x^0)$.
-In all experiments involving our method, we initialize from a uniform noise distribution $\pi_0$, in contrast to diffusion-based baselines which typically utilize the marginal noise distribution.
+Given minibatches \( x^0 \sim \pi_0 \) and \( x^\mathrm{data} \sim \pi_\mathrm{data} \), we pair samples using a permutation-invariant approximation of \( c_{\mathrm{FGW}}(x^0,x^\mathrm{data}) \) described in \Cref{sec:gem}, via histogram matching (\Cref{app:matching}), obtaining a pairing map \( T \) induced by the minibatch coupling.
+ Each source graph $x^0$ is paired with a data graph $x^\mathrm{data}=T(x^0)$.
+In all experiments involving our method, we initialize from a uniform noise distribution $\pi_0$.
 
 Crucially, we utilize $c_{\mathrm{FGW}}$ solely to select optimal pairs based on global structural similarity (e.g., node and edge counts). Once paired, we rely on the isotropy of the uniform source: since the noise graph lacks intrinsic node ordering, any node permutation is statistically equivalent. We therefore treat the sampled node ordering of $x^0$ as implicitly aligned with the paired $x^{\mathrm{data}}$ via the identity permutation. This approach is compatible with our architecture because $V_\theta$ is permutation-invariant by construction (Appendix~\ref{app:perm-invariance}), ensuring the learned energy landscape is independent of the specific stochastic node labeling.
 Denote their embeddings by $\hat{x}^0$ and $\hat{x}^\mathrm{data}$. Define the
@@ -17,12 +15,12 @@ x_i^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{V}\big(x_i^0\big) + t\,\p
 x_{ij}^t \sim \operatorname{Cat}\Big((1-t)\,\phi_\mathcal{E}\big(x_{ij}^0\big) + t\,\phi_\mathcal{E}\big(x_{ij}^{\mathrm{data}}\big)\Big)
 \end{eqnarray}
 % \end{equation}
-Let $\hat{x}^t$ be the continuous embedding of the discrete graph $x^t$ via $\phi_\mathcal{V},\phi_\mathcal{E}$ (Section~\ref{sec:gem}). While this embedding resides in a continuous ambient space, training is conducted solely on discrete graphs $x \in \mathcal{X}$, as both energy and sampling proposals are evaluated primarily through discrete jumps. The continuous embedding thus mainly facilitates gradient computation of $\nabla_{\hat{x}_t} V_\theta(\hat{x}^t)$ to guide these discrete transitions.
+Let $\hat{x}^t$ be the continuous embedding of the discrete graph $x^t$ via $\phi_\mathcal{V},\phi_\mathcal{E}$ (Section~\ref{sec:gem}). While this embedding resides in a continuous ambient space, training is conducted solely on discrete graphs $x \in \mathcal{X}$, as sampling proposals are concerning discrete jumps. The continuous embedding thus mainly facilitates gradient computation of $\nabla_{\hat{x}_t} V_\theta(\hat{x}^t)$ to guide these discrete transitions.
 
 
 
 \paragraph{Objectives.}
-We use the optimality condition derived in \Cref{proposals} to construct the Flow loss ($\mathcal{L}_{\text{Flow}}$). We set the JKO step-size parameter $\eta=1$. Consequently, the optimality condition $\nabla_x V(x) = -\nabla_x c(x,y)$ implies that the negative energy gradient should match the displacement vector $v$ pointing toward the data. While the pairing is determined by global signatures, the local training objective minimizes the Euclidean cost ($c_{\text{loc}}$) along the linear interpolation path:
+We use the optimality condition derived in \Cref{proposals} to construct a flow-like loss ($\mathcal{L}_{\text{Flow}}$). We set the JKO step-size parameter $\eta=1$. Consequently, the optimality condition $\nabla_x V(x) = -\nabla_x c(x,y)$ implies that the negative energy gradient should match the displacement vector $v$ pointing toward the data. While the pairing is determined by global signatures, the local training objective minimizes the Euclidean cost ($c_{\text{loc}}$) along the linear interpolation path:
 \begin{align}
 \mathcal{L}_{\text{Flow}}(\theta)
 &=
@@ -34,10 +32,7 @@ We use the optimality condition derived in \Cref{proposals} to construct the Flo
 \mathbb{E}_{x^{+}\sim \pi_\mathrm{data}}[V_\theta(\hat{x}^{+})]
 -\mathbb{E}_{x^{-}\sim \text{sg}\,\pi_\theta}[V_\theta(\hat{x}^{-})].
 \end{align} 
-The loss $\mathcal{L}_{\text{CL}}$ remains as defined in \Cref{eq:cl}, except that the sampling method employs the discrete proposals introduced in \Cref{proposals_lang}, rather than the continuous SDE from \Cref{em_sde}. Note that we supervise the model solely at discrete graph candidates, as the proposals require evaluation of energies and gradients only at discrete graph states.
-
-Relaxations of the transport objective near $t=1$ are discussed in Appendix~\ref{app:flow-weighting}.
-We minimize
+The loss $\mathcal{L}_{\text{CL}}$ remains as defined in \Cref{eq:cl} (see Appendix \ref{app:energy-refinement}), except that the sampling method employs the discrete proposals introduced in \Cref{proposals_lang}, rather than the continuous SDE from \Cref{em_sde}. We minimize:
 \begin{equation}
 \min_\theta\;
 \mathcal{L}_{\text{Flow}}(\theta)
@@ -46,4 +41,4 @@ We minimize
 \end{equation}
 We use a warm-up of $N_{\mathrm{warmup}}$ iterations with only $\mathcal{L}_{\text{Flow}}$ before
 turning on $\mathcal{L}_{\text{CL}}$, following the continuous formulation~\citep{balcerak2025energy};
-the same intuition carries over to the discrete case by yielding better negatives. See \Cref{app:exp-setup} for specific hyperparameters.
+the same intuition carries over to the discrete case by yielding better negatives. See Appendix \ref{app:exp-setup} for specific hyperparameters.

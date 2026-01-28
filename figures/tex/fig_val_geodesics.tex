@@ -2,9 +2,9 @@
 \centering
 \begin{tikzpicture}[scale=0.95]
   % Axes
-  \draw[->, thick] (8.5,0) -- (16.5,0) node[below, xshift=-2cm, yshift=-0.35cm] {distance (node-matching, $c_{\mathrm{FGW}}$)};
+  \draw[->, thick] (8.5,0) -- (16.5,0) node[below, xshift=-3cm, yshift=-0.35cm] {distance (node-matching, $c_{\mathrm{FGW}}$)};
   \draw[->, thick] (8.5,0) -- (8.5,3.5);
-  \node[rotate=90] at (7.8,1.75) {avg.\ validity (\%)};
+  \node[rotate=90] at (7.8,1.75) {avg.\ validity (\%)$\uparrow$};
 
   % Y-axis ticks and labels
   \foreach \y/\label in {0/0, 0.875/25, 1.75/50, 2.625/75} {
@@ -24,8 +24,8 @@
   \draw[very thick, gray] plot coordinates {(9,1.225) (12,0.91) (16,1.19)};
 
   % Legends
-  \node[blue, anchor=west, font=\footnotesize] at (12.5,2.9) {\gls{gem} energy-weighted geodesic};
-  \node[gray, anchor=west, font=\footnotesize] at (12.5,2.5) {cost-only geodesic};
+  \node[blue, anchor=west, font=\footnotesize] at (11.5,2.9) {\gls{gem} energy-weighted geodesic};
+  \node[gray, anchor=west, font=\footnotesize] at (11.5,2.5) {cost-only geodesic};
 \end{tikzpicture}
 \caption{\footnotesize \textbf{Validity Along Geodesics.} Average chemical validity (\%) vs.\ distance (node-matching, $c_{\mathrm{FGW}}$) for \gls{gem} energy-weighted versus cost-only geodesics.}
 \label{fig:geodesic-validity}

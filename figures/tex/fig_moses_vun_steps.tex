@@ -3,9 +3,9 @@
 \begin{tikzpicture}[scale=0.95]
   \draw[->, thick] (0,0) -- (6.2,0) node[midway, below=8pt] {inference steps};
   \draw[->, thick] (0,0) -- (0,4.0);
-  \node[rotate=90] at (-0.95,2.0) {\glsentryshort{vun}};
+  \node[rotate=90] at (-0.95,2.0) {\glsentryshort{vun}$\uparrow$};
   \draw[->, thick] (6.2,0) -- (6.2,4.0);
-  \node[rotate=90] at (7.1,2.0) {\glsentryshort{fcd}};
+  \node[rotate=90] at (7.1,2.0) {\glsentryshort{fcd}$\downarrow$};
 
   % Title
   \node[font=\small\bfseries] at (3.1,4.35) {Performance vs Inference Steps};
@@ -86,6 +86,6 @@
     \node[anchor=west, font=\scriptsize] at (0.7,0.26) {DeFoG \glsentryshort{fcd}};
   \end{scope}
 \end{tikzpicture}
-\caption{\footnotesize \textbf{\acrshort{vun} and \acrshort{fcd} vs Steps.} \acrshort{vun} (higher is better) and \acrshort{fcd} (lower is better) versus inference steps on MOSES for \gls{gem} noise initialization (uniform) with greedy warmup proposal, \gls{gem} data initialization with annealed proposal, and DeFoG (marginal noise).}
+\caption{\footnotesize \textbf{\acrshort{vun} and \acrshort{fcd} vs Steps.} \acrshort{vun} (higher is better) and \acrshort{fcd} (lower is better) versus inference steps on MOSES for \gls{gem} noise initialization (uniform) with greedy warmup proposal, \gls{gem} data initialization with annealed proposal, and DeFoG (marginal).}
 \label{fig:moses-vun-steps}
 \end{figure}

@@ -2,7 +2,7 @@
 \label{sec:gem}
 We extend the continuous Energy Matching formulation to discrete graph spaces by introducing two novel discrete proposals: one enabling transport-aligned rapid movements across graph spaces, and the other facilitating mixing within the vicinity of high-probability regions. Our formulation employs an energy-based switching mechanism that clearly separates \emph{transport} and \emph{mixing} sampling regimes without requiring explicit indexing of time or noise levels. Sampling is efficiently facilitated through deterministic greedy proposals in the transport regime or stochastic gradient-informed proposals during mixing. Further, we propose an annealing strategy to efficiently generate novel samples from optionally given data samples via incremental edits. The sampler uses a temperature $\epsilon$ to control stochasticity: the transport regime is the deterministic $\epsilon\to 0$ limit, while the mixing regime uses $\epsilon>0$.
 
-\paragraph{Graph representation:} 
+\paragraph{Graph representation.} 
 We consider a discrete state space $\mathcal{X}:=\big(\mathcal{X}_{\mathrm{node}}\big)^{n}\times\big(\mathcal{X}_{\mathrm{edge}}\big)^{\binom{n}{2}}$ to represent undirected graphs. A graph $x\in \mathcal{X}$ contains a set of $n$ nodes $\mathcal{V}=\{1,\dots,n\}$ and edges $\mathcal{E}$ defining the connectivity between these nodes. Each node $i\in\mathcal{V}$ has a node class $x_i \in \mathcal{X}_{\mathrm{node}}$ (e.g.\ an atom type), and each edge $(i,j)\in\mathcal{E}$ has an edge class $x_{ij}\in\mathcal{X}_{\mathrm{edge}}$ (e.g.\ a bond type). The edge space $\mathcal{X}_{\mathrm{edge}}$ includes an element indicating the absence of an edge. The graph $x:=\big(x_\mathcal{V},x_\mathcal{E}\big)$ consists of $x_\mathcal{V}$ and $x_\mathcal{E}$ denoting categorical node and edge features, respectively, and are defined as
 \begin{equation}
 x_\mathcal{V}  :=[x_i]_{i=1}^n\in(\mathcal{X}_{\mathrm{node}})^n;\quad
@@ -23,7 +23,7 @@ $\hat{x}\in\mathbb{R}^d$, where $d=n l_{\mathrm{node}}+\binom{n}{2}l_{\mathrm{ed
 \end{equation}
 where $\oplus$ denotes the column-wise concatenation operation.
 
-\paragraph{Local and Permutation-Invariant Cost:} We measure local discrepancies using the embedding-space cost $
+\paragraph{Local and Permutation-Invariant Cost.} We measure local discrepancies using the embedding-space cost $
     c(x,y) := \tilde c(\hat{x},\hat{y})$,
 which is differentiable in both arguments. The potential $V_\theta$ is permutation-invariant by construction (Appendix~\ref{app:perm-invariance}), so the learned energy landscape used for pairing should also respect node relabelings. Here, $\sigma\in S_n$ acts on node indices and induces a relabeling of the graph: $(\sigma\cdot x)_i=x_{\sigma(i)}$ and $(\sigma\cdot x)_{ij}=x_{\sigma(i)\sigma(j)}$. To obtain a permutation-invariant matching, we first define a local cost ($c_{\mathrm{loc}}$) as:
 \begin{equation}\label{eq:loc-cost}
@@ -75,9 +75,11 @@ which implies
 -\frac{1}{2\eta}\,
 \nabla_{\hat{y}}\tilde c\!\left(\hat{x},\tilde T_k(\hat{x})\right).
 \end{equation}
-This optimality condition characterizes the solution and can therefore serve directly as the training objective, as detailed in \Cref{sec:training}.
+This optimality condition directly characterizes the solution and serves as the training objective (\Cref{sec:training}).
 
-During sampling, given a trained potential $V_\theta$ that satisfies the optimality objective \eqref{eq:optimality}, our goal is to approximately solve \eqref{eq:new_T} using a local proposal mechanism. Instead of performing one-shot global moves, we iteratively descend the potential by making local edits, enabling a Taylor expansion of $V_\theta(y)$ around the current state $x$. Rather than controlling the step-size parameter $\eta$, we simplify the (local) greedy proposal by restricting the kernel to exactly $N$ edits per jump. For this proposal, we employ the local cost $c_{\mathrm{loc}}(x,y)$ with distinct weights $\lambda_\mathcal{V}$ and $\lambda_\mathcal{E}$ (Eq.~\ref{eq:loc-cost}); consequently, the transition cost varies depending on the specific edits in a candidate move.
+
+During sampling, given a trained potential $V_\theta$ that satisfies the optimality objective \eqref{eq:optimality}, our goal is to approximately solve \eqref{eq:new_T} using a local proposal mechanism. Instead of performing one-shot global moves, we iteratively descend the potential by making local edits, enabling a Taylor expansion of $V_\theta(y)$ around the current state $x$. Rather than controlling the step-size parameter $\eta$, we simplify the (local) greedy proposal by restricting the kernel to exactly $N$ edits per jump. Since our proposal is local, we use the local cost \( c_{\mathrm{loc}}(x,y) \) with distinct weights \(\lambda_\mathcal{V}\) and \(\lambda_\mathcal{E}\) (Eq.~\ref{eq:loc-cost}).
+
 
 Linearizing $V_\theta(y)\approx V_\theta(x)+\Delta\hat{x}^\top\nabla_{\hat{x}} V_\theta(\hat{x})$ around $\hat{x}$, with $\Delta\hat{x}=\hat{y}-\hat{x}$, we deterministically select the candidate that minimizes the sum of the potential change and the transport cost. Formally, the candidate set $C_N(x)$ is defined as the set of all edits achievable by exactly $N$ discrete modifications (changing/removing edges or changing nodes) starting from state $x$. The greedy proposal is thus given by:
 \begin{gather}
@@ -86,7 +88,7 @@ q_{\text{greedy}}(x\to y) = \delta_{y^*(x)}(y).
 \end{gather}
 
 In the transport regime, proposed moves are deterministically projected onto directions associated with strictly negative gradients, aiming for a decrease in energy. Edits not meeting this criterion are rejected. If no candidate yields a negative gradient, the greedy sampler stalls, switching to the Langevin-based proposal $q_\mathrm{mixing}$ in \Cref{proposals_lang}.
- For further implementation details, see \Cref{app:sampling-details}.
+ For further implementation details, see Appendix~\ref{app:sampling-details}.
 
 
 \subsection{Discrete Mixing Proposal ($\epsilon>0$)}
@@ -108,9 +110,8 @@ Expanding explicitly and dropping terms independent of $\hat{y}$:
 - \frac{1}{2\epsilon}\nabla V_\theta(\hat{x})^\top(\hat{y}-\hat{x})\notag\\
 &\quad+\text{const.}
 \end{align}
-The proposal is effectively local due to the distance penalty, though, in principle, it can still propose an arbitrary number of edits, allowing mode escape. We define Langevin-specific parameters $(\lambda_{\mathcal{V}}^L, \lambda_{\mathcal{E}}^L, \beta^L)$ by absorbing all constants, including $\epsilon$, $\eta$, scaling terms $\lambda_{\mathcal{V}}, \lambda_{\mathcal{E}}$ from $c_{\mathrm{loc}}$, and numerical factors:
-\addtocounter{equation}{1}
-\begin{align}
+The proposal is effectively local due to the distance penalty, though, in principle, it can still propose an arbitrary number of edits, allowing mode escape. We define Langevin-specific parameters $(\lambda_{\mathcal{V}}^L, \lambda_{\mathcal{E}}^L, \beta^L)$ by absorbing all constants, including $\epsilon$, $\eta$, scaling terms $\lambda_{\mathcal{V}}, \lambda_{\mathcal{E}}$ from $c_{\mathrm{loc}}$, and numerical factors: 
+\addtocounter{equation}{1}\begin{align}
 &q_\mathrm{mixing}(x\to y)
 \;\propto\tag{\theequation}\\
 &\exp\!\bigl(
@@ -126,13 +127,11 @@ discrete-gradient samplers appear in~\citep{grathwohl2021oops,zhang2022langevin}
 Figure~\ref{fig:proposal-middle-softmax-alpha-half} illustrates the resulting geometry-aware proposal
 scoring and how gradient alignment competes with distance penalties.
 
-In practice, the $q_\mathrm{mixing}$ proposal is combined with a \gls{mh} acceptance step, ensuring convergence to the target distribution $\pi_\theta(x)\propto\exp(-\beta_{mh} V_\theta(x))$. 
-
 We calibrate the parameters $\beta_{mh}$, $\beta^{L}$, $\lambda_{\mathcal{V}}^{L}$, and $\lambda_{\mathcal{E}}^{L}$ by maximizing the relative likelihood of generated samples compared to the training dataset samples under the learned energy $V_\theta$, directly after the warmup training phase described in \Cref{sec:training}.
 
 
-
-In the mixing regime, we accept the stochastic proposal with \gls{mh} probability:
+In practice, the \( q_\mathrm{mixing} \) proposal is paired with a \gls{mh} acceptance step to ensure convergence to the target distribution \( \pi_\theta(x) \propto \exp(-\beta_{mh} V_\theta(x)) \).
+In the mixing regime, the stochastic proposal is accepted with the following \gls{mh} probability:
 \begin{equation}\label{eq:mh-accept}
 \begin{aligned}
 \alpha(x,y)
@@ -150,7 +149,7 @@ enforces detailed balance:
 \end{equation}
 so $\pi_\theta$ is stationary for the mixing dynamics~\citep{metropolis1953equation,hastings1970monte}.
 Implementation details of the proposal kernel (factorized logits, temperature annealing, and do-nothing
-resampling) are provided in \Cref{app:sampling-details}. 
+resampling) are provided in Appendix \ref{app:sampling-details}. 
 
 
 
@@ -165,12 +164,12 @@ We control the regime through an energy-based binary indicator $s\in\{0,1\}$: $s
 \label{init_prop}
 We use two initialization regimes with aligned proposal schedules:
 \begin{itemize}[leftmargin=*]
-\item \textbf{Noise initialization:} sample the node count from the empirical histogram, then draw node/edge
+\vspace{-3pt} \item \textbf{Noise initialization:} sample the node count from the empirical histogram, then draw node/edge
 types uniformly (uniform noise) or from empirical marginals (marginal noise). These start far from
 the data distribution, so we run transport with greedy proposals $q_{\text{greedy}}$ until the energy-based switch (see
 \Cref{switch}), then enter mixing with the proposal
 $q_{\mathrm{mixing}}$. 
-\item \textbf{Data initialization:} draw graphs from the training set. We skip the transport phase and start directly in the mixing regime with $q_{\mathrm{mixing}}$, initially using a higher model temperature (lower $\beta_{mh}$) to increase the acceptance rate, and then annealing (raising $\beta_{mh}$) before fixed-temperature mixing (Appendix~\ref{app:sampling-details}).
+\vspace{-3pt} \item \textbf{Data initialization:} draw graphs from the training set. We skip the transport phase and start directly in the mixing regime with $q_{\mathrm{mixing}}$, initially using a higher model temperature (lower $\beta_{mh}$) to increase the acceptance rate, and then annealing (raising $\beta_{mh}$) before fixed-temperature mixing (Appendix~\ref{app:sampling-details}).
 
 \end{itemize}
 All initializations start near-zero \gls{vun}. Figure~\ref{fig:moses-energy-and-metrics}

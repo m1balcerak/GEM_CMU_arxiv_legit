@@ -40,16 +40,16 @@
 \usepackage{titlesec}
 \renewcommand{\paragraph}[1]{\noindent\textbf{#1}}
 
-\setlength{\floatsep}{1ex}
-\setlength{\abovedisplayskip}{1pt}
-\setlength{\abovedisplayshortskip}{1pt}
-\setlength{\belowdisplayskip}{1pt}
-\setlength{\belowdisplayshortskip}{1pt}
+\setlength{\floatsep}{0ex}
+\setlength{\abovedisplayskip}{0pt}
+\setlength{\abovedisplayshortskip}{0pt}
+\setlength{\belowdisplayskip}{0pt}
+\setlength{\belowdisplayshortskip}{0pt}
 
 \setlength{\textfloatsep}{1.5ex}
 \setlength{\parskip}{0.38em}
-\titlespacing\section{2pt}{6pt plus 1pt minus 1pt}{5pt plus 1pt minus 1pt}
-\titlespacing\subsection{2pt}{5pt plus 1pt minus 1pt}{5pt plus 1pt minus 1pt}
+\titlespacing\section{2pt}{4pt plus 1pt minus 1pt}{3pt plus 1pt minus 1pt}
+\titlespacing\subsection{2pt}{3pt plus 1pt minus 1pt}{2pt plus 1pt minus 1pt}
 
 \pgfplotsset{compat=1.18}
 
@@ -106,8 +106,8 @@ Energy-based models for discrete domains, such as graphs, explicitly capture rel
 \input{sections/appendix/appendix_matching}
 % Sampling proposal implementation details (no figures)
 \input{sections/appendix/appendix_sampling_details}
-\input{sections/appendix/appendix_flow_weighting}
-\input{sections/appendix/appendix_qm9_unconditional}
+% \input{sections/appendix/appendix_flow_weighting}
+% \input{sections/appendix/appendix_qm9_unconditional}
 \input{sections/appendix/appendix_baselines}
 \input{sections/appendix/appendix_experimental_setup}
 \input{sections/appendix/appendix_property_regressor_noise}

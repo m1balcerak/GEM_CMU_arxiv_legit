@@ -1,29 +1,18 @@
-\section{Conceptualizing baselines todo}
+\section{Conceptualizing baselines}
 \label{app:baselines}
 
-We summarize the baseline methods used in our experiments with an emphasis on the generation/samplign mechanismn for each method. 
+We summarize the baseline methods used in our experiments with an emphasis on the generation/sampling mechanism for each method. 
 
-\paragraph{GraphEBM.}
-GraphEBM~\citep{liu2021graphebm} models molecular graphs using an energy-based model that assigns a scalar energy $E_\theta(G)$ to each graph $G$ via a graph neural network.
-Unlike transport- or flow-based approaches, GraphEBM does not learn an explicit transformation from a source distribution to the data distribution. Instead, generation relies on Langevin dynamics sampling.
-%GraphEBM~\citep{liu2021graphebm} learns a scalar energy over molecular graphs with a \gls{gnn} and relies on
-%\gls{mcmc} (e.g., \gls{mh} over local graph edits) for sampling, without an explicit transport
-%or flow-matching objective.
+\paragraph{GraphEBM} ~\citep{liu2021graphebm} models molecular graphs using an energy-based model that assigns a scalar energy $E_\theta(x)$ to each graph $x$ via a graph neural network.
+Unlike transport- or flow-based approaches, GraphEBM does not learn an explicit transformation from a source distribution to the data distribution. Instead, generation depends exclusively on Langevin dynamics sampling within a continuous embedding space.
 
-\paragraph{DeFoG.}
-DeFoG~\citep{qinmadeira2024defog} formulates discrete graph generation as (continuous-time) discrete
-flow matching. It learns a continuous-time Markov chain (CTMC) whose transition rates are trained to connect a simple source distribution to the data distribution along a time-indexed stochastic path.
-Sampling proceeds by simulating the learned CTMC dynamics from the source to obtain a final graph.
-%DeFoG~\citep{qinmadeira2024defog} formulates graph generation as discrete flow matching, learning
-%\gls{ctmc} transition rates that connect source and data distributions; sampling follows the learned
-%continuous-time dynamics.
 
-\paragraph{\gls{vfm}.}
-\gls{vfm}~\citep{eijkelboom2024vfm} reframes flow matching as variational
-inference over trajectory endpoints, yielding globally consistent objectives for discrete graph
-generation via \gls{ctmc} paths.
+\paragraph{DeFoG}~\citep{qinmadeira2024defog} adapts discrete flow matching to graphs by pairing an explicit noising path (via linear interpolation toward a simple base distribution) with a learned \gls{ctmc} denoiser: a network predicts the clean-graph posterior from an intermediate noisy graph, which in turn defines the time-dependent rate matrices used for generation.
+Sampling starts from the base distribution and simulates the resulting \gls{ctmc} toward the data distribution, with the sampling step schedule largely selectable at inference time.
 
-\paragraph{G-\gls{vfm}.}
-G-\gls{vfm}~\citep{eijkelboom2025controlledvfm} extends \gls{vfm} with equivariant conditioning mechanisms to
-support controllable generation, typically by incorporating property guidance into the flow-matching
-framework.
+\paragraph{\gls{vfm}}~\citep{eijkelboom2024vfm} casts flow matching as variational inference over trajectory endpoints (the “posterior probability path”), yielding a KL-based objective that for categorical graph variables reduces to a per-component cross-entropy.
+In contrast to DeFoG’s stochastic \gls{ctmc} jump dynamics, \gls{vfm} targets a deterministic continuous flow (vector field) on the probability simplex and generates by integrating this flow from the base distribution, then discretizing/sampling from the final categorical probabilities.
+
+
+\paragraph{G-\gls{vfm}}~\citep{eijkelboom2025controlledvfm} extends \gls{vfm} with equivariant conditioning mechanisms to
+support controllable generation.

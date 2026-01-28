@@ -1,6 +1,7 @@
 \section{Preliminaries: Energy Matching and JKO }
 
-Energy matching learns a scalar potential \( V_\theta:\mathcal{X}\to\mathbb{R} \), parameterized by \(\theta\), on a continuous data space \(\mathcal{X}\). It simultaneously serves two complementary roles: (i)~off-manifold guidance, directing samples toward the data manifold via the gradient field \(-\nabla_x V_\theta\), and (ii)~near-equilibrium refinement, characterizing the data distribution on the manifold as an \gls{ebm} with Gibbs density \(\propto \exp(-V_\theta(x))\).
+Energy matching learns a scalar potential \( V_\theta:\mathbb{X}
+\to\mathbb{R} \), parameterized by \(\theta\), on a continuous data space \(\mathcal{X}\). It simultaneously serves two complementary roles: (i)~off-manifold guidance: directing samples toward the data manifold via the gradient field \(-\nabla_x V_\theta\), and (ii)~near-equilibrium refinement: characterizing the data distribution on the manifold as an \gls{ebm} with Gibbs density \(\propto \exp(-V_\theta(x))\).
 
 These roles separate model learning into a \emph{global} transport-alignment and a \emph{local} density-refinement term. A simple time-dependent temperature schedule to switch between these regimes, e.g., \(\epsilon(t)=0\) for \(0\leq t<1\) (transport) and \(\epsilon(t)=1\) for \(t\ge 1\) (mixing), (i) injects exploration, (ii) mitigates mode collapse, and (iii) stabilizes sampling from the Gibbs distribution \(\propto \exp(-V_\theta(x))\).
 
@@ -14,12 +15,13 @@ Energy Matching can be understood through an optimization-in-probability-spaces 
 &\quad+\;\int V_\theta(y)\,\rho(y)\,\mathrm{d}y\nonumber\\
 &\quad+\;\epsilon(t)\int \rho(y)\log\rho(y)\,\mathrm{d}y,
 \end{align}
-where the cost function \( c(x,y) \) measures the amount of displacement when transporting mass from \(x\) to \(y\), and constitutes a design choice, which in continuous spaces is typically chosen as \( c(x,y)=\|x - y\|^2 \).
+where the cost \( c(x,y) \) quantifies displacement from \( x \) to \( y \), typically set as \( c(x,y)=\|x - y\|^2 \) in continuous spaces.
+
 
 The coupling \(\gamma\in\Gamma(\rho,\rho_t)\) is a joint distribution that characterizes a transport plan. Intuitively, \(\gamma(x,y)\) encodes ``how much mass from each location \(x\sim\rho_t\) is transported to each new location \(y\sim\rho\)'', thus determining the optimal reassignment of mass that minimizes the expected transportation cost \(\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]\).
 
 \paragraph{Off-manifold transport guidance.}
-Based on first-order optimality conditions in Wasserstein space~\citep{lanzetti2024variational,lanzetti2025firstorder} applied to the functional in~\cref{jko_em}, Energy Matching defines two clear learning objectives. Given tractably coupled pairs \((x,y)\sim\gamma\) (e.g., obtained via minibatch matching rather than solving for the globally optimal coupling), we associate \(x_0\) with the noise/source distribution (\(\rho_{0}\)) and \(x_1\) with the data/target distribution (\(\rho_{\mathrm{data}}\)). Intermediate points are sampled as \(x_t=(1-t)x_0+t x_1\) for \(t\sim\Unif([0,1])\). Defining the empirical transport direction \(v=x_1 - x_0\), the \(V_\theta\) is trained via a flow-like objective:
+Based on first-order optimality conditions in Wasserstein space~\citep{lanzetti2024variational,lanzetti2025firstorder} applied to the functional in~\cref{jko_em}, Energy Matching defines two clear learning objectives. Given tractably coupled pairs \((x_0,x_1)\sim\gamma\) (e.g., obtained via minibatch matching rather than solving for the globally optimal coupling), we associate \(x_0\) with the noise/source distribution (\(\rho_{0}\)) and \(x_1\) with the data/target distribution (\(\rho_{\mathrm{data}}\)). Intermediate points are sampled as \(x_t=(1-t)x_0+t x_1\) for \(t\sim\Unif([0,1])\). Defining the empirical transport direction \(v=x_1 - x_0\), the \(V_\theta\) is trained via a flow-like objective:
 \begin{equation}
 \mathcal{L}_{\mathrm{Flow}}(\theta
 )
@@ -33,7 +35,7 @@ At equilibrium (\(t\to\infty\) in Eq.~\eqref{jko_em} and in the mixing regime \(
 \rho_{t\to\infty}(x)\propto \exp(-V_\theta(x)).
 \end{equation}
 
-Refinement of the equilibrium density is achieved using the contrastive loss (CL) (see Appendix \ref{app:energy-refinement}):
+Refinement of the equilibrium density is achieved using the contrastive loss (CL):
 \begin{equation}
 \label{eq:cl}
 \mathcal{L}_{\mathrm{CL}}(\theta)
@@ -42,14 +44,14 @@ Refinement of the equilibrium density is achieved using the contrastive loss (CL
 -
 \mathbb{E}_{x^{-}\sim\operatorname{sg}(\rho_{t\to\infty})}[V_\theta(x^{-})],
 \end{equation}
-where negative samples \(x^{-}\) are generated via Langevin dynamics initialized either from the source or from data, with gradients stopped (\(\operatorname{sg}\)) during sampling. Training begins with an initial warm-up phase using only \(\mathcal{L}_{\mathrm{Flow}}\), followed by joint optimization of:
+where negative samples \(x^{-}\) are generated via Langevin dynamics initialized either from the source or from data, with gradients stopped (\(\operatorname{sg}\)) during the operation. Training begins with an initial warm-up phase using only \(\mathcal{L}_{\mathrm{Flow}}\), followed by joint optimization of:
 \begin{equation}
 \mathcal{L}(\theta)=\mathcal{L}_{\mathrm{Flow}}(\theta)+\lambda_{\mathrm{CL}}\,\mathcal{L}_{\mathrm{CL}}(\theta).
 \end{equation}
 
 \paragraph{Sampling (two regimes).}
 Sampling starts from a transport-aligned drift and switches to refinement via an effective temperature
-$\epsilon(t)$. In continuous time, this corresponds to the time-inhomogeneous \gls{sde}
+$\epsilon(t)$. In continuous time, this corresponds to the time-inhomogeneous \gls{sde}:
 \begin{equation}
 \label{em_sde}
 \mathrm{d}x_t
