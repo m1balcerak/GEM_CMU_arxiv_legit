@@ -10,7 +10,11 @@
   \foreach \y/\label in {0/0, 0.875/25, 1.75/50, 2.625/75} {
     \draw (8.5,\y) -- (8.42,\y);
     \node[left,font=\scriptsize] at (8.4,\y) {\label};
-    \draw[gray!40, dashed] (8.5,\y) -- (16.2,\y);
+    
+    % FIX: Only draw the dashed grid line if y > 0
+    \ifdim \y pt > 0pt
+        \draw[gray!40, dashed] (8.5,\y) -- (16.2,\y);
+    \fi
   }
 
   % X-axis ticks and labels
