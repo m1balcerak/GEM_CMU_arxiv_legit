@@ -24,6 +24,9 @@
 latexmkrc
 *.latexmk
 
+# Local text exports
+main.txt
+
 # OS junk
 .DS_Store
 Thumbs.db
