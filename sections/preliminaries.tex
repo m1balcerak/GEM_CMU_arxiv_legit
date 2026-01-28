@@ -18,7 +18,7 @@ Energy Matching can be understood through an optimization-in-probability-spaces 
 where the cost \( c(x,y) \) quantifies displacement from \( x \) to \( y \), typically set as \( c(x,y)=\|x - y\|^2 \) in continuous spaces.
 
 
-The coupling \(\gamma\in\Gamma(\rho,\rho_t)\) is a joint distribution that characterizes a transport plan. Intuitively, \(\gamma(x,y)\) encodes ``how much mass from each location \(x\sim\rho_t\) is transported to each new location \(y\sim\rho\)'', thus determining the optimal reassignment of mass that minimizes the expected transportation cost \(\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]\).
+The coupling \(\gamma\in\Gamma(\rho_t,\rho)\) is a joint distribution that characterizes a transport plan. Intuitively, \(\gamma(x,y)\) encodes ``how much mass from each location \(x\sim\rho_t\) is transported to each new location \(y\sim\rho\)'', thus determining the optimal reassignment of mass that minimizes the expected transportation cost \(\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]\).
 
 \paragraph{Off-manifold transport guidance.}
 Based on first-order optimality conditions in Wasserstein space~\citep{lanzetti2024variational,lanzetti2025firstorder} applied to the functional in~\cref{jko_em}, Energy Matching defines two clear learning objectives. Given tractably coupled pairs \((x_0,x_1)\sim\gamma\) (e.g., obtained via minibatch matching rather than solving for the globally optimal coupling), we associate \(x_0\) with the noise/source distribution (\(\rho_{0}\)) and \(x_1\) with the data/target distribution (\(\rho_{\mathrm{data}}\)). Intermediate points are sampled as \(x_t=(1-t)x_0+t x_1\) for \(t\sim\Unif([0,1])\). Defining the empirical transport direction \(v=x_1 - x_0\), the \(V_\theta\) is trained via a flow-like objective:
@@ -61,5 +61,4 @@ $\epsilon(t)$. In continuous time, this corresponds to the time-inhomogeneous \g
 \end{equation}
 which reduces to an \gls{ode} when $\epsilon(t)=0$ and becomes stochastic as $\epsilon(t)\to 1$.
 In practice, sampling corresponds to explicitly integrating \cref{em_sde} over a fixed time interval.
-
 

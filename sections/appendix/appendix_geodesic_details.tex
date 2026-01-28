@@ -1,7 +1,6 @@
 \section{Geodesic analysis details}
 \label{app:geodesic-details}
 
-\paragraph{Pairing and alignments.}
 \paragraph{Path optimization.}
 We represent a continuous path $\gamma(t)$ in the embedding space and optimize the energy-weighted length
 \begin{equation}
@@ -11,7 +10,7 @@ with an average-energy regularizer $\lambda_{ME}\int_0^1 V_\theta(\hat{\gamma}(t
 baseline uses the same endpoint pairing and interpolates between the coupled graphs without the additional energy-weighting or average-energy regularization.
 
 \paragraph{Spline parameterization.}
-We implement geodesic paths using a Bezier spline over learnable control-point logits for nodes and
+We implement geodesic paths using a cubic B-spline over learnable control-point logits for nodes and
 edges. The spline lives in the probability simplex (node/edge categorical distributions), and
 discrete graphs are sampled only for visualization and metric evaluation. The optimization minimizes
 the relative length ratio $L_{\mathrm{spline}}/L_{\mathrm{linear}} - 1$, where the segment lengths are
@@ -22,4 +21,4 @@ We discretize each continuous path at evenly spaced points in normalized arc len
 we sample categorical graphs from the path distribution to compute validity and energy statistics.
 We compute average validity along each path and plot it against the endpoint distance induced by the
 \gls{fgw} matching cost $c_{\mathrm{FGW}}$.
-Validity estimation and binning details are in Appendix~\ref{app:exp-setup}.
+Validity estimation and binning details are in \Cref{app:exp-setup}.

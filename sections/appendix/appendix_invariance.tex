@@ -57,6 +57,6 @@ also invariant.
 \paragraph{Energy head and parameter count.}
 To enhance expressivity, we incorporate Relative Random Walk Probabilities (RRWP)~\citep{ma2023graph}
 as node and edge features, matching DeFoG for a fair comparison. The energy MLP head is a 2-layer MLP
-that maps the pooled hidden graph representation (concatenated node/edge/$y$ embeddings) to a single
+that maps the pooled hidden graph representation (concatenated node/edge/$f$ embeddings) to a single
 scalar energy. With dimensions $448\to256\to1$ and SiLU activation, it has 115,201 parameters. The
 full model has 16,382,158 trainable parameters ($\approx 16.38$M).

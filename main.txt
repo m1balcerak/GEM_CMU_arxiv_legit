@@ -1,0 +1,2761 @@
+000
+001
+002
+003
+004
+005
+006
+007
+008
+009
+010
+011
+012
+013
+014
+015
+016
+017
+018
+019
+020
+021
+022
+023
+024
+025
+026
+027
+028
+029
+030
+031
+032
+033
+034
+035
+036
+037
+038
+039
+040
+041
+042
+043
+044
+045
+046
+047
+048
+049
+050
+051
+052
+053
+054
+
+Graph Energy Matching:
+Transport-Aligned Energy-Based Modeling for Graph Generation
+
+Anonymous Authors1
+
+1
+
+Abstract
+
+Introduction
+
+Generative modeling of discrete structured objects, such as
+graphs, is a central challenge across many scientific and
+industrial applications, including drug discovery and materials design (Jin et al., 2018; Stokes et al., 2020; Xie et al.,
+2022). While domain-driven simulations explicitly encode
+physical knowledge (Noé et al., 2020), they quickly become intractable due to the combinatorial complexity of
+the underlying data distribution (Polishchuk et al., 2013),
+highlighting the need for generative models that efficiently
+capture implicit, domain-specific patterns.
+
+Energy-based models for discrete domains, such
+as graphs, explicitly capture relative likelihoods,
+naturally enabling composable probabilistic inference tasks like conditional generation or enforcing constraints at test-time. However, discrete energy-based models typically struggle as
+generative samplers, as off-support regions often
+have high-curvature energy landscapes and spurious local minima, trapping samplers and causing
+training instabilities. This results in a sizable fidelity gap relative to discrete diffusion models,
+restricting discrete energy-based models predominantly to scoring and uncertainty estimation rather
+than high-quality sample generation. We introduce Graph Energy Matching (GEM), a generative framework for graphs that closes this fidelity
+gap. Motivated by the map optimization perspective of the Jordan–Kinderlehrer–Otto formulation,
+GEM learns a permutation-invariant potential that
+simultaneously provides transport-aligned guidance from noise toward data and refines samples
+within regions of high data likelihood. We devised
+a sampling protocol that leverages an energybased switch to bridge regimes, seamlessly transitioning from rapid, gradient-guided transport
+toward high-density regions to rigorous Metropolis–Hastings mixing tailored to the discrete geometry. On molecular graph benchmarks, GEM
+matches or exceeds strong discrete diffusion baselines. Beyond sample quality alone, the learned
+potential naturally enables property-constrained
+generation at test-time, and its explicit relativelikelihood structure supports further analyses.
+
+Current state-of-the-art models for unconditional graph
+generation predominantly rely on discrete diffusion-like
+processes, implemented either as discrete-time denoising
+steps (Vignac et al., 2023) or continuous-time Markov
+chains (CTMCs) (Campbell et al., 2024; Qin et al., 2025).
+These methods generate graphs by progressively denoising
+samples from a simple prior distribution toward the target
+data distribution. For instance, DeFoG (Qin et al., 2025) explicitly learns CTMC transition rates to remove noise from
+corrupted graph states, while Variational Flow Matching
+(VFM) (Eijkelboom et al., 2024; 2025) explicitly parameterizes stochastic trajectories that continuously transform samples from noise distributions into clean graphs. Although
+these approaches yield high-quality unconditional samples,
+they define distributions implicitly via noisy intermediate
+states, lacking an explicit model directly on clean graphs.
+This implicit representation complicates the enforcement of
+user-specified properties or constraints, as guidance must
+operate on intermediate, often off-manifold states, where
+predictors and conditioning signals become less reliable.
+Energy-based models (EBMs) (Hinton, 2002; LeCun et al.,
+2006; Du & Mordatch, 2019) offer a complementary perspective that naturally addresses these limitations. EBMs
+explicitly represent the probability structure of the data distribution through a scalar energy function, enabling direct
+incorporation of constraints, priors, or property-based objectives at inference time without retraining (Du, 2025).
+For graph generation, EBMs offer particular advantages, as
+graph-structured constraints and domain-specific priors can
+be explicitly integrated into the energy function. Historically, however, EBMs have struggled with sample quality,
+
+1
+Anonymous Institution, Anonymous City, Anonymous Region,
+Anonymous Country. Correspondence to: Anonymous Author
+<anon.email@domain.com>.
+
+Preliminary work. Under review by the International Conference
+on Machine Learning (ICML). Do not distribute.
+
+1
+
+Graph Energy Matching
+
+055
+056
+057
+058
+059
+060
+061
+062
+063
+064
+065
+066
+067
+068
+069
+070
+071
+072
+073
+074
+075
+076
+077
+078
+079
+080
+081
+082
+083
+084
+085
+086
+087
+088
+089
+090
+091
+092
+093
+094
+095
+096
+097
+098
+099
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+
+2
+
+primarily due to poor sampling efficiency in discrete, combinatorial domains, as exemplified by existing methods such
+as GraphEBM (Liu et al., 2021). Consequently, discrete
+EBMs have predominantly served as scoring models for
+out-of-distribution detection rather than competitive generation (Wu et al., 2023; Fuchsgruber et al., 2024).
+
+Energy matching learns a scalar potential Vθ : X → R,
+parameterized by θ, on a continuous data space X . It simultaneously serves two complementary roles: (i) off-manifold
+guidance, directing samples toward the data manifold via
+the gradient field −∇x Vθ , and (ii) near-equilibrium refinement, characterizing the data distribution on the manifold
+as an EBM with Gibbs density ∝ exp(−Vθ (x)).
+
+Energy Matching (Balcerak et al., 2025) bridges these
+perspectives by building on the Jordan–Kinderlehrer–Otto
+(JKO) formulation (Jordan et al., 1998) and its first-order optimality perspective (Terpin et al., 2024; Lanzetti et al., 2024;
+2025), explicitly coupling transport toward the data distribution with refinement through an explicitly time-indexed
+sequence of sampling steps. In these continuous formulations, dynamics typically follow ordinary differential equations (ODEs) or stochastic differential equations (SDEs),
+guided by a learned scalar potential that defines both the
+transport direction and refinement by capturing a Boltzmannlike probability structure around the data. This regularizes
+energies off-support while retaining the compositional advantages of EBMs.
+
+These roles separate model learning into a global transportalignment and a local density-refinement term. A simple
+time-dependent temperature schedule to switch between
+these regimes, e.g., ϵ(t) = 0 for 0 ≤ t < 1 (transport) and
+ϵ(t) = 1 for t ≥ 1 (mixing), (i) injects exploration, (ii)
+mitigates mode collapse, and (iii) stabilizes sampling from
+the Gibbs distribution ∝ exp(−Vθ (x)).
+Energy Matching can be understood through an
+optimization-in-probability-spaces perspective, expressed
+via the JKO scheme from density ρt to ρt+∆t :
+1
+inf E(x,y)∼γ [ c(x, y) ]
+ρt+∆t = arg min
+ρ
+2∆t γ∈Γ(ρt ,ρ)
+Z
++
+Vθ (y) ρ(y) dy
+Z
++ ϵ(t) ρ(y) log ρ(y) dy,
+(2.1)
+
+However, continuous-space formulations like Energy Matching rely on explicitly time-indexed dynamics defined in ambient continuous spaces, which do not naturally extend to
+discrete domains where generation proceeds via local jumps.
+This highlights the need for a new framework enabling highquality graph generation while explicitly capturing the relative likelihood structure, thus recovering the compositional
+and constraint-handling advantages of energy-based models.
+
+where the cost function c(x, y) measures the amount of displacement when transporting mass from x to y, and constitutes a design choice, which in continuous spaces is typically
+chosen as c(x, y) = ∥x − y∥2 .
+
+Contributions. We introduce Graph Energy Matching (GEM)a , a state-of-the-art discrete energy-based
+generative model for graphs whose generation quality matches or exceeds leading discrete diffusion approaches. By explicitly defining a Gibbs distribution over graphs, GEM captures the relative likelihood structure of the graph space, naturally supports
+inference-time compositional constraints, and enables
+computation of graph geodesics as minimum-energy
+edit paths aligned with the learned data geometry implicitly encoded in the potential.
+
+The coupling γ ∈ Γ(ρ, ρt ) is a joint distribution that characterizes a transport plan. Intuitively, γ(x, y) encodes “how
+much mass from each location x ∼ ρt is transported to each
+new location y ∼ ρ”, thus determining the optimal reassignment of mass that minimizes the expected transportation
+cost E(x,y)∼γ [ c(x, y) ].
+Off-manifold transport guidance. Based on first-order
+optimality conditions in Wasserstein space (Lanzetti et al.,
+2024; 2025) applied to the functional in eq. (2.1), Energy
+Matching defines two clear learning objectives. Given
+tractably coupled pairs (x, y) ∼ γ (e.g., obtained via minibatch matching rather than solving for the globally optimal
+coupling), we associate x0 with the noise/source distribution (ρ0 ) and x1 with the data/target distribution (ρdata ).
+Intermediate points are sampled as xt = (1 − t)x0 + tx1
+for t ∼ U ([0, 1]). Defining the empirical transport direction
+v = x1 − x0 , the Vθ is trained via a flow-like objective:
+
+
+LFlow (θ) = E(x,y)∼γ, t∼U ([0,1]) ∥∇xt Vθ (xt ) + v∥2 .
+(2.2)
+
+To achieve this, GEM trains a permutation-invariant,
+time-independent scalar field. Unlike discrete diffusion or continuous energy matching methods, GEM’s
+sampling dynamics are free of externally imposed indexing; transitions between transport and local likelihood refinement. Specifically, we introduce a discrete
+transport-aligned transition kernels to rapidly move
+towards high-probability regions and subsequently explore them with efficient local graph edits informed
+by the learned data geometry and guided by Metropolis–Hastings (MH) acceptance.
+a
+
+Preliminaries: Energy Matching and JKO
+
+Near-equilibrium energy refinement. At equilibrium (t →
+∞ in Eq. (2.1) and in the mixing regime ϵ(t) = 1), the
+
+Code will be released upon acceptance.
+
+2
+
+Graph Energy Matching
+
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+
+Probability Distributions Perspective:
+Transport Phase
+
+Mixing Phase
+
+mean
+samples far from data manifold: Vθ (x) ≫ Vdata
+
+mean
+samples near data manifold: Vθ (x) ∼ Vdata
+
+π0
+
+π1
+
+...
+
+πk
+
+...
+
+πdata
+
+=
+
+πθ
+
+multi-site, local, geometry-aware, ∇x Vθ (x)-informed jumps
++ MH acceptance
+
+greedy discrete proposals on samples
+(direction −∇x Vθ (x) ↔ transport map direction)
+
+Samples Perspective:
+
+Figure 1. GEM Sampling Overview. Two perspectives on GEM sampling: a probability-distribution view (top) of the two-phase MCMC
+process, and a samples view (bottom) showing molecular trajectories from MOSES. Sampling alternates between a transport phase,
+where gradient-informed, greedy proposals rapidly move samples toward regions of high probability, and a mixing phase employing MH
+acceptance to ensure correct stationary distribution and efficient mixing between modes. Color key: transport (orange), MH (blue).
+
+stationary distribution induced by Vθ is given by:
+ρt→∞ (x) ∝ exp(−Vθ (x)).
+
+the vicinity of high-probability regions. Our formulation
+employs an energy-based switching mechanism that clearly
+separates transport and mixing sampling regimes without
+requiring explicit indexing of time or noise levels. Sampling
+is efficiently facilitated through deterministic greedy proposals in the transport regime or stochastic gradient-informed
+proposals during mixing. Further, we propose an annealing
+strategy to efficiently generate novel samples from optionally given data samples via incremental edits. The sampler
+uses a temperature ϵ to control stochasticity: the transport
+regime is the deterministic ϵ → 0 limit, while the mixing
+regime uses ϵ > 0.
+
+(2.3)
+
+Refinement of the equilibrium density is achieved using the
+contrastive loss (CL) (see Appendix K):
+LCL (θ) = Ex+ ∼ρdata [Vθ (x+ )] − Ex− ∼sg(ρt→∞ ) [Vθ (x− )],
+(2.4)
+where negative samples x− are generated via Langevin dynamics initialized either from the source or from data, with
+gradients stopped (sg) during sampling. Training begins
+with an initial warm-up phase using only LFlow , followed
+by joint optimization of:
+L(θ) = LFlow (θ) + λCL LCL (θ).
+
+Graph representation: We consider a discrete state space
+n
+(n)
+X := Xnode × Xedge 2 to represent undirected
+graphs. A graph x ∈ X contains a set of n nodes
+V = {1, . . . , n} and edges E defining the connectivity between these nodes. Each node i ∈ V has a node class
+xi ∈ Xnode (e.g. an atom type), and each edge (i, j) ∈ E
+has an edge class xij ∈ Xedge (e.g. a bond type). The edge
+space Xedge includes an element indicating
+the absence of
+
+an edge. The graph x := xV , xE consists of xV and xE
+denoting categorical node and edge features, respectively,
+and are defined as
+(n)
+xV := [xi ]ni=1 ∈ (Xnode )n ; xE := [xij ]i<j ∈ Xedge 2
+
+(2.5)
+
+Sampling (two regimes). Sampling starts from a transportaligned drift and switches to refinement via an effective
+temperature ϵ(t). In continuous time, this corresponds to
+the time-inhomogeneous SDE
+p
+dxt = −∇xt Vθ (xt ) dt + 2 ϵ(t) dWt ,
+(2.6)
+which reduces to an ODE when ϵ(t) = 0 and becomes
+stochastic as ϵ(t) → 1. In practice, sampling corresponds
+to explicitly integrating eq. (2.6) over a fixed time interval.
+
+3
+
+We embed the node and edge categorical feature vectors xV
+and xE using a real-valued one-hot encoding and treat them
+as continuous features via
+
+Graph Energy Matching
+
+We extend the continuous Energy Matching formulation
+to discrete graph spaces by introducing two novel discrete
+proposals: one enabling transport-aligned rapid movements
+across graph spaces, and the other facilitating mixing within
+
+ϕV : Xnode → Rlnode ;
+
+ϕE : Xedge → Rledge
+
+where lnode = |Xnode | and ledge = |Xedge | denote the numbers of node and edge classes, respectively. We denote the
+3
+
+Graph Energy Matching
+
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+
+real-valued node features x̂V ∈ Rnlnode and edge features
+n
+x̂E ∈ R( 2 )ledge , and the corresponding
+graph representation
+
+x̂ ∈ Rd , where d = nlnode + n2 ledge , as:
+x̂V := ⊕ni=1 ϕV (xi );
+
+x̂E := ⊕i<j ϕE (xij );
+
+Discrete, geometry-aware energy-based proposal (local edits)
+qmixing (x → y) ∝ exp −∥ŷV − x̂V ∥22 − ∥ŷE − x̂E ∥22
+
+−β L ∇Vθ (x̂)⊤ (ŷ − x̂)
+
+x̂ := x̂V ⊕x̂E .
+
+distance penalty
+isolines
+
+where ⊕ denotes the column-wise concatenation operation.
+
+σ∈Sn
+
+x̂
+
+Figure 2. Proposal Scoring. Local graph edit proposals with
+scoring given by qmixing (x → y). Dot area encodes proposal
+probabilities; alignment with the gradient direction increases probability, while distance penalties (with equal node/edge weights
+L
+λL
+V = λE = 1 for illustrative purposes) discourage larger edits. If
+the proposal stays at the origin, we resample to encourage exploration and reduce stagnation.
+
+(3.1)
+
+2024; Tong et al., 2024)) and its induced transport map
+Tk , we assume a consistent embedding-based representation y = Tk (x) ⇐⇒ ŷ = T˜k (x̂), with x ∼ πk and
+y = Tk (x) ∼ πk+1 denoting consecutive graph states along
+the transport, and T˜k a continuous map realizing Tk in the
+embedded space. Expressing the JKO variational objective
+from Equation (2.1) as an optimization over transport maps
+(see Section B for derivation) and substituting the time-step
+parameter ∆t with the jump step-size η yields:
+
+
+1
+Tk (x) ∈ arg min
+c(x, y) + Vθ (y) ,
+(3.3)
+y∈X
+2η
+
+(3.2)
+
+In practice, we predominantly use the local cost cloc , as it
+provides a valid and efficient measure for scoring pairs of
+neighboring graphs, e.g. when evaluating displacements induced by local jump proposals. When permutation-invariant
+comparisons between non-local graph pairs are required, we
+instead employ the cFGW cost. Since exact computation
+is intractable, we rely on fast approximations: histogram
+matching for noisy–clean molecule pairings and node matching for molecule–molecule pairings (Appendix C).
+
+where πk+1 = Tk# πk denotes the pushforward of πk .
+Assuming the minimizer Tk (x) lies in the interior, the firstorder optimality condition becomes
+
+
+1
+,
+(3.4)
+0 = ∇ŷ
+c̃(x̂, ŷ) + Ṽθ (ŷ)
+2η
+ŷ=T˜k (x̂)
+
+Learnable Components. The primary learnable component
+of our framework is the scalar energy potential Vθ (x), implemented via a neural network parameterization. While we
+evaluate Vθ exclusively on discrete graphs x ∈ X , we leverage the continuous embedding representation x̂ to enable
+gradient-based computations. Specifically, the differentiability of Vθ (x) := Ṽθ (x̂) with respect to x̂ allows us to
+compute gradients that directly inform and guide local jump
+proposals used by the sampler (see Sections 3.1 and 3.2).
+Thus, the continuous embedding bridges the discrete graph
+domain with gradient-based optimization.
+3.1
+
+dot area ∝ qmixing (x → y)
+stay
+
+with λV , λE > 0 scaling node and edge contributions. To
+compare graphs in a permutation-invariant way, we lift the
+local cost by optimizing over node relabelings to obtain
+the Fused Gromov–Wasserstein (FGW) cost (Vayer et al.,
+2019):
+cFGW (x, y) = min {cloc (x, σ · y)} .
+
+−∇x̂ Vθ (x̂)
+
+2 edits
+1 edit
+
+Local and Permutation-Invariant Cost: We measure local
+discrepancies using the embedding-space cost c(x, y) :=
+c̃(x̂, ŷ), which is differentiable in both arguments. The
+potential Vθ is permutation-invariant by construction (Appendix A), so the learned energy landscape used for pairing should also respect node relabelings. Here, σ ∈ Sn
+acts on node indices and induces a relabeling of the graph:
+(σ · x)i = xσ(i) and (σ · x)ij = xσ(i)σ(j) . To obtain a
+permutation-invariant matching, we first define a local cost
+(cloc ) as:
+cloc (x, y) = λV ∥x̂V − ŷV ∥22 + λE ∥x̂E − ŷE ∥22 ,
+
+3 edits
+
+which implies
+
+
+
+
+1
+∇ŷ Ṽθ T̃k (x̂) = − ∇ŷ c̃ x̂, T̃k (x̂) .
+2η
+
+(3.5)
+
+This optimality condition characterizes the solution and can
+therefore serve directly as the training objective, as detailed
+in Section 3.4.
+During sampling, given a trained potential Vθ that satisfies
+the optimality objective (3.5), our goal is to approximately
+solve (3.3) using a local proposal mechanism. Instead of performing one-shot global moves, we iteratively descend the
+potential by making local edits, enabling a Taylor expansion
+of Vθ (y) around the current state x. Rather than controlling
+the step-size parameter η, we simplify the (local) greedy
+proposal by restricting the kernel to exactly N edits per
+
+Discrete Transport-Aligned Proposal (ϵ → 0)
+
+Let (πk )K
+k=0 denote intermediate distributions along a discrete transport path from an initial noise distribution to the
+data distribution. Given an optimal coupling γk (approximated in practice by tractable methods, e.g., (Albergo et al.,
+4
+
+Graph Energy Matching
+
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+
+jump. For this proposal, we employ the local cost cloc (x, y)
+with distinct weights λV and λE (Eq. 3.1); consequently, the
+transition cost varies depending on the specific edits in a
+candidate move.
+
+In practice, the qmixing proposal is combined with a MH
+acceptance step, ensuring convergence to the target distribution πθ (x) ∝ exp(−βmh Vθ (x)).
+L
+We calibrate the parameters βmh , β L , λL
+V , and λE by maximizing the relative likelihood of generated samples compared to the training dataset samples under the learned energy Vθ , directly after the warmup training phase described
+in Section 3.4.
+
+⊤
+
+Linearizing Vθ (y) ≈ Vθ (x)+∆x̂ ∇x̂ Vθ (x̂) around x̂, with
+∆x̂ = ŷ − x̂, we deterministically select the candidate that
+minimizes the sum of the potential change and the transport
+cost. Formally, the candidate set CN (x) is defined as the set
+of all edits achievable by exactly N discrete modifications
+(changing/removing edges or changing nodes) starting from
+state x. The greedy proposal is thus given by:
+
+In the mixing regime, we accept the stochastic proposal with
+MH probability:
+
+
+πθ (y) qmixing (y → x)
+
+∗
+⊤
+α(x, y) = min 1,
+.
+(3.11)
+y (x) = x + arg min ∆x̂ ∇x̂ Vθ (x̂) + cloc (x, x + ∆x) ,
+πθ (x) qmixing (x → y)
+∆x∈CN (x)
+(3.6)
+qgreedy (x → y) = δy∗ (x) (y).
+
+This choice enforces detailed balance:
+
+(3.7)
+
+πθ (x) qmixing (x → y) α(x, y) =
+
+In the transport regime, proposed moves are deterministically projected onto directions associated with strictly negative gradients, aiming for a decrease in energy. Edits not
+meeting this criterion are rejected. If no candidate yields a
+negative gradient, the greedy sampler stalls, switching to the
+Langevin-based proposal qmixing in Section 3.2. For further
+implementation details, see Section D.
+
+πθ (y) qmixing (y → x) α(y, x)
+
+(3.12)
+
+so πθ is stationary for the mixing dynamics (Metropolis
+et al., 1953; Hastings, 1970). Implementation details of the
+proposal kernel (factorized logits, temperature annealing,
+and do-nothing resampling) are provided in Section D.
+3.3
+
+Initializations and Proposal Schedules
+
+Discrete Mixing Proposal (ϵ > 0)
+
+Determining the Regime. We control the regime through
+an energy-based binary indicator s ∈ {0, 1}: s = 0 selects
+Discretizing the dynamics (Equation (2.6)) in the embedding
+transport (deterministic ϵ → 0 limit), while s = 1 selects
+space with temperature ϵ, step size η, and graphs x, y ∈ X
+mixing (finite ϵ > 0). If initialized at noise, the sampler
+yields:
+follows deterministic greedy edits guided strictly by nega
+
+tive gradient directions. Transition from transport to mixing
+1
+qmixing (x → y) ∝ exp −
+∥ŷ − x̂ + η∇Vθ (x̂)∥2 .
+occurs when the Markov chain either reaches the target
+4ϵη
+energy (defined as the mean data energy estimated during
+(3.8)
+training) or becomes trapped in a local minimum—no valid
+Expanding explicitly and dropping terms independent of ŷ:
+gradient-improving edits exist—for all samples, whichever
+1
+1
+happens first. Once triggered, the sampler enters the stochaslog qmixing (x → y) = −
+∥ŷ − x̂∥2 − ∇Vθ (x̂)⊤ (ŷ − x̂)
+tic Langevin-based mixing regime. More about proposal
+4ϵη
+2ϵ
+schedules in Section 3.3.
++ const.
+(3.9)
+3.2
+
+Sample Initialization. We use two initialization regimes
+with aligned proposal schedules:
+
+The proposal is effectively local due to the distance penalty,
+though, in principle, it can still propose an arbitrary number
+of edits, allowing mode escape. We define Langevin-specific
+L
+L
+parameters (λL
+V , λE , β ) by absorbing all constants, including ϵ, η, scaling terms λV , λE from cloc , and numerical
+factors:
+
+• Noise initialization: sample the node count from the
+empirical histogram, then draw node/edge types uniformly
+(uniform noise) or from empirical marginals (marginal
+noise). These start far from the data distribution, so we run
+transport with greedy proposals qgreedy until the energyqmixing (x → y) ∝
+(3.10)
+based switch (see Section 3.3), then enter mixing with the
+
+2
+L
+2
+L
+⊤
+exp −λL
+V ∥ŷV − x̂V ∥2 − λE ∥ŷE − x̂E ∥2 − β ∇Vθ (x̂) (ŷ − x̂) .proposal qmixing .
+• Data initialization: draw graphs from the training set.
+We skip the transport phase and start directly in the mixing
+regime with qmixing , initially using a higher model temperature (lower βmh ) to increase the acceptance rate, and
+then annealing (raising βmh ) before fixed-temperature
+mixing (Appendix D).
+
+The resulting kernel can be viewed as a linearized locally
+balanced proposal (Zanella, 2020); related discrete-gradient
+samplers appear in (Grathwohl et al., 2021; Zhang et al.,
+2022) for particular costs or candidate sets. Figure 2 illustrates the resulting geometry-aware proposal scoring and
+how gradient alignment competes with distance penalties.
+5
+
+Graph Energy Matching
+
+therefore treat the sampled node ordering of x0 as implicitly
+aligned with the paired xdata via the identity permutation.
+This approach is compatible with our architecture because
+Vθ is permutation-invariant by construction (Appendix A),
+ensuring the learned energy landscape is independent of the
+specific stochastic node labeling. Denote their embeddings
+by x̂0 and x̂data . Define the displacement in the embedding
+space as v = x̂data − x̂0 . We sample a discrete interpolant
+xt := (xtV , xtE ), where xtV := [xti ]ni=1 and xtE := [xtij ]i<j
+by independently sampling each node and edge from the
+endpoint graphs.
+
+
+
+xti ∼ Cat (1 − t) ϕV x0i + t ϕV xdata
+(3.13)
+i
+
+
+
+
+xtij ∼ Cat (1 − t) ϕE x0ij + t ϕE xdata
+(3.14)
+ij
+
+All initializations start near-zero valid-unique-novel
+(V.U.N.). Figure 3 summarizes the resulting energy trajectories under noise vs. data initialization and the corresponding
+proposal regimes.
+Energy Trajectories
+greedy proposals
+275
+
+Vθ (x)
+
+200
+
+noise band
+data band
+samples: noise initialized
+samples: data initialized
+
+100
+
+0
+
+annealed proposal, Sanneal
+
+fixed-temperature proposal
+
+-40
+0
+
+100
+
+200
+
+300
+
+400
+
+500
+
+Let x̂t be the continuous embedding of the discrete graph
+xt via ϕV , ϕE (Section 3). While this embedding resides
+in a continuous ambient space, training is conducted solely
+on discrete graphs x ∈ X , as both energy and sampling
+proposals are evaluated primarily through discrete jumps.
+The continuous embedding thus mainly facilitates gradient
+computation of ∇x̂t Vθ (x̂t ) to guide these discrete transitions.
+
+Validity & Novelty Trajectories
+1.00
+0.90
+0.75
+
+Fraction
+
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+
+0.50
+Validity (noise initialized)
+Novelty (noise initialized)
+0.25
+
+Objectives. We use the optimality condition derived in Section 3.1 to construct the Flow loss (LFlow ). We set the JKO
+step-size parameter η = 1. Consequently, the optimality
+condition ∇x V (x) = −∇x c(x, y) implies that the negative
+energy gradient should match the displacement vector v
+pointing toward the data. While the pairing is determined
+by global signatures, the local training objective minimizes
+the Euclidean cost (cloc ) along the linear interpolation path:
+
+
+LFlow (θ) = E(x0 ,xdata )∼γ̃, t∼U ([0,1]) ∥∇x̂t Vθ (x̂t ) + v∥22 ,
+(3.15)
+
+Validity (data initialized)
+Novelty (data initialized)
+
+0.00
+0
+
+100
+
+200
+
+300
+
+400
+
+500
+
+Inference MCMC steps
+Figure 3. Energy and Sampling Trajectories. Top: energy
+evolution for noise- vs. data-initialized chains, with mean ± 1 std
+bands and reference levels at Ex∼πdata [Vθ (x)] and Ex∼π0 [Vθ (x)].
+Noise-initialized chains use greedy proposals to reach the data
+manifold; data-initialized chains use annealing to recover novelty.
+Bottom: validity and novelty trajectories for data-initialized (teal)
+and noise-initialized (red) chains over inference Markov chain
+Monte Carlo (MCMC) steps. Uniqueness stays around 100%.
+
+LCL (θ) = Ex+ ∼πdata [Vθ (x̂+ )] − Ex− ∼sg πθ [Vθ (x̂− )].
+(3.16)
+
+3.4 Training objectives
+
+The loss LCL remains as defined in Equation (2.4), except
+that the sampling method employs the discrete proposals
+introduced in Section 3.2, rather than the continuous SDE
+from Equation (2.6). Note that we supervise the model
+solely at discrete graph candidates, as the proposals require
+evaluation of energies and gradients only at discrete graph
+states.
+
+Interpolation and Minibatch coupling. Given minibatches
+x0 ∼ π0 and xdata ∼ πdata , we match samples using
+a permutation-invariant approximation to the FGW-type
+graph cost c(x0 , xdata ) (Section 3 and Appendix C), obtaining a pairing map T induced by the minibatch coupling. Each source graph x0 is paired with a data graph
+xdata = T (x0 ). In all experiments involving our method,
+we initialize from a uniform noise distribution π0 , in contrast to diffusion-based baselines which typically utilize the
+marginal noise distribution.
+
+Relaxations of the transport objective near t = 1 are discussed in Appendix E. We minimize
+min LFlow (θ) + λCL LCL (θ).
+θ
+
+(3.17)
+
+We use a warm-up of Nwarmup iterations with only LFlow
+before turning on LCL , following the continuous formulation (Balcerak et al., 2025); the same intuition carries over to
+the discrete case by yielding better negatives. See Section H
+for specific hyperparameters.
+
+Crucially, we utilize cFGW solely to select optimal pairs
+based on global structural similarity (e.g., node and edge
+counts). Once paired, we rely on the isotropy of the uniform
+source: since the noise graph lacks intrinsic node ordering, any node permutation is statistically equivalent. We
+6
+
+Graph Energy Matching
+
+4
+
+(a) MOSES (∼1.5M molecules).
+
+Experiments
+Method
+
+We report unconditional generation on MOSES and QM9,
+conditional generation/property optimization on MOSES,
+and geodesic comparisons based on the learned potential. MOSES provides a larger-scale benchmark (∼1.5M
+molecules), demonstrating the scalability of GEM. QM9
+is a smaller, widely used benchmark where results are
+largely saturated and differences often stem from engineering choices rather than substantive distinctions between
+frameworks, with limited novelty due to memorization effects.
+
+FCD ↓
+
+0.0
+
+0.25
+
+8.12
+81.39
+82.21
+85.61
+
+9.83
+2.71
+1.93
+1.55
+
+32.16
+89.81
+
+7.31
+0.76
+
+Noise Initialization
+GraphEBM∗ (Liu et al., 2021)
+VFM∗ (Eijkelboom et al., 2024)
+DeFoG∗ (Qin et al., 2025)
+GEM (Ours)
+Data Initialization
+GraphEBM∗ (Liu et al., 2021)
+GEM (Ours)
+
+(b) QM9 (∼0.15M molecules).
+Method
+
+V.U. ↑
+
+Novelty ↑
+
+FCD ↓
+
+Training samples (QM9)
+
+100
+
+0
+
+0.04
+
+12.11
+99.81
+96.81
+97.11
+
+0.65
+0.49
+0.36
+0.63
+
+7.16
+0.44
+0.81
+0.92
+
+21.53
+98.51
+
+0.48
+0.51
+
+5.15
+0.31
+
+Noise Initialization
+GraphEBM* (Liu et al., 2021)
+VFM (Eijkelboom et al., 2024)
+DeFoG (Qin et al., 2025)
+GEM (Ours)
+
+A concise conceptual summary of the baselines used in our
+experiments is provided in Appendix G, and the experimental setup is detailed in Appendix H.
+
+Data Initialization
+GraphEBM∗ (Liu et al., 2021)
+GEM (Ours)
+
+Unconditional generation
+
+Table 1. Unconditional Generation. Results grouped by initialization. MOSES reports V.U.N. and FCD (lower is better); QM9
+reports valid-unique (V.U.), novelty, and FCD. ∗ reproduced with
+the same backbone as DeFoG (Qin et al., 2025); EBMs use a small
+energy head. Architecture details are in Appendix A. MOSES: 25k
+generations, 1000 inference steps. QM9: 10k generations, 500
+inference steps.
+
+MOSES. Table 1 (top) reports MOSES results. Across both
+noise and data initialization, GEM outperforms baselines
+in terms of V.U.N. and FCD. Figures 4 and 3 contrast performance versus inference steps and initialization strategies,
+respectively. At larger inference budgets, GEM substantially surpasses diffusion, yielding notably higher V.U.N.
+and improved distributional fidelity (lower FCD); see Figure 4. Thus, GEM demonstrates a clear advantage under
+extended computation, consistently providing superior sample quality.
+
+QM9. Table 1 (bottom) shows QM9 results. GEM is comparable to state-of-the-art diffusion methods under noise
+initialization and vastly outperforms the previous graphEBM approach, despite reproducing it using an identical
+architecture (Appendix A). Under data initialization, GEM
+achieves the strongest overall performance.
+
+Performance vs Inference Steps
+1.00
+
+V.U.N. ↑
+
+Training samples (MOSES)
+
+For all experiments, we report V.U.N. (higher is better) and
+Fréchet ChemNet Distance (FCD) (lower is better), considering two initialization regimes: noise initialization, where
+generation starts from easy-to-sample noise and must reach
+chemically valid molecules; and data initialization, applicable only to EBMs, which starts from training molecules and
+must produce novel molecules through edits.
+
+8
+
+Conditional generation
+GEM (noise init.) V.U.N.
+GEM (data init.) V.U.N.
+DeFoG V.U.N.
+GEM (noise init.) FCD
+GEM (data init.) FCD
+DeFoG FCD
+
+0.50
+
+0.25
+
+6
+
+4
+
+We conduct property optimization with regards to a diverse
+set of properties including the logarithm of lipophilicity
+(logP), the logarithm of aqueous solubility (logS), quantitative estimate of drug-likeness (QED), topological polar
+surface area (TPSA). For comparability, we follow (Vignac
+et al., 2023; Ninniri et al., 2025): we train a GraphTransformer regressor fϕ for differentiable guidance and define
+Vθcond (x) = Vθ (x) + λprop ∥fϕ (x) − y ⋆ ∥2 , then run the
+same proposal kernel qθ (x → y) using −∇x Vθcond (x), with
+the MH acceptance ratio modified accordingly. The above
+scheme can also be modified to accommodate a time- or
+noise-conditioned property regressor. For fairness, all methods reported in Table 2 use noise-conditioned regressors
+(the GEM clean-regressor ablations are provided in Sec-
+
+FCD
+
+0.90
+0.85
+0.80
+
+V.U.N.
+
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+
+2
+
+0.0
+0
+
+500
+
+1000
+
+0
+1500
+
+inference steps
+Figure 4. V.U.N. and FCD vs Steps. V.U.N. (higher is better) and
+FCD (lower is better) versus inference steps on MOSES for GEM
+noise initialization (uniform) with greedy warmup proposal, GEM
+data initialization with annealed proposal, and DeFoG (marginal
+noise).
+
+7
+
+Graph Energy Matching
+MOSES (∼1.5M molecules)
+Method
+Training samples (MOSES)
+
+Condition: logS ≥ -2.25 Condition: QED ≥ 0.9 Condition: TPSA ≤ 50 Condition: logP ≤ 1.5
+C.V.U.N. ↑
+
+C.V.U. ↑
+
+C.V.U.N. ↑ C.V.U. ↑ C.V.U.N. ↑
+
+0
+
+0.24
+
+0
+
+0.16
+
+0
+
+0.21
+
+0
+
+0.15
+
+C.V.U. ↑
+
+C.V.U.N. ↑ C.V.U. ↑
+
+0.72
+0.74
+0.80
+
+0.75
+0.79
+0.81
+
+0.26
+0.26
+0.40
+
+0.28
+0.31
+0.40
+
+0.72
+0.77
+0.80
+
+0.80
+0.82
+0.81
+
+0.70
+0.78
+0.85
+
+0.74
+0.82
+0.85
+
+Noise Initialization
+G-VFM∗ (Eijkelboom et al., 2025)
+DeFoG∗ (Qin et al., 2025)
+GEM (Ours)
+
+Table 2. Property Conditioning. MOSES conditional generation under property constraints. conditional valid-unique-novel (C.V.U.N.)
+is the fraction meeting the condition and valid, unique, novel simultaneously; conditional valid-unique (C.V.U.) is the fraction meeting the
+condition and valid, unique. 1k inference steps. Evaluated on 4k samples.∗ reproduced, same architecture (other than a small energy-head
+for GEM section A).
+GEM energy-weighted geodesic:
+Molecule B
+
+Molecule A
+
+Cost-only geodesic:
+Molecule B
+
+Molecule A
+
+Figure 5. GEM Energy-Weighted vs Cost-Only Geodesics. Molecule trajectories along continuous geodesic paths for MOSES. Top
+row: GEM energy-weighted geodesic; bottom row: cost-only geodesic. Boxes indicate samples along the continuous path. All molecules
+proposed by GEM are valid, whereas cost-only molecules are invalid or fragmented.
+
+tion I, Figure 8, and Table 4). We feed regressor time
+using an energy-based proxy that increases linearly until the
+chain reaches the data distribution, after which it is clamped
+to t = 1 ( Section I). Noise-conditioned regressors provide more reliable predictions on noisy or invalid graphs.
+The target molecular property constraints (logS ≥ -2.25,
+logP ≤ 1.5, QED ≥ 0.9, TPSA ≤ 50) are selected such
+that unconditional MOSES samples satisfy each constraint
+approximately 20% of the time, ensuring comparable difficulty across properties. Table 2 reports the results: GEM
+maintains strong validity, uniqueness, and novelty while
+improving constraint satisfaction relative to baselines.
+
+avg. validity (%)
+
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+
+GEM energy-weighted geodesic
+cost-only geodesic
+
+75
+50
+25
+0
+9
+
+12
+
+16
+
+distance (node-matching, cFGW )
+Figure 6. Validity Along Geodesics. Average chemical validity (%) vs. distance (node-matching, cFGW ) for GEM energyweighted versus cost-only geodesics.
+
+Geodesic Analysis Energy-based models have been used to
+study shortest paths in high-dimensional spaces (Béthune
+et al., 2025). Here, we compute geodesics, minimum-energy
+paths through graph edits aligned with the learned data geometry, between molecules and compare against a linear
+interpolation baseline (cost-only). We plot average validity
+versus the endpoint distance induced by the node-matching
+approximation to the cost cFGW ( Section C), see Figure 6.
+Qualitative paths are shown in Figure 5. Energy-weighted
+geodesics consistently preserve validity compared to cost-
+
+only geodesics, confirming that the learned energy encodes
+chemically meaningful geometry. Experimental details, including pairing, optimization, and discretization, are provided in Section J.
+
+5
+
+Conclusion
+
+We introduced Graph Energy Matching (GEM), a framework motivated by the map-optimization perspective of
+8
+
+Graph Energy Matching
+
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451
+452
+453
+454
+455
+456
+457
+458
+459
+460
+461
+462
+463
+464
+465
+466
+467
+468
+469
+470
+471
+472
+473
+474
+475
+476
+477
+478
+479
+480
+481
+482
+483
+484
+485
+486
+487
+488
+489
+490
+491
+492
+493
+494
+
+the JKO scheme, extending continuous energy matching
+principles to discrete graph spaces. GEM integrates deterministic, transport-aligned graph edits guiding sampling
+toward high-probability regions, with principled MCMC
+mixing under a unified, scalar energy model, bridging graph
+generation and discrete energy-based modeling. This design provides two practical advantages: (i) scalable, highquality unconditional molecular generation from both noiseinitialized and data-driven (editing) initializations, and (ii)
+flexible inference-time conditional generation together with
+a learned relative-likelihood structure, enabling downstream
+tasks such as geodesic interpolation. Empirically, GEM is
+on pair or better against strong diffusion/continuous-time
+Markov chain (CTMC) baselines on MOSES and QM9, and
+it performs effective property optimization under threshold
+constraints. Beyond generation quality, GEM exposes an
+explicit energy landscape that can be utilized for relative
+likelihood comparisons and geodesic analyses, providing
+a complementary diagnostic view of model support and
+controllability in learned molecular space.
+Limitations: Broadly, EBMs for generation rely on
+gradient-based velocity parameterization, which typically
+requires both forward and backward passes per step and
+implies an inherent ∼2–3× theoretical slowdown relative
+to purely forward samplers. While gradient-based guidance
+and multi-step sampling introduce additional compute relative to purely forward generators, GEM offers a flexible and
+analyzable foundation for controllable graph generation.
+Future Directions: A promising extension is 3D molecular generation: GEM can retain a strong graph prior while
+adding geometric energies such as distance or torsion constraints at inference time. Additionally, GEM’s explicit
+energy landscape offers a valuable diagnostics toolkit: by
+comparing energy profiles across datasets, one can directly
+quantify generalization to unseen distributions or flag outof-distribution regions.
+
+9
+
+Graph Energy Matching
+
+495
+496
+497
+498
+499
+500
+501
+502
+503
+504
+505
+506
+507
+508
+509
+510
+511
+512
+513
+514
+515
+516
+517
+518
+519
+520
+521
+522
+523
+524
+525
+526
+527
+528
+529
+530
+531
+532
+533
+534
+535
+536
+537
+538
+539
+540
+541
+542
+543
+544
+545
+546
+547
+548
+549
+
+References
+
+Hastings, W. K. Monte carlo sampling methods using
+markov chains and their applications. Biometrika, 57
+(1):97–109, 1970. doi: 10.1093/biomet/57.1.97.
+
+Albergo, M. S., Goldstein, M., Boffi, N. M., Ranganath,
+R., and Vanden-Eijnden, E. Stochastic interpolants with
+data-dependent couplings. In International Conference
+on Machine Learning, pp. 921–937. PMLR, 2024.
+
+Hinton, G. E. Training products of experts by minimizing
+contrastive divergence. Neural computation, 14(8):1771–
+1800, 2002.
+
+Balcerak, M., Amiranashvili, T., Terpin, A., Shit, S., Bogensperger, L., Kaltenbach, S., Koumoutsakos, P., and
+Menze, B. Energy matching: Unifying flow matching
+and energy-based models for generative modeling. arXiv
+preprint arXiv:2504.10612, 2025.
+
+Jin, W., Barzilay, R., and Jaakkola, T. Junction tree variational autoencoder for molecular graph generation. In
+International conference on machine learning, pp. 2323–
+2332. PMLR, 2018.
+Jordan, R., Kinderlehrer, D., and Otto, F. The variational
+formulation of the fokker–planck equation. SIAM Journal
+on Mathematical Analysis, 29(1):1–17, 1998.
+
+Bell, E. W. and Zhang, Y. Dockrmsd: an open-source
+tool for atom mapping and rmsd calculation of symmetric molecules through graph isomorphism. Journal
+of Cheminformatics, 11(1):1–9, 2019. doi: 10.1186/
+s13321-019-0362-7.
+
+Kingma, D. P. and Ba, J. Adam: A method for stochastic
+optimization. arXiv preprint arXiv:1412.6980, 2014.
+Lanzetti, N., Terpin, A., and Dörfler, F. Variational
+analysis in the wasserstein space. arXiv preprint
+arXiv:2406.10676, 2024.
+
+Béthune, L., Vigouroux, D., Du, Y., VanRullen, R., Serre, T.,
+and Boutin, V. Follow the energy, find the path: Riemannian metrics from energy-based models. arXiv preprint
+arXiv:2505.18230, 2025. NeurIPS 2025.
+
+Lanzetti, N., Bolognani, S., and Dörfler, F. First-order conditions for optimization in the wasserstein space. SIAM
+Journal on Mathematics of Data Science, 7(1):274–300,
+2025.
+
+Campbell, A., Yim, J., Barzilay, R., Rainforth, T., and
+Jaakkola, T. Generative flows on discrete state-spaces: Enabling multimodal flows with applications to protein codesign. In International Conference on Machine Learning
+(ICML), 2024.
+
+LeCun, Y., Chopra, S., Hadsell, R., Ranzato, M., and Huang,
+F. A tutorial on energy-based learning. Predicting Structured Data, 1(0), 2006.
+
+Du, Y. Learning Generalizable Systems by Learning Composable Energy Landscapes. PhD thesis, Massachusetts
+Institute of Technology, 2025.
+
+Liu, M., Yan, K., Oztekin, B., and Ji, S. Graphebm: Molecular graph generation with energy-based models, 2021.
+arXiv preprint.
+
+Du, Y. and Mordatch, I. Implicit generation and generalization in energy-based models, 2019. arXiv preprint.
+
+Metropolis, N., Rosenbluth, A. W., Rosenbluth, M. N.,
+Teller, A. H., and Teller, E. Equation of state calculations by fast computing machines. The Journal
+of Chemical Physics, 21(6):1087–1092, 1953. doi:
+10.1063/1.1699114.
+
+Eijkelboom, F., Bartosh, G., Naesseth, C. A., Welling, M.,
+and van de Meent, J.-W. Variational flow matching for
+graph generation. In Advances in Neural Information
+Processing Systems (NeurIPS), volume 37, 2024.
+
+Ninniri, M., Podda, M., and Bacciu, D. Graph diffusion that
+can insert and delete. In Advances in Neural Information
+Processing Systems, 2025. NeurIPS 2025.
+
+Eijkelboom, F., Zimmermann, H., Vadgama, S., Bekkers,
+E. J., Welling, M., Naesseth, C. A., and van de Meent,
+J.-W. Controlled generation with equivariant variational
+flow matching, 2025.
+
+Noé, F., Tkatchenko, A., Müller, K.-R., and Clementi, C.
+Machine learning for molecular simulation. Annual review of physical chemistry, 71(1):361–390, 2020.
+
+Fuchsgruber, D., Wollschläger, T., and Günnemann, S.
+Energy-based epistemic uncertainty for graph neural networks. Advances in Neural Information Processing Systems, 2024.
+
+Polishchuk, P. G., Madzhidov, T. I., and Varnek, A. Estimation of the size of drug-like chemical space based
+on gdb-17 data. Journal of computer-aided molecular
+design, 27(8):675–679, 2013.
+
+Grathwohl, W., Swersky, K., Hashemi, M., Duvenaud, D.,
+and Maddison, C. Oops i took a gradient: Scalable sampling for discrete distributions. In International Conference on Machine Learning, pp. 3831–3841. PMLR,
+2021.
+
+Qin, Y., Madeira, M., Thanou, D., and Frossard, P. Defog: Discrete flow matching for graph generation. In
+International Conference on Machine Learning (ICML),
+2025.
+10
+
+Graph Energy Matching
+
+550
+551
+552
+553
+554
+555
+556
+557
+558
+559
+560
+561
+562
+563
+564
+565
+566
+567
+568
+569
+570
+571
+572
+573
+574
+575
+576
+577
+578
+579
+580
+581
+582
+583
+584
+585
+586
+587
+588
+589
+590
+591
+592
+593
+594
+595
+596
+597
+598
+599
+600
+601
+602
+603
+604
+
+Stokes, J. M., Yang, K., Swanson, K., Jin, W., CubillosRuiz, A., Donghia, N. M., MacNair, C. R., French, S.,
+Carfrae, L. A., Bloom-Ackermann, Z., et al. A deep
+learning approach to antibiotic discovery. Cell, 180(4):
+688–702, 2020.
+Terpin, A., Lanzetti, N., Gadea, M., and Dörfler, F. Learning
+diffusion at lightspeed. Advances in Neural Information
+Processing Systems, 2024.
+Tong, A., Fatras, K., Malkin, N., Huguet, G., Zhang, Y.,
+Rector-Brooks, J., Wolf, G., and Bengio, Y. Improving and generalizing flow-based generative models with
+minibatch optimal transport. Transactions on Machine
+Learning Research, 2024.
+Vayer, T., Chapel, L., Flamary, R., Tavenard, R., and Courty,
+N. Optimal transport for structured data with application on graphs. In International Conference on Machine
+Learning, pp. 6275–6284. PMLR, 2019.
+Vignac, C., Krawczuk, I., Siraudin, A., Wang, B., Cevher,
+V., and Frossard, P. Digress: Discrete denoising diffusion
+for graph generation. In International Conference on
+Learning Representations (ICLR), 2023.
+Wang, R. and Du, Y. Equilibrium matching: Generative modeling with implicit energy-based models. arXiv
+preprint arXiv:2510.02300, 2025.
+Wu, Q., Chen, Y., Yang, C., and Yan, J. Energy-based
+out-of-distribution detection for graph neural networks.
+International Conference on Learning Representations
+(ICLR), 2023.
+Xie, T., Fu, X., Ganea, O.-E., Barzilay, R., and Jaakkola,
+T. S. Crystal diffusion variational autoencoder for periodic material generation. In International Conference on
+Learning Representations, 2022.
+Zanella, G. Informed proposals for local mcmc in discrete
+spaces. Journal of the American Statistical Association,
+115(530):852–865, 2020.
+Zhang, R., Liu, X., and Liu, Q. A langevin-like sampler
+for discrete distributions. In International Conference on
+Machine Learning, pp. 26375–26396. PMLR, 2022.
+
+11
+
+Graph Energy Matching
+
+605
+606
+607
+608
+609
+610
+611
+612
+613
+614
+615
+616
+617
+618
+619
+620
+621
+622
+623
+624
+625
+626
+627
+628
+629
+630
+631
+632
+633
+634
+635
+636
+637
+638
+639
+640
+641
+642
+643
+644
+645
+646
+647
+648
+649
+650
+651
+652
+653
+654
+655
+656
+657
+658
+659
+
+A
+
+Permutation-invariant energy
+parameterization
+
+Assuming the optimal coupling admits a deterministic transport map T (i.e., a Monge-type solution) so that π = T# πk ,
+the objective reduces to an optimization over maps:
+
+We implement the potential with a graph transformer backbone directly from DeFoG (Qin et al., 2025). Each layer of
+this backbone is permutation equivariant, meaning that for
+any permutation (relabeling) σ, the layer satisfies:
+(l)
+
+(l)
+
+(l+1)
+
+h(l) (σ · xV , σ · xE , f (l) ) = (σ · xV
+(l)
+
+(l+1)
+
+, σ · xE
+
+T ∈ arg
+
+, f (l+1) ),
+
+(l)
+
+Since the expectation is over x ∼ πk , the minimization
+decouples pointwise, yielding
+
+
+1
+T (x) ∈ arg min
+c(x, y) + Vθ (y) , for each x ∼ πk .
+y
+2η
+(B.4)
+This is the discrete counterpart of the transport-aligned update used in Section 3.1.
+
+Following (Vignac et al., 2023; Qin et al., 2025), we pad
+and mask all smaller graphs to the maximum number of
+nodes observed in the training dataset, denoted as n. This
+results in fixed-size inputs to the model, denoted xV and xE
+for node and edge features, respectively. We denote node
+(l)
+(l)
+and edge features at layer l as xV and xE , respectively.
+The global feature f (l) collects graph-level features at layer
+l and is updated through a permutation-invariant operation.
+Figure 7 summarizes the backbone and invariant readout.
+Input Graph
+(l)
+
+(l)
+
+Graph Transformer
+(Permutation Equivariant)
+
+C
+
+Invariant Readout
+(L)
+,
+i xi
+
+P
+
+(L)
+(L)
+i̸=j xij , f
+
+P
+
+Exact computation of the FGW cost cFGW requires a combinatorial search over permutations. We therefore use fast,
+permutation-invariant hard-assignment approximations tailored to the source distribution and the downstream use
+(pairing vs. local edits), and use cFGW as shorthand for
+these proxies.
+
+The scalar energy is obtained by an invariant readout that
+first pools the equivariant features and then applies an multilayer perceptron (MLP):
+X (L)
+X (L)
+x̄ =
+xi ,
+ē =
+xij ,
+i<j
+i∈V
+(A.1)
+
+Vθ (x) = MLP [x̄, ē, f (L) ] .
+
+Histogram matching for a uniform source. When the
+source π0 is a uniform distribution over node and edge
+classes, we use a cheap signature for each graph. Let hV
+be the normalized node-type histogram, hE the normalized
+edge-type histogram (over i < j), and hVE the histogram
+over unordered node-type pairs with edge types. We form
+a weighted signature h(x) = [α1 hV , α2 hE , α3 hVE ] and
+solve a linear assignment between graphs of equal size using ∥h(x) − h(y)∥1 . This produces permutation-invariant
+couplings and is sufficient when π0 is far from πdata , so we
+do not require fine-grained alignment.
+
+Since the sum operation is permutation invariant, the concatenated vector (x̄, ē, f (L) ) is invariant. Therefore, an MLP
+applied to it is also invariant.
+Energy head and parameter count. The energy MLP
+head is a 2-layer MLP that maps the pooled hidden graph
+representation (concatenated node/edge/y embeddings) to a
+single scalar energy. With dimensions 448 → 256 → 1 and
+SiLU activation, it has 115,201 parameters. The full model
+has 16,382,158 trainable parameters (≈ 16.38M).
+
+Node matching for molecule-like sources. If the source
+distribution already produces valid molecules, we recommend a node-matching alignment based on node labels (optionally with a light edge-structure tie-breaker), followed
+by computing the aligned local cost. This reflects chemical
+atom mapping practice: once atoms are aligned, bond correspondences are largely determined (Bell & Zhang, 2019).
+
+JKO reduction to a transport map
+
+We specialize the continuous JKO functional (Equation (2.1)) to discrete distributions in the transport regime
+(ϵ = 0) and replace the time step ∆t with the jump size η.
+Given πk and a candidate π, the variational objective reads
+πk+1 = arg min
+π
+
+D
+
+Sampling proposal implementation details
+
+Gradient features. We use gradient-informed proposals
+on the discrete graph space with target density πθ (x) ∝
+exp (−Vθ (x)). We allow an effective inverse temperature
+βmh in the MH ratio below (βmh = 1 for the base model).
+
+1
+inf E(x,y)∼γ [c(x, y)]
+2η γ∈Γ(πk ,π)
++Ey∼π [Vθ (y)].
+
+Permutation-invariant minibatch
+matching
+
+Vθ (x) ∈ R
+
+Figure 7. Energy Backbone. Permutation-equivariant backbone
+with invariant pooling to produce a scalar energy.
+
+B
+
+1
+Ex∼πk [ c(x, T ′ (x)) ]
+2η
+
++ Ex∼πk [ Vθ (T ′ (x)) ].
+(B.2)
+
+
+1
+T ∈ arg min
+Ex∼πk
+c(x, T ′ (x)) + Vθ (T ′ (x)) .
+T′
+2η
+(B.3)
+
+where xV and xE denote node and edge features at layer l,
+respectively, and f (l) denotes the global graph-level feature.
+
+x := (xV , xE )
+
+min
+
+′ π
+T ′ :π=T#
+k
+
+(B.1)
+12
+
+Graph Energy Matching
+
+660
+661
+662
+663
+664
+665
+666
+667
+668
+669
+670
+671
+672
+673
+674
+675
+676
+677
+678
+679
+680
+681
+682
+683
+684
+685
+686
+687
+688
+689
+690
+691
+692
+693
+694
+695
+696
+697
+698
+699
+700
+701
+702
+703
+704
+705
+706
+707
+708
+709
+710
+711
+712
+713
+714
+
+E
+
+We denote the gradients with respect to real-valued one-hot
+node and edge features as follows.
+
+g V := reshapen,lnode ∇x̂V Vθ (x̂) ∈ Rn×lnode
+
+n
+g E := reshape(n),ledge ∇x̂E Vθ (x̂) ∈ R( 2 )×ledge
+2
+
+The flow-matching term can be reweighted in time by introducing a scalar α(t):
+
+
+Lflow,α (θ) = E(x0 ,x1 )∼γ̃, t∼U ([0,1]) α(t) ∥ − ∇x̂t Vθ (x̂t ) − v∥22 .
+(E.1)
+A simple choice is a piecewise linear schedule
+
+
+0 ≤ t ≤ τ ∗,
+1,
+ατ ∗ (t) =
+(E.2)
+1−t
+
+
+, τ ∗ < t ≤ 1,
+∗
+1−τ
+
+where reshapem,n (x) is a row-major resizing operation
+converting the vector x ∈ Rmn to a shape of Rm×n . Inside the transformer Since we are working with undirected
+graphs, we use symmetrized edge gradients from the graph
+transformer.
+Factorized proposal (multi-site). We sample all nodes and
+undirected edges independently from categorical logits
+
+V
+V
+ℓV
+i,ci = βprop gi,xi − gi,ci − λV I{ci ̸=xi } ; ∀ ci ∈ Xnode
+(D.1)
+
+E
+E
+E
+ℓij,cij = βprop gij,xij − gij,cij
+− λE I{cij ̸=xij } ; ∀ cij ∈ Xedge
+
+so that ατ ∗ (1) = 0. This downweights flow supervision
+for samples approaching the data manifold and can reduce
+interference with LER . We do not apply this weighting in
+our experiments (α(t) ≡ 1), because full flow supervision
+was empirically more stable for LER .
+
+(D.2)
+
+Time-decaying weights are common in continuous settings:
+Energy Matching and Equilibrium Matching relax the flow
+term to avoid over-constraining the equilibrium regime. In
+particular, Equilibrium Matching uses α(t) → 0 as t → 1
+because a vanishing energy gradient at equilibrium is one
+of the score-matching conditions for energy-based training (Wang & Du, 2025). Such schedules may be beneficial
+in other domains where late-time supervision conflicts with
+equilibrium refinement.
+
+so the full proposal factorizes as
+Y
+
+qβprop (x → y) =
+Cat yi ; softmax(ℓV
+i )
+i∈V
+
+×
+
+Y
+
+Time weighting for the flow loss
+
+ (D.3)
+Cat yij ; softmax(ℓEij ) .
+
+i<j
+
+The current class has logit value of 0 (the stay option), while
+λV , λE penalize changes.
+
+F
+
+MH refinement (single beta). For the standard Langevin
+proposal we set βprop = βmh = β and accept
+
+Unconditional generation on QM9
+
+QM9 unconditional metrics are reported in the main text
+(Table 1b). V.U. is saturated around 100%, and lower FCD
+is often paid for with decreased novelty or larger networks
+that can memorize the dataset.
+
+α(x, y) = min{1, exp(∆(x, y))},
+
+qβ (y → x)
+∆(x, y) = −βmh Vθ (y) − Vθ (x) + log prop
+.
+qβprop (x → y)
+(D.4)
+
+G
+
+Two-betas simulated annealing. We decouple the proposal
+temperature and target temperature by using βprop in the
+logits above, while βmh controls the MH ratio. Optionally,
+βmh is annealed across MCMC steps:
+
+s
+β init + ∆β
+, 0 ≤ s < Sanneal ,
+mh
+S
+−1
+anneal
+βmh (s) =
+β final ,
+s ≥ Sanneal .
+mh
+(D.5)
+final
+init
+where ∆β = βmh
+− βmh
+.
+
+Conceptualizing baselines todo
+
+We summarize the baseline methods used in our experiments
+with an emphasis on the generation/samplign mechanismn
+for each method.
+GraphEBM. GraphEBM (Liu et al., 2021) models molecular graphs using an energy-based model that assigns a scalar
+energy Eθ (G) to each graph G via a graph neural network.
+Unlike transport- or flow-based approaches, GraphEBM
+does not learn an explicit transformation from a source distribution to the data distribution. Instead, generation relies
+on Langevin dynamics sampling.
+
+Do-nothing resampling and proposal diffusion. If the
+independently sampled proposal equals the current state
+(all sites stay), we resample after softening the logits to
+increase randomness: βprop ← ρ βprop , λV ← ρ λV , λE ←
+ρ λE with 0 < ρ < 1. We repeat this a bounded number
+of times; if no change occurs, we keep the current state
+and accumulate the stay probability in log q. The reverse
+transition uses the same resampling rule, preserving the MH
+ratio.
+
+DeFoG. DeFoG (Qin et al., 2025) formulates discrete graph
+generation as (continuous-time) discrete flow matching. It
+learns a continuous-time Markov chain (CTMC) whose transition rates are trained to connect a simple source distribution to the data distribution along a time-indexed stochastic
+path. Sampling proceeds by simulating the learned CTMC
+dynamics from the source to obtain a final graph.
+13
+
+Graph Energy Matching
+
+715
+716
+717
+718
+719
+720
+721
+722
+723
+724
+725
+726
+727
+728
+729
+730
+731
+732
+733
+734
+735
+736
+737
+738
+739
+740
+741
+742
+743
+744
+745
+746
+747
+748
+749
+750
+751
+752
+753
+754
+755
+756
+757
+758
+759
+760
+761
+762
+763
+764
+765
+766
+767
+768
+769
+
+VFM. VFM (Eijkelboom et al., 2024) reframes flow matching as variational inference over trajectory endpoints, yielding globally consistent objectives for discrete graph generation via CTMC paths.
+G-VFM. G-VFM (Eijkelboom et al., 2025) extends VFM
+with equivariant conditioning mechanisms to support controllable generation, typically by incorporating property
+guidance into the flow-matching framework.
+
+H.3
+
+logP ≤ 1.5
+logS ≥ −2.25
+QED ≥ 0.9
+TPSA ≤ 50
+
+0.2
+0.2
+0.05
+5
+
+10
+16
+193
+0.03
+
+140
+130
+360
+0.5
+
+Geodesic analysis: validity along geodesics
+
+We compare GEM’s energy-weighted geodesic to a costonly baseline along interpolated paths between matched
+MOSES molecules. We align permutations using the nodematching cFGW cost (Section 3, Eq. 3.2; node-matching details in Appendix C), and then use the aligned local cost cloc
+(Eq. 3.1) to evaluate distances, which is equivalent under a
+fixed alignment. Paths are parameterized as cubic B-splines
+in the node/edge probability simplex with fixed endpoints
+and learned interior control points (8 control points, degree 3). Optimization minimizes the energy-weighted path
+length Lθ from Appendix J (with the exp(βVθ ) weighting)
+plus an average-energy regularizer. We use β = 0.1, length
+weight λL = 0.1, energy weight λM E = 1.0, 2000 Adam
+iterations, and a learning rate of 10−3 (Kingma & Ba, 2014).
+
+We summarize datasets, preprocessing, training, sampling
+settings, and hyperparameters here. [WiP] We also report
+the diffusion-editing noise level τ selected for each baseline
+here. [WiP]
+GEM training (shared across experiments). Training
+proceeds in two stages. We first run flow-matching (FM)
+only with λCL = 0.0 for 330k iterations (lr = 10−4 , batch
+size 128, gradient clip 10) to establish the transport field. We
+then add contrastive divergence (CD) with λCL = 0.1 for
+500 iterations using chain length 500 at lr = 5×10−5 , batch
+size 128. CD sampling uses greedy transport proposals
+followed by dLangevin mixing with β L = 9.55, λL
+V = 0.23,
+L
+λL
+=
+1.88,
+and
+β
+=
+β
+.
+For
+DeFoG
+baselines
+we use
+mh
+E
+the authors’ checkpoint (Qin et al., 2025).
+
+Validity is estimated by sampling 16 arc-length–uniform
+s locations per path and drawing 16 discrete graphs per
+s. Validity is the fraction of RDKit-valid and connected
+samples, averaged along each path and then across pairs
+within each distance bin. We use three distance bins: [5, 10),
+[10, 15), and [15, 20), with 50 molecules per bin.
+
+Unconditional generation
+
+We report 25k MOSES samples and 10k QM9 samples. For
+noise initialization we use greedy transport followed by the
+dLangevin mixing parameters from the training setup above.
+For data initialization we use an annealed schedule with
+init
+final
+βprop = 8.12, βmh
+= 0.18, βmh
+= 13.56, Sanneal = 200,
+L
+L
+λV = 0.07, and λE = 2.23.
+H.2
+
+margin GEM λprop DeFoG λprop
+
+Table 3. Hyper-parameters for noisy-regressor conditioning
+on MOSES. GEM uses uniform-noise regressors; DeFoG uses
+marginal-noise regressors. All results use 4k samples.
+
+H Experimental setup and hyperparameters
+
+H.1
+
+Task
+
+I
+
+Noise sensitivity of property regressors
+
+Property regressor training. Let (x1 , y) denote a molecule
+(graph) and its scalar property. A clean regressor fϕ is
+trained on valid molecules by minimizing
+
+
+min E(x1 ,y)∼D ∥fϕ (x1 ) − y∥22 .
+(I.1)
+
+Conditional generation and property optimization
+
+ϕ
+
+Noisy property regressors. We train time-conditioned
+regressors on MOSES with shared hyper-parameters
+for both marginal- and uniform-noise variants; only
+the diffusion transition differs (noise transition ∈
+{marginal, uniform}). Training uses batch size 1024,
+60 epochs, Adam (lr = 10−4 , weight decay 10−6 ), 4 layers
+with hidden dims (dx = 256, de = 128, dy = 128), nhead =
+8, FF dims (256, 128, 192), polydec time distortion, and a
+timestep embedding (time conditioned=true). We
+report test MAE on 10k molecules at t ∈ {0, 0.2, . . . , 1}.
+
+For noise-conditioned regressors, we sample a time t ∼
+p(t) and a noisy graph xt ∼ qt (xt | x1 ) using the same
+discrete noising kernel as the forward process (marginal or
+uniform). The regressor takes (xt , t) as input (time is fed as
+an additional scalar feature) and is trained with
+
+
+min E(x1 ,y)∼D, t∼p(t), xt ∼qt (·|x1 ) ∥fϕ (xt , t)−y∥22 . (I.2)
+ϕ
+
+During GEM sampling we do not explicitly track diffusion
+time, so we use an energy-based proxy to set t: we linearly
+increase t between the noise and data energy bands and
+clamp to t = 1 once the chain reaches the data distribution,
+using t = 1 for the remainder of generation.
+
+Conditional generation (GEM & DeFoG). GEM uses
+guided warmup (225 steps, linear t schedule) and dLangevin
+L
+proposals (β L = 9.55, λL
+V = 0.23, λE = 1.88) with uniform transitions. DeFoG uses marginal-noise regressors.
+For each task we sweep λprop and report the best CVUN;
+margins and selected λprop are below.
+
+Property regressors are trained on clean molecules, so evaluating them on noisy graphs is ill-posed when bonds and
+14
+
+Graph Energy Matching
+
+each pair we construct an energy-weighted geodesic and a
+linear interpolation baseline.
+
+logS ≥ -2.25 QED ≥ 0.9 logP ≤ 1.5
+C.V.U.N. ↑ C.V.U.N. ↑ C.V.U.N. ↑
+
+Regressor
+Clean
+Noise-conditioned
+
+0.531
+0.836
+
+0.154
+0.422
+
+0.552
+0.846
+
+Path optimization. We represent a continuous path in the
+embedding space and optimize the energy-weighted length
+Z 1
+
+˙
+Lθ (γ) =
+exp βVθ (γ̂(t)) ∥γ̂(t)∥
+(J.1)
+loc dt
+
+Table 4. Regressor ablations (GEM). Clean regressors are
+time-independent and trained only on valid molecules. Noiseconditioned regressors are time-dependent and trained on uniformly noised graphs. We report C.V.U.N. for each property condition on MOSES.
+
+0
+
+R1
+with an average-energy regularizer λM E 0 Vθ (γ̂(t)) dt.
+The linear baseline uses the same endpoint pairing and interpolates between the coupled graphs.
+
+valences are corrupted. We measure the degradation by
+computing test mean absolute error (MAE) as a function of
+denoising time t along the diffusion path. We use 10k test
+molecules and report four representative properties (TPSA,
+logS, logP, QED). As expected, errors are large for noisy
+inputs and only become reasonable at t = 1 (fully denoised,
+clean samples). Figure 8 summarizes the trend. Solid lines
+are marginal-noise regressors; dashed lines are uniformnoise regressors.
+1
+Test MAE
+
+770
+771
+772
+773
+774
+775
+776
+777
+778
+779
+780
+781
+782
+783
+784
+785
+786
+787
+788
+789
+790
+791
+792
+793
+794
+795
+796
+797
+798
+799
+800
+801
+802
+803
+804
+805
+806
+807
+808
+809
+810
+811
+812
+813
+814
+815
+816
+817
+818
+819
+820
+821
+822
+823
+824
+
+TPSA/50 (margi.)
+
+TPSA/50 (unif.)
+
+logS (margi.)
+
+logS (unif.)
+
+logP (margi.)
+
+logP (unif.)
+
+QED (margi.)
+
+QED (unif.)
+
+Spline parameterization. We implement geodesic paths
+using a Bezier spline over learnable control-point logits
+for nodes and edges. The spline lives in the probability
+simplex (node/edge categorical distributions), and discrete
+graphs are sampled only for visualization and metric evaluation. The optimization minimizes the relative length ratio
+Lspline /Llinear −1, where the segment lengths are weighted
+by exp βVθ (xτ ) along the path.
+Discrete evaluation. We discretize each continuous path at
+evenly spaced points in normalized arc length. At each point
+we sample categorical graphs from the path distribution to
+compute validity and energy statistics. We compute average
+validity along each path and plot it against the endpoint
+distance induced by the FGW matching cost cFGW .
+
+0.5
+
+K
+0
+
+Let the model density be
+0
+
+0.2
+
+0.4
+0.6
+Denoising time t
+
+0.8
+
+1
+
+Z
+e−Eθ (x)
+,
+Zθ = e−Eθ (x) dx.
+(K.1)
+Zθ
+Maximum likelihood estimation solves
+
+
+θ⋆ = arg max Ex∼pdata log pθ (x) ⇐⇒ θ⋆ = arg min J (θ),
+pθ (x) =
+
+Figure 8. Test MAE of time/noise-conditioned property regressors
+versus denoising time t (0 = fully noised, 1 = clean/denoised).
+Each point averages 10k test molecules. Solid lines are marginalnoise regressors; dashed lines are uniform-noise regressors. TPSA
+MAE is scaled by 1/50 for visualization. Errors are large for noisy
+inputs and only become reasonable around t = 1.
+
+I.1
+
+θ
+
+θ
+
+(K.2)
+with
+
+
+
+
+J (θ) := −Epdata log pθ (x) = Epdata Eθ (x) + log Zθ .
+(K.3)
+Taking gradients gives
+
+
+∇θ J (θ) = Epdata ∇θ Eθ (x) + ∇θ log Zθ ,
+(K.4)
+
+Regressor-guided Diffusion
+
+Both DeFoG (Qin et al., 2025) and Variational Flow Matching (VFM) (Eijkelboom et al., 2024; 2025) achieve controllable graph diffusion by conditioning transitions on noisedependent regressors predicting desired properties. Formally, these regressors approximate conditional distributions of graph properties y given intermediate noisy graph
+states xt , i.e., ρ(y | xt , t) or ρt (y | xt ). Figure 8 illustrates
+how prediction accuracy varies across different noise levels.
+
+J
+
+Contrastive loss objective derivation
+
+and
+Z
+
+1
+1
+∇θ Z θ =
+e−Eθ (x) − ∇θ Eθ (x) dx
+Zθ
+Zθ
+
+
+= −Epθ ∇θ Eθ (x) .
+(K.5)
+
+∇θ log Zθ =
+
+Therefore,
+
+
+
+
+∇θ J (θ) = Epdata ∇θ Eθ (x) − Epθ ∇θ Eθ (x) . (K.6)
+
+Geodesic analysis details
+
+In our setting, Eθ (x) = Vθ (x), and we approximate the
+model expectation with samples from the current chain
+while stopping gradients through the sampler, yielding the
+energy refinement objective in the main text.
+
+Pairing and alignments. We draw 1000 molecules from
+the dataset and group them by node count. For each group
+we sample same-size pairs uniformly and align them using
+node matching to define a coupling between endpoints. For
+15
+
+

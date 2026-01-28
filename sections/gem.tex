@@ -1,6 +1,6 @@
 \section{Graph Energy Matching}
 \label{sec:gem}
-We extend the continuous Energy Matching formulation to discrete graph spaces by introducing two novel discrete proposals: one enabling transport-aligned rapid movements across graph spaces, and the other facilitating mixing within the vicinity of high-probability regions. Our formulation employs an energy-based switching mechanism that clearly separates \emph{transport} and \emph{mixing} sampling regimes without requiring explicit indexing of time or noise levels. Sampling is efficiently facilitated through deterministic greedy proposals in the transport regime and stochastic gradient-informed proposals during mixing. Further, we propose an annealing strategy to efficiently generate novel samples from optionally given data samples via incremental edits. The sampler uses a temperature $\epsilon$ to control stochasticity: the transport regime is the deterministic $\epsilon\to 0$ limit, while the mixing regime uses $\epsilon>0$.
+We extend the continuous Energy Matching formulation to discrete graph spaces by introducing two novel discrete proposals: one enabling transport-aligned rapid movements across graph spaces, and the other facilitating mixing within high-probability regions. Our formulation employs an energy-based switching mechanism that clearly separates \emph{transport} and \emph{mixing} sampling regimes without requiring explicit indexing of time or noise levels. Sampling is efficiently facilitated through deterministic greedy proposals in the transport regime and stochastic gradient-informed proposals during mixing. Further, we propose an annealing strategy to efficiently generate novel samples from optionally given data samples via incremental edits. The sampler uses a temperature $\epsilon$ to control stochasticity: the transport regime is the deterministic $\epsilon\to 0$ limit, while the mixing regime uses $\epsilon>0$.
 
 \paragraph{Graph representation.} 
 We consider a discrete state space $\mathcal{X}:=\big(\mathcal{X}_{\mathrm{node}}\big)^{n}\times\big(\mathcal{X}_{\mathrm{edge}}\big)^{\binom{n}{2}}$ to represent undirected graphs. A graph $x\in \mathcal{X}$ contains a set of $n$ nodes $\mathcal{V}=\{1,\dots,n\}$ and edges $\mathcal{E}$ defining the connectivity between these nodes. Each node $i\in\mathcal{V}$ has a node class $x_i \in \mathcal{X}_{\mathrm{node}}$ (e.g.\ an atom type), and each edge $(i,j)\in\mathcal{E}$ has an edge class $x_{ij}\in\mathcal{X}_{\mathrm{edge}}$ (e.g.\ a bond type). The edge space $\mathcal{X}_{\mathrm{edge}}$ includes an element indicating the absence of an edge. The graph $x:=\big(x_\mathcal{V},x_\mathcal{E}\big)$ consists of $x_\mathcal{V}$ and $x_\mathcal{E}$ denoting categorical node and edge features, respectively, and are defined as
@@ -25,7 +25,7 @@ where $\oplus$ denotes the column-wise concatenation operation.
 
 \paragraph{Local and Permutation-Invariant Cost.} We measure local discrepancies using the embedding-space cost $
     c(x,y) := \tilde c(\hat{x},\hat{y})$,
-which is differentiable in both arguments. The potential $V_\theta$ is permutation-invariant by construction (Appendix~\ref{app:perm-invariance}), so the learned energy landscape used for pairing should also respect node relabelings. Here, $\sigma\in S_n$ acts on node indices and induces a relabeling of the graph: $(\sigma\cdot x)_i=x_{\sigma(i)}$ and $(\sigma\cdot x)_{ij}=x_{\sigma(i)\sigma(j)}$. To obtain a permutation-invariant matching, we first define a local cost ($c_{\mathrm{loc}}$) as:
+which is differentiable in both arguments. The potential $V_\theta$ is permutation-invariant by construction (\Cref{app:perm-invariance}), so the learned energy landscape used for pairing should also respect node relabelings. Here, $\sigma\in S_n$ acts on node indices and induces a relabeling of the graph: $(\sigma\cdot x)_i=x_{\sigma(i)}$ and $(\sigma\cdot x)_{ij}=x_{\sigma(i)\sigma(j)}$. To obtain a permutation-invariant matching, we first define a local cost ($c_{\mathrm{loc}}$) as:
 \begin{equation}\label{eq:loc-cost}
 c_{\mathrm{loc}}(x,y)
 \;=\;
@@ -33,7 +33,7 @@ c_{\mathrm{loc}}(x,y)
 +
 \lambda_\mathcal{E}\|\hat{x}_{\mathcal{E}}-\hat{y}_{\mathcal{E}}\|^2_2,
 \end{equation}
-with $\lambda_\mathcal{V},\lambda_\mathcal{E}>0$ scaling node and edge contributions. To compare graphs in a permutation-invariant way, we lift the local cost by optimizing over node relabelings to obtain the \gls{fgw} cost \citep{vayer2019optimal}:
+with $\lambda_\mathcal{V},\lambda_\mathcal{E}>0$ scaling node and edge contributions. To compare graphs in a permutation-invariant way, we lift the local cost by optimizing over node relabelings to obtain the hard-permutation \gls{fgw} cost \citep{vayer2019optimal}:
 \begin{equation}\label{eq:fgw-cost}
 c_{\mathrm{FGW}}(x,y)
 =
@@ -42,7 +42,7 @@ c_{\mathrm{FGW}}(x,y)
 c_{\mathrm{loc}}(x,\sigma\cdot y)
 \right\}.
 \end{equation}
-In practice, we predominantly use the local cost $c_{\mathrm{loc}}$, as it provides a valid and efficient measure for scoring pairs of neighboring graphs, e.g.\ when evaluating displacements induced by local jump proposals. When permutation-invariant comparisons between non-local graph pairs are required, we instead employ the $c_{\mathrm{FGW}}$ cost. Since exact computation is intractable, we rely on fast approximations: histogram matching for noisy--clean molecule pairings and node matching for molecule--molecule pairings (Appendix~\ref{app:matching}).
+In practice, we predominantly use the local cost $c_{\mathrm{loc}}$, as it provides a valid and efficient measure for scoring pairs of neighboring graphs, e.g.\ when evaluating displacements induced by local jump proposals. When permutation-invariant comparisons between non-local graph pairs are required, we instead employ the $c_{\mathrm{FGW}}$ cost. Since exact computation is intractable, we rely on fast approximations: histogram matching for noisy--clean molecule pairings and node matching for molecule--molecule pairings (\Cref{app:matching}).
 
 
 
@@ -88,7 +88,7 @@ q_{\text{greedy}}(x\to y) = \delta_{y^*(x)}(y).
 \end{gather}
 
 In the transport regime, proposed moves are deterministically projected onto directions associated with strictly negative gradients, aiming for a decrease in energy. Edits not meeting this criterion are rejected. If no candidate yields a negative gradient, the greedy sampler stalls, switching to the Langevin-based proposal $q_\mathrm{mixing}$ in \Cref{proposals_lang}.
- For further implementation details, see Appendix~\ref{app:sampling-details}.
+ For further implementation details, see \Cref{app:sampling-details}.
 
 
 \subsection{Discrete Mixing Proposal ($\epsilon>0$)}
@@ -127,10 +127,10 @@ discrete-gradient samplers appear in~\citep{grathwohl2021oops,zhang2022langevin}
 Figure~\ref{fig:proposal-middle-softmax-alpha-half} illustrates the resulting geometry-aware proposal
 scoring and how gradient alignment competes with distance penalties.
 
-We calibrate the parameters $\beta_{mh}$, $\beta^{L}$, $\lambda_{\mathcal{V}}^{L}$, and $\lambda_{\mathcal{E}}^{L}$ by maximizing the relative likelihood of generated samples compared to the training dataset samples under the learned energy $V_\theta$, directly after the warmup training phase described in \Cref{sec:training}.
+We calibrate the parameters $\beta_{\mathrm{mh}}$, $\beta^{L}$, $\lambda_{\mathcal{V}}^{L}$, and $\lambda_{\mathcal{E}}^{L}$ by maximizing the relative likelihood of generated samples compared to the training dataset samples under the learned energy $V_\theta$, directly after the warmup training phase described in \Cref{sec:training}.
 
 
-In practice, the \( q_\mathrm{mixing} \) proposal is paired with a \gls{mh} acceptance step to ensure convergence to the target distribution \( \pi_\theta(x) \propto \exp(-\beta_{mh} V_\theta(x)) \).
+In practice, the \( q_\mathrm{mixing} \) proposal is paired with a \gls{mh} acceptance step to ensure convergence to the target distribution \( \pi_\theta(x) \propto \exp(-\beta_{\mathrm{mh}} V_\theta(x)) \).
 In the mixing regime, the stochastic proposal is accepted with the following \gls{mh} probability:
 \begin{equation}\label{eq:mh-accept}
 \begin{aligned}
@@ -149,7 +149,7 @@ enforces detailed balance:
 \end{equation}
 so $\pi_\theta$ is stationary for the mixing dynamics~\citep{metropolis1953equation,hastings1970monte}.
 Implementation details of the proposal kernel (factorized logits, temperature annealing, and do-nothing
-resampling) are provided in Appendix \ref{app:sampling-details}. 
+resampling) are provided in \Cref{app:sampling-details}. 
 
 
 
@@ -158,7 +158,7 @@ resampling) are provided in Appendix \ref{app:sampling-details}.
 
 \paragraph{Determining the Regime.}
 \label{switch}
-We control the regime through an energy-based binary indicator $s\in\{0,1\}$: $s=0$ selects transport (deterministic $\epsilon\to 0$ limit), while $s=1$ selects mixing (finite $\epsilon>0$). If initialized at noise, the sampler follows deterministic greedy edits guided strictly by negative gradient directions. Transition from transport to mixing occurs when the Markov chain either reaches the target energy (defined as the mean data energy estimated during training) or becomes trapped in a local minimum—no valid gradient-improving edits exist—for all samples, whichever happens first. Once triggered, the sampler enters the stochastic Langevin-based mixing regime. More about proposal schedules in \Cref{init_prop}.
+We control the regime through an energy-based binary indicator $s\in\{0,1\}$: $s=0$ selects transport (deterministic $\epsilon\to 0$ limit), while $s=1$ selects mixing (finite $\epsilon>0$). If initialized at noise, the sampler follows deterministic greedy edits guided strictly by negative gradient directions. Transition from transport to mixing occurs when the Markov chain either reaches the target energy (defined as the mean energy of the training samples estimated during training) or becomes trapped in a local minimum—no valid gradient-improving edits exist—for all samples, whichever happens first. We trigger the switch at the batch level for parallelism and observed no difference versus per-sample switching. Once triggered, the sampler enters the stochastic Langevin-based mixing regime. More about proposal schedules in \Cref{init_prop}.
 
 \paragraph{Sample Initialization.}
 \label{init_prop}
@@ -169,7 +169,7 @@ types uniformly (uniform noise) or from empirical marginals (marginal noise). Th
 the data distribution, so we run transport with greedy proposals $q_{\text{greedy}}$ until the energy-based switch (see
 \Cref{switch}), then enter mixing with the proposal
 $q_{\mathrm{mixing}}$. 
-\vspace{-3pt} \item \textbf{Data initialization:} draw graphs from the training set. We skip the transport phase and start directly in the mixing regime with $q_{\mathrm{mixing}}$, initially using a higher model temperature (lower $\beta_{mh}$) to increase the acceptance rate, and then annealing (raising $\beta_{mh}$) before fixed-temperature mixing (Appendix~\ref{app:sampling-details}).
+\vspace{-3pt} \item \textbf{Data initialization:} draw graphs from the training set. We skip the transport phase and start directly in the mixing regime with $q_{\mathrm{mixing}}$, initially using a higher model temperature (lower $\beta_{\mathrm{mh}}$) to increase the acceptance rate, and then annealing (raising $\beta_{\mathrm{mh}}$) before fixed-temperature mixing (\Cref{app:sampling-details}).
 
 \end{itemize}
 All initializations start near-zero \gls{vun}. Figure~\ref{fig:moses-energy-and-metrics}
