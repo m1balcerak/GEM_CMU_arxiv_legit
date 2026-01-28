@@ -2,17 +2,13 @@
 \label{app:geodesic-details}
 
 \paragraph{Pairing and alignments.}
-We draw 1000 molecules from the dataset and group them by node count. For each group we sample
-same-size pairs uniformly and align them using node matching to define a coupling between endpoints.
-For each pair we construct an energy-weighted geodesic and a linear interpolation baseline.
-
 \paragraph{Path optimization.}
-We represent a continuous path in the embedding space and optimize the energy-weighted length
+We represent a continuous path $\gamma(t)$ in the embedding space and optimize the energy-weighted length
 \begin{equation}
 L_\theta(\gamma)=\int_0^1 \exp\!\big(\beta V_\theta(\hat{\gamma}(t))\big)\|\dot{\hat{\gamma}}(t)\|_{\mathrm{loc}}\,dt
 \end{equation}
-with an average-energy regularizer $\lambda_{ME}\int_0^1 V_\theta(\hat{\gamma}(t))\,dt$. The linear
-baseline uses the same endpoint pairing and interpolates between the coupled graphs.
+with an average-energy regularizer $\lambda_{ME}\int_0^1 V_\theta(\hat{\gamma}(t))\,dt$. The cost-based
+baseline uses the same endpoint pairing and interpolates between the coupled graphs without the additional energy-weighting or average-energy regularization.
 
 \paragraph{Spline parameterization.}
 We implement geodesic paths using a Bezier spline over learnable control-point logits for nodes and
