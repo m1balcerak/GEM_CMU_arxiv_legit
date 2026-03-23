@@ -14,10 +14,10 @@
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 
 % Use the following line for the initial blind version submitted for review:
-\usepackage{icml2026}
+% \usepackage{icml2026}
 
 % For preprint, use
-% \usepackage[preprint]{icml2026}
+\usepackage[preprint]{icml2026}
 
 % If accepted, instead use the following line for the camera-ready submission:
 % \usepackage[accepted]{icml2026}
@@ -59,6 +59,80 @@
 % Therefore, a short form for the running title is supplied here:
 \icmltitlerunning{Graph Energy Matching}
 
+% Author footnote symbols
+\icmlsetsymbol{senior}{*}
+
+% Render multiple author markers as a single comma-separated superscript.
+\makeatletter
+\newif\ificml@firstaffil
+\newcommand{\icml@printsuperscriptlist}[1]{%
+  \begingroup
+  \def\icml@formatted{}%
+  \icml@firstaffiltrue
+  \@for\theaffil:=#1\do{%
+    \ifcsname the@affil\theaffil\endcsname
+      % Existing affiliation label, nothing to initialize.
+    \else
+      \ifcsname @icmlsymbol\theaffil\endcsname
+        % Symbol labels do not need numeric counters.
+      \else
+        \stepcounter{@affiliationcounter}%
+        \newcounter{@affil\theaffil}%
+        \setcounter{@affil\theaffil}{\value{@affiliationcounter}}%
+      \fi
+    \fi%
+    \ificml@firstaffil
+      \icml@firstaffilfalse
+    \else
+      \xdef\icml@formatted{\icml@formatted,}%
+    \fi
+    \ifcsname @icmlsymbol\theaffil\endcsname
+      \xdef\icml@formatted{\icml@formatted\csname @icmlsymbol\theaffil\endcsname}%
+    \else
+      \xdef\icml@formatted{\icml@formatted\csname the@affil\theaffil\endcsname}%
+    \fi
+  }%
+  \textsuperscript{\icml@formatted}%
+  \endgroup
+}
+\renewcommand{\icmlauthor}[2]{%
+  \ificmlshowauthors
+    \mbox{\bf #1}\,\icml@printsuperscriptlist{#2}\addtofullauthorlist{#1}%
+  \else
+    \ifdefined\@icmlfirsttime\else
+      \gdef\@icmlfirsttime{1}
+      \mbox{\bf Anonymous Authors}\,\icml@printsuperscriptlist{@anon}\addtofullauthorlist{Anonymous Authors}
+    \fi
+  \fi
+}
+
+% Keep affiliations, correspondence, and notice compact in one footnote paragraph.
+\renewcommand{\printAffiliationsAndNotice}[1]{\global\icml@noticeprintedtrue%
+  \stepcounter{@affiliationcounter}%
+  {\let\thefootnote\relax\footnotetext{\hspace*{-\footnotesep}\ificmlshowauthors #1\fi%
+      \forloop{@affilnum}{1}{\value{@affilnum} < \value{@affiliationcounter}}{
+        \textsuperscript{\arabic{@affilnum}}\ifcsname @affilname\the@affilnum\endcsname%
+          \csname @affilname\the@affilnum\endcsname%
+        \else
+          {\bf AUTHORERR: Missing \textbackslash{}icmlaffiliation.}
+        \fi
+        \ifnum\value{@affilnum}<\numexpr\value{@affiliationcounter}-1\relax
+          ;\ %
+        \else
+          .\ %
+        \fi
+      }%
+      \ifdefined\icmlcorrespondingauthor@text
+         Correspondence to: \icmlcorrespondingauthor@text.
+      \else
+        {\bf AUTHORERR: Missing \textbackslash{}icmlcorrespondingauthor.}
+      \fi
+      \ \Notice@String
+    }
+  }
+}
+\makeatother
+
 \begin{document}
 
 \twocolumn[
@@ -67,18 +141,26 @@ Transport-Aligned Energy-Based Modeling for Graph Generation}
 %Controllable(?) Graph Generation with Transport‑Aligned Discrete Proposals}
   \vskip 0.05in
   \begin{icmlauthorlist}
-    \icmlauthor{Anonymous}{anon}
+    \icmlauthor{Michal Balcerak}{zurich}
+    \icmlauthor{Suprosana Shit}{zurich}
+    \icmlauthor{Chinmay Prabhakar}{zurich}
+    \icmlauthor{Sebastian Kaltenbach}{harvard}\\
+    \icmlauthor{Michael Samuel Albergo}{harvard,kempner}
+    \icmlauthor{Yilun Du}{harvard,kempner,senior}
+    \icmlauthor{Bjoern Menze}{zurich,senior}
   \end{icmlauthorlist}
 
-\icmlaffiliation{anon}{Anonymous Institution}
-\icmlcorrespondingauthor{Anonymous Author}{anon.email@domain.com}
+\icmlaffiliation{zurich}{University of Zurich}
+\icmlaffiliation{harvard}{Harvard University}
+\icmlaffiliation{kempner}{Kempner Institute}
+\icmlcorrespondingauthor{Michal Balcerak}{michal.balcerak@uzh.ch}
 
   \icmlkeywords{Energy-based models, graph generation, optimal transport}
 
   \vskip 0.3in
 ]
 
-\printAffiliationsAndNotice{}  % no special notice (required even if empty)
+\printAffiliationsAndNotice{\textsuperscript{*}Contributed equally as senior authors.\ }
 
 \begin{abstract}
 Energy-based models for discrete domains, such as graphs, explicitly capture relative likelihoods, naturally enabling composable probabilistic inference tasks like conditional generation or enforcing constraints at test-time. However, discrete energy-based models typically struggle with efficient and high-quality sampling, as off-support regions often contain spurious local minima, trapping samplers and causing training instabilities. This has historically resulted in a fidelity gap relative to discrete diffusion models. We introduce \emph{Graph Energy Matching (GEM)}, a generative framework for graphs that closes this fidelity gap. Motivated by the transport map optimization perspective of the Jordan–Kinderlehrer–Otto (JKO) scheme, GEM learns a permutation-invariant potential energy that simultaneously provides transport-aligned guidance from noise toward data and refines samples within regions of high data likelihood. Further, we introduce a sampling protocol that leverages an energy-based switch to seamlessly bridge: (i) rapid, gradient-guided transport toward high-probability regions to (ii) a mixing regime for exploration of the learned graph distribution. On molecular graph benchmarks, GEM matches or exceeds strong discrete diffusion baselines. 
@@ -94,8 +176,8 @@ Beyond sample quality, explicit modeling of relative likelihood enables targeted
 \input{sections/experiments}
 \input{sections/discussion}
 \FloatBarrier
+\input{sections/acknowledgments}
 
-\clearpage
 %BIBLIOGRAPHY
 \bibliographystyle{icml2026}
 \bibliography{main}
