@@ -1,10 +1,10 @@
 \section{Experimental setup and hyperparameters}
 \label{app:exp-setup}
-\paragraph{MOSES GEM training (shared across experiments).}
+\paragraph{MOSES (shared across experiments).}
 Training is conducted in two stages. We first train with $\lambda_{\mathrm{CL}}=0.0$ for $330\,\text{k}$ iterations ($\text{lr}=10^{-4}$, batch size $=128$) to pretrain the potential field, enabling efficient burn-in of samples initialized from noise. We then follow with
-$\lambda_{\mathrm{CL}}=0.1$ for 25 iterations using chain length 500 at
+$\lambda_{\mathrm{CL}}=0.1$ for 1000 iterations using chain length $N_{\mathrm{CL}}$ = 500 at
 $\text{lr}=1\times 10^{-5}$, batch size 128. Greedy transport proposals followed by mixing with $\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$,
-and $\beta_{\mathrm{mh}}=\beta^L$. We incorporate RRWP features~\citep{ma2023graph} into GEM and all reproduced baselines to ensure a fair comparison with DeFoG, which originally employs these features. For the DeFoG baselines, we directly use the authors' provided checkpoint~\citep{qinmadeira2024defog}. During training, we consider two distinct setups for initializing the contrastive loss (CL) samples: either from noise or directly from data. We evenly split these initializations (50\% noise / 50\% data), except in the unconditional generation scenario (``Data Initialization'' category), where we exclusively (100\%) initialize CL samples from data.
+and $\beta_{\mathrm{mh}}=\beta^L$. For the DeFoG baselines, we directly use the authors' provided checkpoint~\citep{qinmadeira2024defog}. During training, we consider two distinct setups for initializing the contrastive loss (CL) samples: either from noise or directly from data. We evenly split these initializations (50\% noise / 50\% data), except in the unconditional generation scenario (``Data Initialization'' category), where we exclusively (100\%) initialize CL samples from data.
 
 
 \subsection{Unconditional generation}
@@ -16,48 +16,54 @@ and $\lambda_{\mathcal{E}}^L=2.23$.
 
 \subsection{Conditional generation and property optimization}
 \paragraph{Noisy property regressors.}
-We train time-conditioned regressors on MOSES using shared hyper-parameters for both marginal- and uniform-noise variants. Training uses batch size $1024$ for $60$ epochs with Adam ($\text{lr}=10^{-4}$, weight decay=$10^{-6}$). The regressor is a GraphTransformer with $4$ layers, $8$ attention heads, hidden dimensions $(d_x,d_e,d_y)=(256,128,128)$, feedforward dimensions $(256,128,192)$, and MLP dimensions $(X,E,y)=(256,128,256)$, SiLU activations, and a scalar property head. We apply polydec time distortion and report test MAE on $10$k molecules at $t\in\{0,0.2,\dots,1\}$. Additional noise-sensitivity details are provided in \Cref{app:regressor-noise}.
+We train time-conditioned regressors on MOSES using shared hyper-parameters for both marginal- and uniform-noise variants. Training uses batch size $1024$ for $60$ epochs with Adam ($\text{lr}=10^{-4}$, weight decay=$10^{-6}$). The regressor is a GraphTransformer with $4$ layers, $8$ attention heads, hidden dimensions $(d_x,d_e,d_y)=(256,128,128)$, feedforward dimensions $(256,128,192)$, and MLP dimensions $(X,E,y)=(256,128,256)$, SiLU activations, and a scalar property head. We apply polydec time distortion. Additional noise-sensitivity details are provided in \Cref{app:regressor-noise}.
 
 
 \paragraph{Conditional generation (GEM \& DeFoG).}
 GEM mixing proposal parameters:
 ($\beta^L=9.55$, $\lambda_{\mathcal{V}}^L=0.23$, $\lambda_{\mathcal{E}}^L=1.88$) with uniform noise initialization/regressors.
 DeFoG uses marginal-noise initialization/ regressors. For each task we sweep $\lambda_{\text{prop}}$
-and report the best CVUN; margins and selected $\lambda_{\text{prop}}$ are below. The reported results are computed directly using RDKit library tools—not from the regressors, which serve solely for guidance purposes.
+and report the best CVUN.
+
+The reported results are computed directly using RDKit library \cite{rdkit}—not from the regressors, which serve solely for guidance purposes.
 
 
 \begin{table}[t]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-Task & margin & GEM $\lambda_{\text{prop}}$ & DeFoG $\lambda_{\text{prop}}$ \\
+Task & GEM $\lambda_{\text{prop}}$ & DeFoG $\lambda_{\text{prop}}$ \\
 \midrule
-logP $\le 1.5$ & 0.2 & 10 & 140 \\
-logS $\ge -2.25$ & 0.2 & 16 & 130 \\
-QED $\ge 0.9$ & 0.05 & 193 & 360 \\
-TPSA $\le 50$ & 5 & 0.03 & 0.5 \\
+logP $\le 1.5$ & 10 & 140 \\
+logS $\ge -2.25$ & 16 & 130 \\
+QED $\ge 0.9$ & 193 & 360 \\
+TPSA $\le 50$ & 0.03 & 0.5 \\
 \bottomrule
 \end{tabular}
 \caption{\footnotesize Hyper-parameters for noisy-regressor conditioning on MOSES.
-GEM uses uniform-noise regressors; DeFoG uses marginal-noise regressors. All results use 4k samples.}
+GEM uses uniform-noise regressors; DeFoG uses marginal-noise regressors. Conditional results based on 5k samples.}
 \label{tab:cond-hparams}
 \end{table}
+
 
 \subsection{Geodesic analysis: validity along geodesics}
 We compare GEM's energy-weighted geodesic to a cost-only baseline along interpolated paths between
 matched MOSES molecules. We align permutations using the node-matching $c_{\mathrm{FGW}}$ cost
 (\Cref{sec:gem}, \eqref{eq:fgw-cost}; node-matching details in \Cref{app:matching}),
-and then use the aligned local cost $c_{\mathrm{loc}}$ (\eqref{eq:loc-cost}) to evaluate distances,
-which is equivalent under a fixed alignment. Paths are parameterized as cubic B-splines in the
+and then use the aligned local cost $c_{\mathrm{loc}}$ \eqref{eq:loc-cost} to evaluate distances,
+which is equivalent under the fixed alignment. 
+
+\paragraph{Geodesics.}
+Paths are parameterized as cubic B-splines in the
 node/edge probability simplex with fixed endpoints and learned interior control points (8 control
 points, degree 3). Optimization minimizes the energy-weighted path length $L_\theta$ from
 \Cref{app:geodesic-details} (with the $\exp(\beta V_\theta)$ weighting) plus an average-energy
 regularizer. We use $\beta=0.1$, length weight $\lambda_L=0.1$, energy weight $\lambda_{ME}=1.0$,
 2000 Adam iterations, and a learning rate of $10^{-3}$ \citep{kingma2014adam}.
 
-Validity is estimated by sampling 16 arc-length--uniform $s$ locations per path and drawing 16
-discrete graphs per $s$. Validity is the fraction of RDKit-valid and connected samples, averaged
+Validity is estimated by sampling 16 arc-length--uniform locations per path and drawing 16
+discrete graphs per location. Validity is the fraction of RDKit-valid and connected samples, averaged
 along each path and then across pairs within each distance bin. We use three distance bins:
-$[5,10)$, $[10,15)$, and $[15,20)$, with 50 molecules per bin.
+$[5,10)$, $[10,15)$, and $[15,20)$, with 256 molecules per bin.

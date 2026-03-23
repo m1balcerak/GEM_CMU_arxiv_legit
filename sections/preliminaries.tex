@@ -1,56 +1,27 @@
 \section{Preliminaries: Energy Matching and JKO }
 
 Energy matching learns a scalar potential \( V_\theta:\mathbb{X}
-\to\mathbb{R} \), parameterized by \(\theta\), on a continuous data space \(\mathcal{X}\). It simultaneously serves two complementary roles: (i)~off-manifold guidance: directing samples toward the data manifold via the gradient field \(-\nabla_x V_\theta\), and (ii)~near-equilibrium refinement: characterizing the data distribution on the manifold as an \gls{ebm} with Gibbs density \(\propto \exp(-V_\theta(x))\).
+\to\mathbb{R} \), parameterized by \(\theta\), on a continuous data space \(\mathbb{X}\). It simultaneously serves two complementary roles: (i)~off-manifold guidance: directing samples toward the data manifold via the gradient field \(-\nabla_x V_\theta\), and (ii)~near-equilibrium refinement: characterizing the data distribution as an \gls{ebm}.
 
-These roles separate model learning into a \emph{global} transport-alignment and a \emph{local} density-refinement term. A simple time-dependent temperature schedule to switch between these regimes, e.g., \(\epsilon(t)=0\) for \(0\leq t<1\) (transport) and \(\epsilon(t)=1\) for \(t\ge 1\) (mixing), (i) injects exploration, (ii) mitigates mode collapse, and (iii) stabilizes sampling from the Gibbs distribution \(\propto \exp(-V_\theta(x))\).
+These objectives decompose model learning into a \emph{global} transport-alignment term and a \emph{local} density-refinement term. A time-dependent temperature schedule (e.g., $\epsilon(t)=0$ for $0 \leq t < 1$ for transport and $\epsilon(t)=\epsilon$ for $t \geq 1$ for mixing, promoting exploration) ensures that samples converge to the Gibbs measure $\rho_{\theta}(x) \propto \exp(-\frac{1}{\epsilon} V_\theta(x))$ as $t \to \infty$.
 
-Energy Matching can be understood through an optimization-in-probability-spaces perspective, expressed via the \gls{jko} scheme from density $\rho_t$ to $\rho_{t+\Delta t}$:
+Energy Matching can be viewed through an optimization-in-probability-spaces perspective, expressed via the \gls{jko} scheme from density $\rho_t$ to $\rho_{t+\Delta t}$:
 \begin{align}
 \label{jko_em}
 \rho_{t+\Delta t}
 &=
 \arg\min_{\rho}\;
 \frac{1}{2\Delta t}\,\inf_{\gamma\in\Gamma(\rho_t,\rho)}\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]\nonumber\\
-&\quad+\;\int V_\theta(y)\,\rho(y)\,\mathrm{d}y\nonumber\\
-&\quad+\;\epsilon(t)\int \rho(y)\log\rho(y)\,\mathrm{d}y,
+&\quad+\;\int V_\theta(y)\,\rho(y)\,\mathrm{d}y
++\;\epsilon(t)\int \rho(y)\log\rho(y)\,\mathrm{d}y,
 \end{align}
 where the cost \( c(x,y) \) quantifies displacement from \( x \) to \( y \), typically set as \( c(x,y)=\|x - y\|^2 \) in continuous spaces.
 
+The coupling \(\gamma\in\Gamma(\rho_t,\rho)\) is a joint distribution that characterizes a transport plan. Intuitively, \(\gamma(x,y)\) encodes ``how much mass from each location \(x\sim\rho_t\) is transported to each new location \(y\sim\rho\)'', thus determining the optimal reassignment of mass that minimizes the expected transportation cost \(\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]\). In practice, couplings $\gamma$ can either be precomputed or dynamically estimated during training, and the potential $V_\theta$ is optimized accordingly, aligning it with the induced transport trajectories.
 
-The coupling \(\gamma\in\Gamma(\rho_t,\rho)\) is a joint distribution that characterizes a transport plan. Intuitively, \(\gamma(x,y)\) encodes ``how much mass from each location \(x\sim\rho_t\) is transported to each new location \(y\sim\rho\)'', thus determining the optimal reassignment of mass that minimizes the expected transportation cost \(\mathbb{E}_{(x,y)\sim\gamma}[\,c(x,y)\,]\).
-
-\paragraph{Off-manifold transport guidance.}
-Based on first-order optimality conditions in Wasserstein space~\citep{lanzetti2024variational,lanzetti2025firstorder} applied to the functional in~\eqref{jko_em}, Energy Matching defines two clear learning objectives. Given tractably coupled pairs \((x_0,x_1)\sim\gamma\) (e.g., obtained via minibatch matching rather than solving for the globally optimal coupling), we associate \(x_0\) with the noise/source distribution (\(\rho_{0}\)) and \(x_1\) with the data/target distribution (\(\rho_{\mathrm{data}}\)). Intermediate points are sampled as \(x_t=(1-t)x_0+t x_1\) for \(t\sim\Unif([0,1])\). Defining the empirical transport direction \(v=x_1 - x_0\), the \(V_\theta\) is trained via a flow-like objective:
-\begin{equation}
-\mathcal{L}_{\mathrm{Flow}}(\theta
-)
-=
-\mathbb{E}_{(x,y)\sim\gamma,\,t\sim\Unif([0,1])}\big[\|\nabla_{x_t} V_\theta(x_t) + v\|^2\big].
-\end{equation}
-
-\paragraph{Near-equilibrium energy refinement.}
-At equilibrium (\(t\to\infty\) in \eqref{jko_em} and in the mixing regime \(\epsilon(t)=1\)), the stationary distribution induced by \(V_\theta\) is given by:
-\begin{equation}
-\rho_{t\to\infty}(x)\propto \exp(-V_\theta(x)).
-\end{equation}
-
-Refinement of the equilibrium density is achieved using the contrastive loss (CL):
-\begin{equation}
-\label{eq:cl}
-\mathcal{L}_{\mathrm{CL}}(\theta)
-=
-\mathbb{E}_{x^{+}\sim \rho_{\mathrm{data}}}[V_\theta(x^{+})]
--
-\mathbb{E}_{x^{-}\sim\operatorname{sg}(\rho_{t\to\infty})}[V_\theta(x^{-})],
-\end{equation}
-where negative samples \(x^{-}\) are generated via Langevin dynamics initialized either from the source or from data, with gradients stopped (\(\operatorname{sg}\)) during the operation. Training begins with an initial warm-up phase using only \(\mathcal{L}_{\mathrm{Flow}}\), followed by joint optimization of:
-\begin{equation}
-\mathcal{L}(\theta)=\mathcal{L}_{\mathrm{Flow}}(\theta)+\lambda_{\mathrm{CL}}\,\mathcal{L}_{\mathrm{CL}}(\theta).
-\end{equation}
 
 \paragraph{Sampling (two regimes).}
-Sampling starts from a transport-aligned drift and switches to refinement via an effective temperature
+Sampling starts from a transport-aligned drift and switches to refinement via a prescribed time-dependent temperature
 $\epsilon(t)$. In continuous time, this corresponds to the time-inhomogeneous \gls{sde}:
 \begin{equation}
 \label{em_sde}
@@ -59,5 +30,5 @@ $\epsilon(t)$. In continuous time, this corresponds to the time-inhomogeneous \g
 -\nabla_{x_t} V_\theta(x_t)\,\mathrm{d}t
 +\sqrt{2\,\epsilon(t)}\,\mathrm{d}W_t,
 \end{equation}
-which reduces to an \gls{ode} when $\epsilon(t)=0$ and becomes stochastic as $\epsilon(t)\to 1$.
+which reduces to an \gls{ode} when $\epsilon(t)=0$ and becomes stochastic as $\epsilon(t)> 0$.
 In practice, sampling corresponds to explicitly integrating \eqref{em_sde} over a fixed time interval.

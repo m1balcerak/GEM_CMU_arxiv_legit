@@ -1,19 +1,19 @@
 \section{Noise sensitivity of property regressors}
 \label{app:regressor-noise}
 \paragraph{Property regressor training.}
-Let $(x_1,y)$ denote a molecule (graph) and its scalar property. A clean regressor $f_\phi$ is
+Let $(x_1,\zeta)$ denote a molecule (graph) and its scalar property ($\zeta$). A clean regressor $f_\phi$ is
 trained on valid molecules by minimizing
 \begin{equation}
 \min_\phi~\mathbb{E}_{(x_1,y)\sim \mathcal{D}}
-\big[\|f_\phi(x_1)-y\|_2^2\big].
+\big[\|f_\phi(x_1)-\zeta\|_2^2\big].
 \end{equation}
 For noise-conditioned regressors, we sample a time $t\sim p(t)$ and a noisy graph
 $x_t\sim q_t(x_t\mid x_1)$ using the same discrete noising kernel as the forward process
 (marginal or uniform). The regressor takes $(x_t,t)$ as input (time is fed as an additional scalar
 feature) and is trained with
 \begin{equation}
-\min_\phi~\mathbb{E}_{(x_1,y)\sim \mathcal{D},~t\sim p(t),~x_t\sim q_t(\cdot\mid x_1)}
-\big[\|f_\phi(x_t,t)-y\|_2^2\big].
+\min_\phi~\mathbb{E}_{(x_1,\zeta)\sim \mathcal{D},~t\sim p(t),~x_t\sim q_t(\cdot\mid x_1)}
+\big[\|f_\phi(x_t,t)-\zeta\|_2^2\big].
 \end{equation}
 During \gls{gem} sampling we do not explicitly track diffusion time, so we use an energy-based proxy to
 set $t$: we linearly increase $t$ between the noise and data energy bands and clamp to $t=1$ once
@@ -152,7 +152,3 @@ Noise-conditioned  & \textbf{0.836} & \textbf{0.422} & \textbf{0.846} \\
 \caption{\footnotesize \textbf{Regressor ablations (\gls{gem}).} Clean regressors are time-independent and trained only on valid molecules. Noise-conditioned regressors are time-dependent and trained on uniformly noised graphs. We report \gls{cvun} for each property condition on MOSES.}
 \label{tab:regressor-ablations}
 \end{table}
-
-
-\subsection{Regressor-guided Diffusion}
-Both DeFoG~\citep{qinmadeira2024defog} and Variational Flow Matching (VFM)~\citep{eijkelboom2024vfm,eijkelboom2025controlledvfm} achieve controllable graph diffusion by conditioning transitions on noise-dependent regressors predicting desired properties. Formally, these regressors approximate conditional distributions of graph properties $y$ given intermediate noisy graph states $x_t$, i.e., $\rho(y\mid x_t,t)$ or $\rho_t(y\mid x_t)$. \Cref{fig:regressor-noise} illustrates how prediction accuracy varies across different noise levels.

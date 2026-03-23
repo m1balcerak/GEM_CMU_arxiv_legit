@@ -1,6 +1,6 @@
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[scale=0.95]
+\begin{tikzpicture}[scale=0.87]
   % Axes
   \draw[->, thick] (8.5,0) -- (16.5,0) node[below, xshift=-3cm, yshift=-0.35cm] {distance (node-matching, $c_{\mathrm{FGW}}$)};
   \draw[->, thick] (8.5,0) -- (8.5,3.5);
@@ -31,6 +31,6 @@
   \node[blue, anchor=west, font=\footnotesize] at (11.5,2.9) {\gls{gem} energy-weighted geodesic};
   \node[gray, anchor=west, font=\footnotesize] at (11.5,2.5) {cost-only geodesic};
 \end{tikzpicture}
-\caption{\footnotesize \textbf{Validity Along Geodesics.} Average chemical validity (\%) vs.\ distance (node-matching, $c_{\mathrm{FGW}}$) for \gls{gem} energy-weighted versus cost-only geodesics. Cost-only ignores the learned data geometry and interpolates through low-density regions, yielding invalid valences.}
+\caption{\footnotesize \textbf{Validity Along Geodesics.} Average chemical validity (\%) vs.\ distance (node-matching, $c_{\mathrm{FGW}}$) for \gls{gem} energy-weighted versus cost-only geodesics. Cost-only ignores the learned data geometry and interpolates through low-validity regions.}
 \label{fig:geodesic-validity}
 \end{figure}

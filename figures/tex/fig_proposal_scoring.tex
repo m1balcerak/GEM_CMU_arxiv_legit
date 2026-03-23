@@ -6,7 +6,7 @@
 % ---------------- Panel box ----------------
 \def\W{11.2}
 \def\H{4.9}
-\node[font=\small\bfseries] at (\W/2,\H+0.25)
+\node[font=\small\bfseries] at (\W/2-0.7,\H+0.45)
 {Discrete, geometry-aware energy-based proposal (local edits)};
 
 % ---------------- Center + shells ----------------
@@ -67,10 +67,10 @@
 % ---------------- Legend + equation (spaced higher) ----------------
 \node[draw, rounded corners, fill=white, inner sep=6pt,
       font=\small, anchor=north, align=left]
-  at (\W/2,\H-0.05)
+  at (\W/2 -0.7,\H+0.10)
 {$q_\mathrm{mixing}(x\to y)\propto \exp\bigl(
-- \|\hat{y}_{\mathcal{V}}-\hat{x}_{\mathcal{V}}\|_2^2
-- \|\hat{y}_{\mathcal{E}}-\hat{x}_{\mathcal{E}}\|_2^2$\\[4pt]
+- \lambda^L_{\mathcal{V}}\|\hat{y}_{\mathcal{V}}-\hat{x}_{\mathcal{V}}\|_2^2
+- \lambda^L_{\mathcal{E}}\|\hat{y}_{\mathcal{E}}-\hat{x}_{\mathcal{E}}\|_2^2$\\[4pt]
 $\quad\quad\quad\quad\quad\quad - \beta^L\,\nabla V_\theta(\hat{x})^\top(\hat{y}-\hat{x})\bigr)$};
 
 % ---------------- Dot area explanation repositioned ----------------
@@ -79,6 +79,6 @@ $\quad\quad\quad\quad\quad\quad - \beta^L\,\nabla V_\theta(\hat{x})^\top(\hat{y}
 
 \end{tikzpicture}%
 }
-\caption{\textbf{Proposal Scoring.} Local graph edit proposals with scoring given by $q_\mathrm{mixing}(x\to y)$. Dot area encodes proposal probabilities; alignment with the gradient direction increases probability, while distance penalties (with equal node/edge weights $\lambda^L_{\mathcal{V}} = \lambda^L_{\mathcal{E}} = 1$ for illustrative purposes) discourage larger edits. If the proposal stays at the origin, we resample to encourage exploration and reduce stagnation.}
+\caption{\textbf{Proposal Scoring.} Local graph edit proposals with scoring given by $q_\mathrm{mixing}(x\to y)$. The size of dots encodes proposal probabilities. Alignment with the gradient direction increases the probability, while distance penalties discourage larger edits. If the candidate is the origin (stay), we resample to promote exploration. (with equal node/edge weights $\lambda^L_{\mathcal{V}} = \lambda^L_{\mathcal{E}}$ for illustrative purposes)}
 \label{fig:proposal-middle-softmax-alpha-half}
 \end{figure}

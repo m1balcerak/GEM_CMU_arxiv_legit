@@ -1,4 +1,4 @@
-\begin{figure}[h]
+\begin{figure}[t!]
 \centering
 
 \begin{tikzpicture}[scale=1.15]
@@ -19,7 +19,7 @@
 
   % Annealing window (S) - Using TEAL (was Green)
   \draw[decorate, decoration={brace, amplitude=4pt, mirror}, draw=cb_teal] (0.06,0.2) -- (2.10,0.2);
-  \node[font=\scriptsize, text=cb_teal] at (1.36,-0.16) {annealed temperature mixing};
+  \node[font=\scriptsize, text=cb_teal] at (1.36,-0.16) {annealed-temperature mixing};
   
   % Fixed-temperature window - Using BLUE (was Blue)
   \draw[decorate, decoration={brace, amplitude=4pt, mirror}, draw=cb_blue] (2.28,0.2) -- (5.94,0.2);
@@ -158,5 +158,5 @@
 \caption{\footnotesize \textbf{Energy and Sampling Trajectories.} Top: energy evolution for noise- vs.\ data-initialized chains, with mean $\pm$ 1 std bands and reference levels at $\mathbb{E}_{x\sim \pi_\mathrm{data}}[V_\theta(x)]$ and $\mathbb{E}_{x\sim \pi_0}[V_\theta(x)]$. Noise-initialized chains use greedy proposals to reach the data distribution; data-initialized chains use temperature annealing (low initial $\beta_{\mathrm{mh}}$, gradually increasing) to recover novelty.
  Bottom: validity and novelty trajectories for data-initialized (teal) and noise-initialized (red) chains over inference steps. Uniqueness $\approx$100\%.}
 \label{fig:moses-energy-and-metrics}
-\vspace{-5pt}
+\vspace{5pt}
 \end{figure}

@@ -11,10 +11,10 @@ for each graph. Let $h_\mathcal{V}$ be the normalized node-type histogram, $h_\m
 histogram (over $i<j$), and $h_{\mathcal{V}\mathcal{E}}$ the histogram over unordered node-type pairs with edge types. We
 form a weighted signature $h(x)=[\alpha_1 h_\mathcal{V},\;\alpha_2 h_\mathcal{E},\;\alpha_3 h_{\mathcal{V}\mathcal{E}}]$ and solve a linear assignment
 between graphs of equal size using $\|h(x)-h(y)\|_1$. This produces permutation-invariant couplings and
-is sufficient when $\pi_0$ is far from $\pi_{\mathrm{data}}$, so we do not require fine-grained alignment.
+is sufficient when $\pi_0$ is far from $\pi_{\mathrm{data}}$, so we do not require fine-grained alignment. $\alpha_{*}$ are chosen to balance each contribution equally.
 
 \paragraph{Node matching for molecule-like sources.}
-If the source distribution already produces valid molecules, we recommend a node-matching alignment
-based on node labels (optionally with a light edge-structure tie-breaker), followed by computing the
+If the source distribution already produces valid molecules, we use a node-matching permutation alignment
+based on node labels, followed by computing the
 aligned local cost. This reflects chemical atom mapping practice: once atoms are aligned, bond
 correspondences are largely determined~\citep{bell2019dockrmsd}.

@@ -1,12 +1,11 @@
 \section{Contrastive loss objective derivation}\label{app:energy-refinement}
-
-Let the model density be
+Given the model density (where $\beta_{\mathrm{mh}}$ is a constant):
 \begin{equation}
-p_\theta(x)=\frac{e^{-E_\theta(x)}}{Z_\theta},
+p_\theta(x)=\frac{e^{-\beta_{\mathrm{mh}} V_\theta(x)}}{Z_\theta},
 \qquad
-Z_\theta=\int e^{-E_\theta(x)}\,\mathrm{d}x.
+Z_\theta=\sum_x e^{-\beta_{\mathrm{mh}} V_\theta(x)}.
 \end{equation}
-Maximum likelihood estimation solves
+let us consider maximum likelihood estimation:
 \begin{equation}
 \theta^\star=\arg\max_\theta\;\mathbb{E}_{x\sim p_{\text{data}}}\big[\log p_\theta(x)\big]
 \;\;\Longleftrightarrow\;\;
@@ -15,29 +14,29 @@ Maximum likelihood estimation solves
 with
 \begin{equation}
 \mathcal{J}(\theta):=-\mathbb{E}_{p_{\text{data}}}\big[\log p_\theta(x)\big]
-=\mathbb{E}_{p_{\text{data}}}\big[E_\theta(x)\big]+\log Z_\theta.
+=\mathbb{E}_{p_{\text{data}}}\big[\beta_{\mathrm{mh}} V_\theta(x)\big]+\log Z_\theta.
 \end{equation}
 Taking gradients gives
 \begin{equation}
 \nabla_\theta \mathcal{J}(\theta)
-=\mathbb{E}_{p_{\text{data}}}\big[\nabla_\theta E_\theta(x)\big]
+=\mathbb{E}_{p_{\text{data}}}\big[\beta_{\mathrm{mh}}\nabla_\theta V_\theta(x)\big]
 +\nabla_\theta \log Z_\theta,
 \end{equation}
-and
+where
 \begin{equation}
 \begin{aligned}
 \nabla_\theta \log Z_\theta
 &=\frac{1}{Z_\theta}\nabla_\theta Z_\theta
-=\frac{1}{Z_\theta}\int e^{-E_\theta(x)}\big(-\nabla_\theta E_\theta(x)\big)\,\mathrm{d}x\\
-&=-\mathbb{E}_{p_\theta}\big[\nabla_\theta E_\theta(x)\big].
+=\frac{1}{Z_\theta}\sum_x e^{-\beta_{\mathrm{mh}} V_\theta(x)}\big(-\beta_{\mathrm{mh}}\nabla_\theta V_\theta(x)\big)\\
+&=-\mathbb{E}_{p_\theta}\big[\beta_{\mathrm{mh}}\nabla_\theta V_\theta(x)\big].
 \end{aligned}
 \end{equation}
-Therefore,
+Therefore, the gradient simplifies to
 \begin{equation}
 \boxed{
 \nabla_\theta \mathcal{J}(\theta)
-=\mathbb{E}_{p_{\text{data}}}\big[\nabla_\theta E_\theta(x)\big]
--\mathbb{E}_{p_\theta}\big[\nabla_\theta E_\theta(x)\big]
+=\beta_{\mathrm{mh}}\left(\mathbb{E}_{p_{\text{data}}}\big[\nabla_\theta V_\theta(x)\big]
+-\mathbb{E}_{p_\theta}\big[\nabla_\theta V_\theta(x)\big]\right)
 }.
 \end{equation}
-In our setting, \(E_\theta(x)=\beta_{\mathrm{mh}} V_\theta(x)\), and we approximate the model expectation with samples from the current chain while stopping gradients through the sampler, yielding the energy refinement objective in the main text.
+This motivates the contrastive loss objective \(\mathcal{L}_{\mathrm{CL}}\) introduced in \eqref{eq:cl}, where we approximate the expectation over \(p_\theta\) using samples initialized either at uniform noise and data samples in 50\%/50\% proportions for general training, or exclusively at data samples (0\%/100\%) for the specialized training of data-initialized unconditional generation models. We then iteratively run a sequence of \((\text{greedy} + N_{\mathrm{CL}})\) proposals, explicitly detaching gradients flowing through the sampler transitions (i.e., Markov chain proposal and acceptance steps) to avoid backpropagation through the stochastic sampling process itself, ensuring stable estimation.

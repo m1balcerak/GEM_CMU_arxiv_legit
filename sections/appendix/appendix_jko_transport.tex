@@ -1,7 +1,7 @@
 \section{JKO reduction to a transport map}
 \label{app:jko}
 
-We specialize the continuous JKO functional (\eqref{jko_em}) to discrete distributions in the
+We specialize the continuous JKO functional \eqref{jko_em} to discrete distributions in the
 transport regime ($\epsilon=0$) and replace the time step $\Delta t$ with the jump size $\eta$.
 Given $\pi_k$ and a candidate $\pi$, the variational objective reads
 \begin{align}
@@ -22,5 +22,5 @@ Since the expectation is over $x\sim\pi_k$, the minimization decouples pointwise
 \begin{equation}
     T(x)\in\arg\min_{y}\left\{\frac{1}{2\eta}c(x,y)+V_\theta(y)\right\},\quad\text{for each }x\sim\pi_k.
 \end{equation}
-This is the discrete counterpart of the transport-aligned update used in
+This yields the update used in
 \Cref{proposals}.

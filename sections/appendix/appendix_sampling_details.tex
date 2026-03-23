@@ -33,7 +33,7 @@ $\lambda_{\mathcal{V}}$ and $\lambda_{\mathcal{E}}$ penalize modifications to no
 
 
 \paragraph{\gls{mh} refinement (single beta).}
-For the standard Langevin proposal we set \(\beta^L=\beta_{\mathrm{mh}}=\beta\) and accept
+For the fixed-temperature proposal we set \(\beta^L=\beta_{\mathrm{mh}}=\beta\) and accept
 \begin{equation}
 \begin{aligned}
 \alpha(x,y)
@@ -47,7 +47,7 @@ For the standard Langevin proposal we set \(\beta^L=\beta_{\mathrm{mh}}=\beta\) 
 \paragraph{Two-betas simulated annealing.}
 We decouple the proposal temperature and target temperature by using
 \(\beta^L\) in the logits above, while \(\beta_{\mathrm{mh}}\) controls the \gls{mh} ratio.
-Optionally, \(\beta_{\mathrm{mh}}\) is annealed across \gls{mcmc} steps:
+Optionally, \(\beta_{\mathrm{mh}}\) is annealed across $S_{\mathrm{anneal}}$ mixing steps:
 \begin{equation}
 \beta_{\mathrm{mh}}(s)=
 \begin{cases}
