@@ -109,7 +109,7 @@
 % Keep affiliations, correspondence, and notice compact in one footnote paragraph.
 \renewcommand{\printAffiliationsAndNotice}[1]{\global\icml@noticeprintedtrue%
   \stepcounter{@affiliationcounter}%
-  {\let\thefootnote\relax\footnotetext{\hspace*{-\footnotesep}\ificmlshowauthors #1\fi%
+  {\let\thefootnote\relax\footnotetext{\hspace*{-\footnotesep}\ificmlshowauthors
       \forloop{@affilnum}{1}{\value{@affilnum} < \value{@affiliationcounter}}{
         \textsuperscript{\arabic{@affilnum}}\ifcsname @affilname\the@affilnum\endcsname%
           \csname @affilname\the@affilnum\endcsname%
@@ -127,7 +127,7 @@
       \else
         {\bf AUTHORERR: Missing \textbackslash{}icmlcorrespondingauthor.}
       \fi
-      \ \Notice@String
+      \ #1\ \Notice@String\fi
     }
   }
 }

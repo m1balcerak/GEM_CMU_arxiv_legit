@@ -23,7 +23,7 @@ However, Energy Matching formulations operate in continuous spaces and rely on t
 
 \begin{mdframed}[hidealllines=true,backgroundcolor=BurntOrange!8]
 \paragraph{Contributions.}
-We introduce \glsadd{gem}\emph{\gls{gem}}\footnote{{\footnotesize\urlstyle{same}\href{https://github.com/m1balcerak/GraphEnergyMatching}{\nolinkurl{https://github.com/m1balcerak/GraphEnergyMatching}}}.}, a novel discrete energy-based generative model for graphs, achieving molecular graph generation quality that matches or surpasses leading discrete diffusion approaches.  Beyond unconditional sampling, the explicitly learned distribution over graphs enables \gls{gem} to incorporate compositional constraints at inference time and facilitates the computation of geodesics between graphs.
+We introduce \glsadd{gem}\emph{\gls{gem}}, a novel discrete energy-based generative model for graphs, achieving molecular graph generation quality that matches or surpasses leading discrete diffusion approaches.  Beyond unconditional sampling, the explicitly learned distribution over graphs enables \gls{gem} to incorporate compositional constraints at inference time and facilitates the computation of geodesics between graphs.
 
 We leverage a \gls{jko}-style transport map optimization perspective to define (i) a transport-aligned discrete proposal to rapidly move towards high-probability graphs, and (ii) a discrete mixing proposal that efficiently explores the learned data geometry through local graph edits. \gls{gem} provides a principled pathway toward solving limitations of energy-based discrete graph generation, paving the way for their broader applicability.
 \end{mdframed}
